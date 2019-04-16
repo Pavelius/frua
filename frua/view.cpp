@@ -83,12 +83,22 @@ static void load_picture(const char* url) {
 	picture.read(url);
 }
 
+static void render_picture(int x, int y) {
+	auto w = 300;
+	if(w > picture.width)
+		w = picture.width;
+	auto h = 300;
+	if(h > picture.height)
+		h = picture.height;
+	blit(*canvas, x, y, w, h, 0, picture, 0, 0);
+}
+
 answer* character::choose(const char* url, aref<answer> source) {
 	load_picture(url);
 	while(ismodal()) {
 		rect rc = {0, 0, getwidth(), getheight()};
 		rectf(rc, colors::window);
-		blit(*canvas, 8, 8, 300, 300, 0, picture, 0, 0);
+		render_picture(8, 8);
 		auto x = 6, y = 572;
 		for(auto& e : source)
 			x += button(x, y, e.name);

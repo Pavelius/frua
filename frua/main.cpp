@@ -5,7 +5,8 @@ int	main(int argc, char *argv[]) {
 	answer source[] = {{0, "Персонаж"}, {0, "Магия"}, {0, "Отменить"}};
 	draw::initialize();
 	character e;
-	e.choose("art/settlements/city_night.png", source);
+	//e.choose("art/settlements/city_night.png", source);
+	e.choose("art/tavern/tavern1.png", source);
 	return 0;
 }
 
