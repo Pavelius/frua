@@ -3,9 +3,6 @@
 
 using namespace draw;
 
-static const char*	picture_url;
-static surface		picture;
-
 static struct gui_info {
 	unsigned char	border;
 	short			button_width, window_width, window_height;
@@ -33,6 +30,8 @@ static struct char_code_info {
 {'Û', 'S'}, {'Ü', 'M'}, {'Ý', '\''},
 {'Þ', '.'}, {'ß', 'Z'},
 };
+static struct main_picture_info : surface, picture_info {
+} picture;
 
 static void window(rect rc, int border = 0) {
 	if(border == 0)
@@ -75,9 +74,9 @@ static int button(int x, int y, const char* string) {
 static void load_picture(const char* url) {
 	if(!url)
 		return;
-	if(picture_url && strcmp(url, picture_url) == 0)
+	if(picture.id && strcmp(url, picture.id) == 0)
 		return;
-	picture_url = szdup(url);
+	picture.id = szdup(url);
 	if(picture)
 		picture.clear();
 	picture.read(url);
@@ -90,7 +89,7 @@ static void render_picture(int x, int y) {
 	auto h = 300;
 	if(h > picture.height)
 		h = picture.height;
-	blit(*canvas, x, y, w, h, 0, picture, 0, 0);
+	blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
 }
 
 answer* character::choose(const char* url, aref<answer> source) {

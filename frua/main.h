@@ -198,6 +198,11 @@ struct answers : adat<answer, 32> {
 private:
 	char					text[4096];
 };
+struct picture_info {
+	const char*				id;
+	point					position;
+	point					size;
+};
 struct class_info {
 	const char*				id;
 	const char*				name;
