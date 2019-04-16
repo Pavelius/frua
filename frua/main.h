@@ -199,9 +199,12 @@ private:
 	char					text[4096];
 };
 struct picture_info {
+	const char*				folder;
 	const char*				id;
 	point					position;
 	point					size;
+	constexpr picture_info() : folder(0), id(0), position(), size() {}
+	bool					pick();
 };
 struct class_info {
 	const char*				id;

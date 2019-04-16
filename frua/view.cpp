@@ -1,3 +1,4 @@
+#include "crt.h"
 #include "draw.h"
 #include "main.h"
 
@@ -30,7 +31,23 @@ static struct char_code_info {
 {'Û', 'S'}, {'Ü', 'M'}, {'Ý', '\''},
 {'Þ', '.'}, {'ß', 'Z'},
 };
-static struct main_picture_info : surface, picture_info {
+struct main_picture_info : surface, picture_info {
+	bool load(const char* folder, const char* id) {
+		if(!id)
+			return false;
+		if(this->id
+			&& strcmp(this->id, id) == 0
+			&& strcmp(this->folder, folder) == 0)
+			return true;
+		this->id = szdup(id);
+		this->folder = szdup(folder);
+		if(*this)
+			this->clear();
+		char temp[260];
+		szprint(temp, zendof(temp), "art/%1/%2.png", folder, id);
+		this->read(temp);
+		return true;
+	}
 } picture;
 
 static void window(rect rc, int border = 0) {
@@ -71,17 +88,6 @@ static int button(int x, int y, const char* string) {
 	return dx + gui.padding + border * 2;
 }
 
-static void load_picture(const char* url) {
-	if(!url)
-		return;
-	if(picture.id && strcmp(url, picture.id) == 0)
-		return;
-	picture.id = szdup(url);
-	if(picture)
-		picture.clear();
-	picture.read(url);
-}
-
 static void render_picture(int x, int y) {
 	auto w = 300;
 	if(w > picture.width)
@@ -92,11 +98,15 @@ static void render_picture(int x, int y) {
 	blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
 }
 
+static void render_background() {
+	rect rc = {0, 0, getwidth(), getheight()};
+	rectf(rc, colors::window);
+}
+
 answer* character::choose(const char* url, aref<answer> source) {
-	load_picture(url);
+	picture.load("tavern", "tavern2");
 	while(ismodal()) {
-		rect rc = {0, 0, getwidth(), getheight()};
-		rectf(rc, colors::window);
+		render_background();
 		render_picture(8, 8);
 		auto x = 6, y = 572;
 		for(auto& e : source)
@@ -106,4 +116,37 @@ answer* character::choose(const char* url, aref<answer> source) {
 	if(!getresult())
 		return 0;
 	return 0;
+}
+
+bool picture_info::pick() {
+	auto x = 8, y = 8;
+	while(ismodal()) {
+		render_background();
+		if(position.x < 0)
+			position.x = 0;
+		if(position.y < 0)
+			position.y = 0;
+		picture.load(folder, id);
+		if(true) {
+			setclip({x, y, x + 300, y + 300});
+			auto w = 300;
+			if(position.x + w > picture.width)
+				w = picture.width - position.x;
+			auto h = 300;
+			if(position.y + h > picture.height)
+				h = picture.height - position.y;
+			blit(*canvas, x, y, w, h, 0,
+				(surface&)picture, position.x, position.y);
+		}
+		domodal();
+		switch(hot.key) {
+		case KeyLeft: position.x--; break;
+		case KeyRight: position.x++; break;
+		case KeyUp: position.y--; break;
+		case KeyDown: position.y++; break;
+		default:
+			break;
+		}
+	}
+	return true;
 }
