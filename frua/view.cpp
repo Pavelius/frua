@@ -3,6 +3,9 @@
 
 using namespace draw;
 
+static const char*	picture_url;
+static surface		picture;
+
 static struct gui_info {
 	unsigned char	border;
 	short			button_width, window_width, window_height;
@@ -69,12 +72,24 @@ static int button(int x, int y, const char* string) {
 	return dx + gui.padding + border * 2;
 }
 
-answer* character::choose(aref<answer> source) {
+static void load_picture(const char* url) {
+	if(!url)
+		return;
+	if(picture_url && strcmp(url, picture_url) == 0)
+		return;
+	picture_url = szdup(url);
+	if(picture)
+		picture.clear();
+	picture.read(url);
+}
+
+answer* character::choose(const char* url, aref<answer> source) {
+	load_picture(url);
 	while(ismodal()) {
 		rect rc = {0, 0, getwidth(), getheight()};
 		rectf(rc, colors::window);
-		auto x = 6;
-		auto y = 572;
+		blit(*canvas, 8, 8, 300, 300, 0, picture, 0, 0);
+		auto x = 6, y = 572;
 		for(auto& e : source)
 			x += button(x, y, e.name);
 		domodal();

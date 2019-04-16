@@ -78,6 +78,21 @@
     <ClCompile Include="character.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="png.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="zip.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="converter.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="bstream.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="surface_serial.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -114,6 +129,12 @@
       <Filter>Коллекция</Filter>
     </ClInclude>
     <ClInclude Include="stringcreator.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="converter.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="bstream.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>

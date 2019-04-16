@@ -263,7 +263,7 @@ struct character {
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
-	static answer*			choose(aref<answer> source);
+	static answer*			choose(const char* url, aref<answer> source);
 private:
 	gender_s				gender;
 	alignment_s				alignment;
