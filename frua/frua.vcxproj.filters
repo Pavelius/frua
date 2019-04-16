@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Графика">
+      <UniqueIdentifier>{4fa3af6e-48b4-4e11-ac07-30cdc4ffdd73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Поддержка">
+      <UniqueIdentifier>{e8ac2453-6a7c-4f9f-b8bc-1acc9fa82540}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Логика">
+      <UniqueIdentifier>{9842c017-84dd-4f81-a74e-8fccef27afcf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Платформа">
+      <UniqueIdentifier>{b645bd12-7c16-4465-bbd2-94c310487f64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Коллекция">
+      <UniqueIdentifier>{aecc7538-d01c-47b5-b792-99cf89d6dc23}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="draw.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_text.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_textf.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="color.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="crt.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="point.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="win_draw.cpp">
+      <Filter>Платформа</Filter>
+    </ClCompile>
+    <ClCompile Include="win_io_file.cpp">
+      <Filter>Платформа</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="io.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="archive.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="collection.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="szdup.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="string_value.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="stringcreator.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_input.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="view.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="skill.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="class.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="character.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="draw.h">
+      <Filter>Графика</Filter>
+    </ClInclude>
+    <ClInclude Include="color.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="crt.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="point.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="rect.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="win.h">
+      <Filter>Платформа</Filter>
+    </ClInclude>
+    <ClInclude Include="main.h">
+      <Filter>Логика</Filter>
+    </ClInclude>
+    <ClInclude Include="io.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="archive.h">
+      <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="collection.h">
+      <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="initializer_list.h">
+      <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="stringcreator.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
