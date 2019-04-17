@@ -127,7 +127,10 @@
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="draw.cpp" />
+    <ClCompile Include="draw_control.cpp" />
     <ClCompile Include="draw_input.cpp" />
+    <ClCompile Include="draw_list.cpp" />
+    <ClCompile Include="draw_scroll.cpp" />
     <ClCompile Include="draw_text.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="io.cpp" />
@@ -152,6 +155,7 @@
     <ClInclude Include="converter.h" />
     <ClInclude Include="crt.h" />
     <ClInclude Include="draw.h" />
+    <ClInclude Include="draw_control.h" />
     <ClInclude Include="initializer_list.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />

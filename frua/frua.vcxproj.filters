@@ -93,6 +93,15 @@
     <ClCompile Include="surface_serial.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_control.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_list.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_scroll.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -136,6 +145,9 @@
     </ClInclude>
     <ClInclude Include="bstream.h">
       <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="draw_control.h">
+      <Filter>Графика</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

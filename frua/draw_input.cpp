@@ -1,4 +1,5 @@
 #include "draw.h"
+#include "draw_control.h"
 #include "main.h"
 
 using namespace draw;
@@ -10,6 +11,7 @@ struct focusable_element {
 };
 static focusable_element elements[96];
 static focusable_element* render_control;
+static draw::controls::control* current_focus_control;
 static int		current_focus;
 static bool		break_modal;
 static int		break_result;
@@ -66,6 +68,26 @@ static focusable_element* getlast() {
 		p = &e;
 	}
 	return p;
+}
+
+bool controls::control::isfocused() const {
+	return (control*)current_focus == this;
+}
+
+bool controls::control::ishilited() const {
+	return false;
+}
+
+void draw::controls::control::view(const rect& rc) {
+	if(isfocusable()) {
+		addelement((int)this, rc);
+		if(!getfocus())
+			setfocus((int)this, true);
+	}
+	if(isfocused())
+		current_focus_control = this;
+	if(show_border)
+		rectb(rc, colors::border);
 }
 
 void draw::addelement(int id, const rect& rc) {
@@ -163,6 +185,7 @@ int draw::getresult() {
 }
 
 bool draw::ismodal() {
+	current_focus_control = 0;
 	render_control = elements;
 	domodal = standart_domodal;
 	if(!break_modal)
