@@ -20,6 +20,10 @@ callback		draw::domodal;
 static void standart_domodal() {
 	int id;
 	hot.key = draw::rawinput();
+	if(current_focus_control) {
+		if(current_focus_control->keyinput(hot.key))
+			return;
+	}
 	switch(hot.key) {
 	case KeyTab:
 	case KeyTab | Shift:

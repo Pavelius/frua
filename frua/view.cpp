@@ -1,9 +1,14 @@
 #include "crt.h"
-#include "draw.h"
+#include "draw_control.h"
 #include "io.h"
 #include "main.h"
 
 using namespace draw;
+
+const int picture_width = 300;
+const int picture_height = 300;
+
+typedef adat<const char*, 256> strings_array;
 
 struct file_info {
 	const char*			id;
@@ -17,7 +22,7 @@ static struct gui_info {
 	void initialize() {
 		memset(this, 0, sizeof(*this));
 		border = 8;
-		padding = 4;
+		padding = 8;
 		window_width = 400;
 		button_width = 64;
 	}
@@ -39,7 +44,7 @@ static struct char_code_info {
 };
 struct main_picture_info : surface, picture_info {
 	bool load(const char* folder, const char* id) {
-		if(!id)
+		if(!id || !id[0])
 			return false;
 		if(this->id
 			&& strcmp(this->id, id) == 0
@@ -55,6 +60,26 @@ struct main_picture_info : surface, picture_info {
 		return true;
 	}
 } picture;
+
+struct string_view : controls::list {
+	strings_array& source;
+	int getmaximum() const override {
+		return source.count;
+	}
+	const char*	getname(char* result, const char* result_max, int line, int column) const {
+		if(source.data) {
+			if(column == 0)
+				return source.data[line];
+		}
+		return "";
+	}
+	const char* getcurrent() const {
+		if(source.count==0)
+			return 0;
+		return source.data[current];
+	}
+	constexpr string_view(strings_array& source) : source(source) {}
+};
 
 static void window(rect rc, int border = 0) {
 	if(border == 0)
@@ -125,6 +150,7 @@ answer* character::choose(const char* url, aref<answer> source) {
 }
 
 static void make_cash(agrw<file_info>& source, const char* folder) {
+	char temp[260];
 	char url_folder[260]; szprint(url_folder, zendof(url_folder), "art/%1", folder);
 	for(auto file = io::file::find(url_folder); file; file.next()) {
 		auto pn = file.name();
@@ -132,7 +158,6 @@ static void make_cash(agrw<file_info>& source, const char* folder) {
 			continue;
 		auto ext = szext(pn);
 		if(!ext) {
-			char temp[260];
 			if(folder[0])
 				szprint(temp, zendof(temp), "%1/%2", folder, pn);
 			else
@@ -140,14 +165,15 @@ static void make_cash(agrw<file_info>& source, const char* folder) {
 			make_cash(source, temp);
 		} else {
 			auto pi = source.add();
+			szfnamewe(temp, pn);
 			memset(pi, 0, sizeof(pi));
 			pi->folder = szdup(folder);
-			pi->id = szdup(pn);
+			pi->id = szdup(temp);
 		}
 	}
 }
 
-static void make_cash(agrw<const char*>& result, agrw<file_info>& source) {
+static void make_cash(strings_array& result, agrw<file_info>& source) {
 	const char* v = 0;
 	for(auto& e : source) {
 		if(e.folder != v) {
@@ -159,38 +185,54 @@ static void make_cash(agrw<const char*>& result, agrw<file_info>& source) {
 }
 
 bool picture_info::pick() {
-	auto x = 8, y = 8;
-	agrw<file_info> source;
-	agrw<const char*> folders;
-	make_cash(source, "");
-	make_cash(folders, source);
+	agrw<file_info> files;
+	strings_array folders;
+	strings_array filter;
+	make_cash(files, "");
+	make_cash(folders, files);
+	string_view s1(folders);
+	string_view s2(filter);
 	while(ismodal()) {
 		render_background();
+		if(position.x + picture_width > picture.width)
+			position.x = picture.width - picture_width;
 		if(position.x < 0)
 			position.x = 0;
+		if(position.y + picture_height > picture.height)
+			position.y = picture.height - picture_height;
 		if(position.y < 0)
 			position.y = 0;
-		picture.load(folder, id);
+		auto current_folder = s1.getcurrent();
+		filter.clear();
+		for(auto& e : files) {
+			if(e.folder != current_folder)
+				continue;
+			filter.add(e.id);
+		}
+		s2.correction();
+		auto current_id = s2.getcurrent();
+		picture.load(current_folder, current_id);
+		auto x = gui.padding, y = gui.padding;
+		rect rc = {x, y, x + picture_width, y + picture_height};
 		if(true) {
-			setclip({x, y, x + 300, y + 300});
-			auto w = 300;
-			if(position.x + w > picture.width)
-				w = picture.width - position.x;
-			auto h = 300;
-			if(position.y + h > picture.height)
-				h = picture.height - position.y;
-			blit(*canvas, x, y, w, h, 0,
-				(surface&)picture, position.x, position.y);
+			draw::state push;
+			setclip(rc);
+			blit(*canvas, x, y, picture_width, picture_height, 0,
+				picture, position.x, position.y);
 		}
+		rectb(rc, colors::border);
+		y += picture_height + gui.padding * 2;
+		s1.view({x, y, x + picture_width, getheight() - 32});
+		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, getheight() - 32});
 		domodal();
-		switch(hot.key) {
-		case KeyLeft: position.x--; break;
-		case KeyRight: position.x++; break;
-		case KeyUp: position.y--; break;
-		case KeyDown: position.y++; break;
-		default:
-			break;
-		}
+		//switch(hot.key) {
+		//case KeyLeft: position.x--; break;
+		//case KeyRight: position.x++; break;
+		//case KeyUp: position.y--; break;
+		//case KeyDown: position.y++; break;
+		//default:
+		//	break;
+		//}
 	}
 	return true;
 }

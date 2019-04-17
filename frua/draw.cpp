@@ -1999,6 +1999,7 @@ unsigned char* surface::allocator(unsigned char* bits, unsigned size) {
 	if(!size) {
 		free(bits);
 		bits = 0;
+		return 0;
 	}
 	if(!bits)
 		bits = (unsigned char*)malloc(size);
@@ -2014,8 +2015,12 @@ void surface::resize(int width, int height, int bpp, bool alloc_memory) {
 	this->width = width;
 	this->height = height;
 	this->scanline = color::scanline(width, bpp);
-	if(alloc_memory)
-		bits = allocator(bits, (height + 1)*scanline);
+	if(alloc_memory) {
+		if(!height)
+			bits = allocator(bits, 0);
+		else
+			bits = allocator(bits, (height + 1)*scanline);
+	}
 }
 
 void surface::flipv() {
