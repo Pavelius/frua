@@ -4,7 +4,6 @@
 int	main(int argc, char *argv[]) {
 	answer source[] = {{0, "Персонаж"}, {0, "Магия"}, {0, "Отменить"}};
 	draw::initialize();
-	//e.choose("art/settlements/city_night.png", source);
 	picture_info e;
 	e.folder = "tavern";
 	e.id = "tavern2";

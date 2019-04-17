@@ -5,6 +5,11 @@
 
 using namespace draw;
 
+struct file_info {
+	const char*			id;
+	const char*			folder;
+};
+
 static struct gui_info {
 	unsigned char	border;
 	short			button_width, window_width, window_height;
@@ -119,15 +124,19 @@ answer* character::choose(const char* url, aref<answer> source) {
 	return 0;
 }
 
-static void make_cash(agrw<picture_info>& source, const char* folder) {
-	char temp[260];
-	for(auto file = io::file::find(folder); file; file.next()) {
+static void make_cash(agrw<file_info>& source, const char* folder) {
+	char url_folder[260]; szprint(url_folder, zendof(url_folder), "art/%1", folder);
+	for(auto file = io::file::find(url_folder); file; file.next()) {
 		auto pn = file.name();
 		if(pn[0] == '.')
 			continue;
 		auto ext = szext(pn);
 		if(!ext) {
-			szprint(temp, zendof(temp), "%1/%2", folder, pn);
+			char temp[260];
+			if(folder[0])
+				szprint(temp, zendof(temp), "%1/%2", folder, pn);
+			else
+				szprint(temp, zendof(temp), pn);
 			make_cash(source, temp);
 		} else {
 			auto pi = source.add();
@@ -140,8 +149,8 @@ static void make_cash(agrw<picture_info>& source, const char* folder) {
 
 bool picture_info::pick() {
 	auto x = 8, y = 8;
-	agrw<picture_info> source;
-	make_cash(source, "art");
+	agrw<file_info> source;
+	make_cash(source, "");
 	while(ismodal()) {
 		render_background();
 		if(position.x < 0)
