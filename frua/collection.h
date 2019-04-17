@@ -38,7 +38,7 @@ struct agrw {
 	T						data[N];
 	unsigned				count;
 	agrw*					next;
-	constexpr agrw() : next(0) {}
+	constexpr agrw() : data(), count(0), next(0) {}
 	~agrw() { delete next; next = 0; }
 	T*						add() { auto p = this; while(p->count >= N) { if(!p->next) p->next = new agrw; p = p->next; } return p->data + (p->count++); }
 	T*						begin() { return data; }
