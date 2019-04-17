@@ -147,10 +147,23 @@ static void make_cash(agrw<file_info>& source, const char* folder) {
 	}
 }
 
+static void make_cash(agrw<const char*>& result, agrw<file_info>& source) {
+	const char* v = 0;
+	for(auto& e : source) {
+		if(e.folder != v) {
+			v = e.folder;
+			auto pp = result.add();
+			*pp = v;
+		}
+	}
+}
+
 bool picture_info::pick() {
 	auto x = 8, y = 8;
 	agrw<file_info> source;
+	agrw<const char*> folders;
 	make_cash(source, "");
+	make_cash(folders, source);
 	while(ismodal()) {
 		render_background();
 		if(position.x < 0)
