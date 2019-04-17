@@ -40,6 +40,7 @@ struct agrw {
 	agrw*					next;
 	constexpr agrw() : data(), count(0), next(0) {}
 	~agrw() { delete next; next = 0; }
+	explicit constexpr operator bool() const { return count != 0; }
 	T*						add() { auto p = this; while(p->count >= N) { if(!p->next) p->next = new agrw; p = p->next; } return p->data + (p->count++); }
 	T*						begin() { return data; }
 	const T*				begin() const { return data; }

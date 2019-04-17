@@ -10,11 +10,6 @@ const int picture_height = 300;
 
 typedef adat<const char*, 256> strings_array;
 
-struct file_info {
-	const char*			id;
-	const char*			folder;
-};
-
 static struct gui_info {
 	unsigned char	border;
 	short			button_width, window_width, window_height;
@@ -80,6 +75,7 @@ struct string_view : controls::list {
 	}
 	constexpr string_view(strings_array& source) : source(source) {}
 };
+static agrw<picture_info> file_data;
 
 static void window(rect rc, int border = 0) {
 	if(border == 0)
@@ -134,7 +130,7 @@ static void render_background() {
 	rectf(rc, colors::window);
 }
 
-answer* character::choose(const char* url, aref<answer> source) {
+answer* character::choose(const picture_info& image, aref<answer> source) {
 	picture.load("tavern", "tavern2");
 	while(ismodal()) {
 		render_background();
@@ -149,7 +145,7 @@ answer* character::choose(const char* url, aref<answer> source) {
 	return 0;
 }
 
-static void make_cash(agrw<file_info>& source, const char* folder) {
+static void make_cash(agrw<picture_info>& source, const char* folder) {
 	char temp[260];
 	char url_folder[260]; szprint(url_folder, zendof(url_folder), "art/%1", folder);
 	for(auto file = io::file::find(url_folder); file; file.next()) {
@@ -173,7 +169,7 @@ static void make_cash(agrw<file_info>& source, const char* folder) {
 	}
 }
 
-static void make_cash(strings_array& result, agrw<file_info>& source) {
+static void make_cash(strings_array& result, const agrw<picture_info>& source) {
 	const char* v = 0;
 	for(auto& e : source) {
 		if(e.folder != v) {
@@ -184,14 +180,27 @@ static void make_cash(strings_array& result, agrw<file_info>& source) {
 	}
 }
 
+static void header(int x, int y, const char* title, const char* text) {
+	int width = getwidth() - x;
+	draw::state push;
+	font = metrics::h1;
+	fore = colors::yellow;
+	y += textf(x, y, width, title) + gui.padding;
+	fore = colors::text;
+	font = metrics::font;
+	y += textf(x, y, width, text);
+}
+
 bool picture_info::pick() {
-	agrw<file_info> files;
 	strings_array folders;
 	strings_array filter;
-	make_cash(files, "");
-	make_cash(folders, files);
+	if(!file_data)
+		make_cash(file_data, "");
+	make_cash(folders, file_data);
 	string_view s1(folders);
 	string_view s2(filter);
+	const char* current_folder = 0;
+	const char* current_id = 0;
 	while(ismodal()) {
 		render_background();
 		if(position.x + picture_width > picture.width)
@@ -202,15 +211,15 @@ bool picture_info::pick() {
 			position.y = picture.height - picture_height;
 		if(position.y < 0)
 			position.y = 0;
-		auto current_folder = s1.getcurrent();
+		current_folder = s1.getcurrent();
 		filter.clear();
-		for(auto& e : files) {
+		for(auto& e : file_data) {
 			if(e.folder != current_folder)
 				continue;
 			filter.add(e.id);
 		}
 		s2.correction();
-		auto current_id = s2.getcurrent();
+		current_id = s2.getcurrent();
 		picture.load(current_folder, current_id);
 		auto x = gui.padding, y = gui.padding;
 		rect rc = {x, y, x + picture_width, y + picture_height};
@@ -222,17 +231,26 @@ bool picture_info::pick() {
 		}
 		rectb(rc, colors::border);
 		y += picture_height + gui.padding * 2;
-		s1.view({x, y, x + picture_width, getheight() - 32});
-		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, getheight() - 32});
+		s1.view({x, y, x + picture_width, getheight() - gui.padding});
+		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, getheight() - gui.padding});
+		header(x + picture_width + gui.padding, gui.padding, "Выбирайте картинку",
+			"Используйте [Ctrl] и клавиши движения чтобы перемещать отображаемую область картинки, если она превышает размер окна в [300] на [300] точек.\n\nНажмите [Enter] для подтверждения или [Esc] для отмены.");
 		domodal();
-		//switch(hot.key) {
-		//case KeyLeft: position.x--; break;
-		//case KeyRight: position.x++; break;
-		//case KeyUp: position.y--; break;
-		//case KeyDown: position.y++; break;
-		//default:
-		//	break;
-		//}
+		switch(hot.key) {
+		case Ctrl | KeyLeft: position.x--; break;
+		case Ctrl | KeyRight: position.x++; break;
+		case Ctrl | KeyUp: position.y--; break;
+		case Ctrl | KeyDown: position.y++; break;
+		case KeyEnter: breakmodal(1); break;
+		case KeyEscape: breakmodal(0); break;
+		default:
+			break;
+		}
 	}
-	return true;
+	if(getresult()) {
+		this->id = current_id;
+		this->folder = current_folder;
+		return true;
+	}
+	return false;
 }
