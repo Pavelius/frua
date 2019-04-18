@@ -1,10 +1,19 @@
 #include "crt.h"
 #include "draw_control.h"
 
+using namespace draw;
 using namespace draw::controls;
 
 static char		search_text[32];
 static unsigned	search_time;
+static int		current_index;
+static int		current_column;
+
+static void execute_select() {
+	auto p = (list*)hot.param;
+	p->current = current_index;
+	p->ensurevisible();
+}
 
 void list::ensurevisible() {
 	correction();
@@ -15,8 +24,9 @@ void list::ensurevisible() {
 }
 
 void list::select(int index, int column) {
-	current = index;
-	ensurevisible();
+	current_index = index;
+	current_column = column;
+	execute(execute_select, (int)this);
 }
 
 void list::correction_width() {

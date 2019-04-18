@@ -213,6 +213,10 @@ struct class_info {
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			flags;
 };
+struct event_info {
+	picture_info			picture;
+	void					edit();
+};
 struct damageinfo {
 	damage_s				type;
 	//dice					damage, damage_large;

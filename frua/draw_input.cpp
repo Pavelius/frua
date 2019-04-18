@@ -4,6 +4,10 @@
 
 using namespace draw;
 
+void tooltips_after();
+void tooltips_before();
+void view_initialize();
+
 struct focusable_element {
 	int			id;
 	rect		rc;
@@ -21,6 +25,7 @@ callback		draw::domodal;
 
 static void standart_domodal() {
 	int id;
+	tooltips_after();
 	hot.key = draw::rawinput();
 	if(current_hilite_control) {
 		switch(hot.key & CommandMask) {
@@ -215,6 +220,7 @@ bool draw::ismodal() {
 		sys_static_area.clear();
 	else
 		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
+	tooltips_before();
 	domodal = standart_domodal;
 	if(!break_modal)
 		return true;
@@ -246,5 +252,6 @@ void draw::initialize() {
 	draw::font = metrics::font;
 	draw::fore = colors::text;
 	draw::fore_stroke = colors::blue;
+	view_initialize();
 	create(-1, -1, 800, 600, 0, 32);
 }

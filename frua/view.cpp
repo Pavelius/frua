@@ -5,23 +5,21 @@
 
 using namespace draw;
 
-const int picture_width = 300;
+const int picture_width = 320;
 const int picture_height = 300;
 
-typedef adat<const char*, 256> strings_array;
+static agrw<picture_info>		file_data;
+typedef adat<const char*, 256>	strings_array;
 
 static struct gui_info {
-	unsigned char	border;
-	short			button_width, window_width, window_height;
-	short			padding;
+	int	border, padding;
+	int	buttons_height;
 	void initialize() {
 		memset(this, 0, sizeof(*this));
 		border = 8;
 		padding = 8;
-		window_width = 400;
-		button_width = 64;
+		buttons_height = texth() + padding * 2;
 	}
-	gui_info() { initialize(); }
 } gui;
 static struct char_code_info {
 	char ru, en;
@@ -69,13 +67,16 @@ struct string_view : controls::list {
 		return "";
 	}
 	const char* getcurrent() const {
-		if(source.count==0)
+		if(source.count == 0)
 			return 0;
 		return source.data[current];
 	}
 	constexpr string_view(strings_array& source) : source(source) {}
 };
-static agrw<picture_info> file_data;
+
+void view_initialize() {
+	gui.initialize();
+}
 
 static void window(rect rc, int border = 0) {
 	if(border == 0)
@@ -97,27 +98,14 @@ static int window(int x, int y, int width, const char* string) {
 	return height + gui.border * 2;
 }
 
-static int button(int x, int y, const char* string) {
+static int button(int x, int y, const char* string, const runable& ev) {
+	auto id = ev.getid();
 	auto dx = textw(string);
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
-	if(draw::buttonv(rc, false, getfocus() == rc.x1, false, false, string, 0, false)) {
-	}
-	//const int border = 2;
-	//draw::state push;
-	////font = metrics::h3;
-	//auto dy = texth();
-	//auto dx1 = textw(string[0]) + 1;
-	//auto dx2 = textw(string + 1);
-	//auto dx = dx1 + dx2 + gui.padding + border * 2;
-	//rect rc = {x, y, x + dx, y + dy};
-	//window(rc, border);
-	//auto old_fore = fore;
-	//fore = fore.mix(colors::special, 128);
-	//text(rc.x1, rc.y1, string, 1, TextBold); rc.x1 += dx1;
-	//fore = old_fore;
-	//text(rc.x1 + dx1, rc.y1, string + 1);
-	//return dx + gui.padding + border * 2;
-	return rc.width();
+	addelement(id, rc);
+	if(draw::buttonh(rc, false, getfocus() == ev.getid(), ev.isdisabled(), true, string, 0, false))
+		ev.execute();
+	return rc.width() + 2;
 }
 
 static void render_picture(int x, int y) {
@@ -141,8 +129,8 @@ answer* character::choose(const picture_info& image, aref<answer> source) {
 		render_background();
 		render_picture(8, 8);
 		auto x = 6, y = 572;
-		for(auto& e : source)
-			x += button(x, y, e.name);
+		//for(auto& e : source)
+		//	x += button(x, y, e.name);
 		domodal();
 	}
 	if(!getresult())
@@ -159,6 +147,8 @@ static void make_cash(agrw<picture_info>& source, const char* folder) {
 			continue;
 		auto ext = szext(pn);
 		if(!ext) {
+			if(strcmp(pn, "fonts") == 0)
+				continue;
 			if(folder[0])
 				szprint(temp, zendof(temp), "%1/%2", folder, pn);
 			else
@@ -186,7 +176,7 @@ static void make_cash(strings_array& result, const agrw<picture_info>& source) {
 }
 
 static void header(int x, int y, const char* title, const char* text) {
-	int width = getwidth() - x;
+	int width = getwidth() - x - gui.padding;
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
@@ -204,6 +194,14 @@ static picture_info* find(const picture_info& v) {
 	return 0;
 }
 
+static picture_info* find(const char* id, const char* folder) {
+	for(auto& e : file_data) {
+		if(strcmp(e.id, id) == 0 && strcmp(e.folder, folder) == 0)
+			return &e;
+	}
+	return 0;
+}
+
 bool picture_info::pick() {
 	strings_array folders;
 	strings_array filter;
@@ -214,16 +212,9 @@ bool picture_info::pick() {
 	string_view s2(filter);
 	const char* current_folder = 0;
 	const char* current_id = 0;
+	int y_buttons = getheight() - gui.buttons_height;
 	while(ismodal()) {
 		render_background();
-		if(position.x + picture_width > picture.width)
-			position.x = picture.width - picture_width;
-		if(position.x < 0)
-			position.x = 0;
-		if(position.y + picture_height > picture.height)
-			position.y = picture.height - picture_height;
-		if(position.y < 0)
-			position.y = 0;
 		current_folder = s1.getcurrent();
 		filter.clear();
 		for(auto& e : file_data) {
@@ -231,39 +222,94 @@ bool picture_info::pick() {
 				continue;
 			filter.add(e.id);
 		}
+		s1.correction();
 		s2.correction();
 		current_id = s2.getcurrent();
-		picture.load(current_folder, current_id);
+		picture_info* current_picture = find(current_id, current_folder);
 		auto x = gui.padding, y = gui.padding;
-		rect rc = {x, y, x + picture_width, y + picture_height};
-		if(true) {
-			draw::state push;
-			setclip(rc);
-			blit(*canvas, x, y, picture_width, picture_height, 0,
-				picture, position.x, position.y);
+		if(current_picture) {
+			picture.load(current_picture->folder, current_picture->id);
+			if(current_picture->position.x + picture_width > picture.width)
+				current_picture->position.x = picture.width - picture_width;
+			if(current_picture->position.x < 0)
+				current_picture->position.x = 0;
+			if(current_picture->position.y + picture_height > picture.height)
+				current_picture->position.y = picture.height - picture_height;
+			if(current_picture->position.y < 0)
+				current_picture->position.y = 0;
+			rect rc = {x, y, x + picture_width, y + picture_height};
+			if(true) {
+				draw::state push;
+				setclip(rc);
+				blit(*canvas, x, y, picture_width, picture_height, 0,
+					picture, current_picture->position.x, current_picture->position.y);
+			}
+			rectb(rc, colors::border);
 		}
-		rectb(rc, colors::border);
-		y += picture_height + gui.padding * 2;
-		s1.view({x, y, x + picture_width, getheight() - gui.padding});
-		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, getheight() - gui.padding});
+		y += picture_height + gui.padding;
+		s1.view({x, y, x + picture_width, y_buttons - gui.padding});
+		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, y_buttons - gui.padding});
 		header(x + picture_width + gui.padding, gui.padding, "Выбирайте картинку",
 			"Используйте [Ctrl] и клавиши движения чтобы перемещать отображаемую область картинки, если она превышает размер окна в [300] на [300] точек.\n\nНажмите [Enter] для подтверждения или [Esc] для отмены.");
+		y = y_buttons;
+		x += button(x, y, "Выбрать", cmd(buttonok));
+		x += button(x, y, "Отмена", cmd(buttoncancel));
 		domodal();
-		switch(hot.key) {
-		case Ctrl | KeyLeft: position.x--; break;
-		case Ctrl | KeyRight: position.x++; break;
-		case Ctrl | KeyUp: position.y--; break;
-		case Ctrl | KeyDown: position.y++; break;
-		case KeyEnter: breakmodal(1); break;
-		case KeyEscape: breakmodal(0); break;
-		default:
-			break;
+		if(current_picture) {
+			switch(hot.key) {
+			case Ctrl | KeyLeft: current_picture->position.x--; break;
+			case Ctrl | KeyRight: current_picture->position.x++; break;
+			case Ctrl | KeyUp: current_picture->position.y--; break;
+			case Ctrl | KeyDown: current_picture->position.y++; break;
+			default: break;
+			}
 		}
 	}
 	if(getresult()) {
-		this->id = current_id;
-		this->folder = current_folder;
+		picture_info* current_picture = find(current_id, current_folder);
+		if(!current_picture)
+			return false;
+		*this = *current_picture;
 		return true;
 	}
 	return false;
+}
+
+static void render_title(int x, int y, int width, const char* title) {
+	char temp[260]; szprint(temp, zendof(temp), "%1:", title);
+	textf(x, y, width - gui.padding, temp);
+}
+
+static int field(int x, int y, int width, const char* title, int title_width) {
+	render_title(x, y, title_width, title);
+	x += title_width;
+	width -= title_width;
+	rect rc = {x, y, x + width, y + texth() + gui.padding * 2};
+	buttonh(rc, false, false, false, true, "sadaskdj");
+	return texth() + gui.padding * 2;
+}
+
+static int event_header(int x, int y, const char* title) {
+	draw::state push;
+	font = metrics::h1;
+	fore = colors::yellow;
+	text(x, y, title);
+	return texth() + gui.padding;
+}
+
+void event_info::edit() {
+	int y_buttons = getheight() - gui.buttons_height;
+	const int width = 300;
+	while(ismodal()) {
+		render_background();
+		int x = gui.padding, y = gui.padding;
+		auto w = getwidth() - gui.padding - x;
+		y += event_header(x, y, "Боевая сцена");
+		y += field(x, y, w, "Картинка, которую видит партия", width) + gui.border;
+		y += field(x, y, w, "Текст, который написан под картинкой", width) + gui.border;
+		y = y_buttons;
+		x += button(x, y, "Выбрать", cmd(buttonok));
+		x += button(x, y, "Отмена", cmd(buttoncancel));
+		domodal();
+	}
 }

@@ -4,10 +4,8 @@
 int	main(int argc, char *argv[]) {
 	answer source[] = {{0, "Персонаж"}, {0, "Магия"}, {0, "Отменить"}};
 	draw::initialize();
-	picture_info e;
-	e.folder = "tavern";
-	e.id = "tavern2";
-	//e.pick();
+	event_info ev;
+	ev.edit();
 	return 0;
 }
 
