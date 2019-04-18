@@ -108,6 +108,15 @@ static int button(int x, int y, const char* string, const runable& ev) {
 	return rc.width() + 2;
 }
 
+static int button(const rect& rc, const char* string, const runable& ev) {
+	auto id = ev.getid();
+	auto dx = textw(string);
+	addelement(id, rc);
+	if(draw::buttonh(rc, false, getfocus() == ev.getid(), ev.isdisabled(), true, string, 0, false))
+		ev.execute();
+	return rc.height();
+}
+
 static void render_picture(int x, int y) {
 	auto w = 300;
 	if(w > picture.width)
@@ -280,13 +289,13 @@ static void render_title(int x, int y, int width, const char* title) {
 	textf(x, y, width - gui.padding, temp);
 }
 
-static int field(int x, int y, int width, const char* title, int title_width) {
+static int field(int x, int y, int width, const char* title, int title_width, const runable& ev) {
 	render_title(x, y, title_width, title);
 	x += title_width;
 	width -= title_width;
 	rect rc = {x, y, x + width, y + texth() + gui.padding * 2};
-	buttonh(rc, false, false, false, true, "sadaskdj");
-	return texth() + gui.padding * 2;
+	//buttonh(rc, false, false, false, true, "sadaskdj");
+	return button(rc, "asdasAs", ev) + gui.border;
 }
 
 static int event_header(int x, int y, const char* title) {
@@ -297,6 +306,11 @@ static int event_header(int x, int y, const char* title) {
 	return texth() + gui.padding;
 }
 
+static void edit_event() {
+	auto p = (event_info*)hot.param;
+	p->picture.pick();
+}
+
 void event_info::edit() {
 	int y_buttons = getheight() - gui.buttons_height;
 	const int width = 300;
@@ -305,8 +319,8 @@ void event_info::edit() {
 		int x = gui.padding, y = gui.padding;
 		auto w = getwidth() - gui.padding - x;
 		y += event_header(x, y, "Боевая сцена");
-		y += field(x, y, w, "Картинка, которую видит партия", width) + gui.border;
-		y += field(x, y, w, "Текст, который написан под картинкой", width) + gui.border;
+		y += field(x, y, w, "Картинка, которую видит партия", width, cmd(edit_event, (int)this));
+		y += field(x, y, w, "Текст, который написан под картинкой", width, cmd(edit_event, (int)this));
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));
 		x += button(x, y, "Отмена", cmd(buttoncancel));
