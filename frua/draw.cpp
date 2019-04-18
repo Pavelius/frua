@@ -42,6 +42,7 @@ hotinfo				draw::hot;
 static draw::surface default_surface;
 draw::surface*		draw::canvas = &default_surface;
 static bool			line_antialiasing = true;
+rect				sys_static_area;
 // Metrics
 rect				metrics::edit = {4, 4, -4, -4};
 sprite*				metrics::font = (sprite*)loadb("art/fonts/font.pma");
@@ -1289,7 +1290,36 @@ void draw::setclip(rect rcn) {
 	draw::clipping = rc;
 }
 
+rect draw::getarea() {
+	return sys_static_area;
+}
+
+static void intersect_rect(rect& r1, const rect& r2) {
+	if(!r1.intersect(r2))
+		return;
+	if(hot.mouse.in(r2)) {
+		if(r2.y1 > r1.y1)
+			r1.y1 = r2.y1;
+		if(r2.x1 > r1.x1)
+			r1.x1 = r2.x1;
+		if(r2.y2 < r1.y2)
+			r1.y2 = r2.y2;
+		if(r2.x2 < r1.x2)
+			r1.x2 = r2.x2;
+	} else {
+		if(hot.mouse.y > r2.y2 && r2.y2 > r1.y1)
+			r1.y1 = r2.y2;
+		else if(hot.mouse.y < r2.y1 && r2.y1 < r1.y2)
+			r1.y2 = r2.y1;
+		else if(hot.mouse.x > r2.x2 && r2.x2 > r1.x1)
+			r1.x1 = r2.x2;
+		else if(hot.mouse.x < r2.x1 && r2.x1 < r1.x2)
+			r1.x2 = r2.x1;
+	}
+}
+
 areas draw::area(rect rc) {
+	intersect_rect(sys_static_area, rc);
 	if(!hot.mouse.in(clipping))
 		return AreaNormal;
 	if(!mouseinput)

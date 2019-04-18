@@ -11,7 +11,9 @@ struct focusable_element {
 };
 static focusable_element elements[96];
 static focusable_element* render_control;
-static draw::controls::control* current_focus_control;
+static draw::controls::control*		current_focus_control;
+static draw::controls::control*		current_hilite_control;
+extern rect		sys_static_area;
 static int		current_focus;
 static bool		break_modal;
 static int		break_result;
@@ -20,6 +22,21 @@ callback		draw::domodal;
 static void standart_domodal() {
 	int id;
 	hot.key = draw::rawinput();
+	if(current_hilite_control) {
+		switch(hot.key & CommandMask) {
+		case MouseLeft:
+		case MouseRight:
+		case MouseLeftDBL:
+			current_hilite_control->mouseinput(hot.key, hot.mouse);
+			return;
+		case MouseWheelDown:
+			current_hilite_control->mousewheel(hot.key, hot.mouse, 1);
+			return;
+		case MouseWheelUp:
+			current_hilite_control->mousewheel(hot.key, hot.mouse, -1);
+			return;
+		}
+	}
 	if(current_focus_control) {
 		if(current_focus_control->keyinput(hot.key))
 			return;
@@ -79,7 +96,7 @@ bool controls::control::isfocused() const {
 }
 
 bool controls::control::ishilited() const {
-	return false;
+	return current_hilite_control == this;
 }
 
 void draw::controls::control::view(const rect& rc) {
@@ -88,6 +105,8 @@ void draw::controls::control::view(const rect& rc) {
 		if(!getfocus())
 			setfocus((int)this, true);
 	}
+	if(areb(rc))
+		current_hilite_control = this;
 	if(isfocused())
 		current_focus_control = this;
 	if(show_border)
@@ -190,7 +209,12 @@ int draw::getresult() {
 
 bool draw::ismodal() {
 	current_focus_control = 0;
+	current_hilite_control = 0;
 	render_control = elements;
+	if(hot.mouse.x < 0 || hot.mouse.y < 0)
+		sys_static_area.clear();
+	else
+		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
 	domodal = standart_domodal;
 	if(!break_modal)
 		return true;

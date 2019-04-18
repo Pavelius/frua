@@ -74,7 +74,86 @@ static int tovkey(unsigned id) {
 }
 
 static int handle(MSG& msg) {
+	POINT pt;
+	TRACKMOUSEEVENT tm;
 	switch(msg.message) {
+	case WM_MOUSEMOVE:
+		if(msg.hwnd != hwnd)
+			break;
+		if(!use_mouse)
+			break;
+		memset(&tm, 0, sizeof(tm));
+		tm.cbSize = sizeof(tm);
+		tm.dwFlags = TME_LEAVE | TME_HOVER;
+		tm.hwndTrack = hwnd;
+		tm.dwHoverTime = HOVER_DEFAULT;
+		TrackMouseEvent(&tm);
+		hot.mouse.x = LOWORD(msg.lParam);
+		hot.mouse.y = HIWORD(msg.lParam);
+		if(draw::mouseinput) {
+			if(hot.mouse.in(sys_static_area))
+				return InputNoUpdate;
+		}
+		return MouseMove;
+	case WM_MOUSELEAVE:
+		if(msg.hwnd != hwnd)
+			break;
+		if(!use_mouse)
+			break;
+		GetCursorPos(&pt);
+		ScreenToClient(msg.hwnd, &pt);
+		hot.mouse.x = (short)pt.x;
+		if(hot.mouse.x < 0)
+			hot.mouse.x = -10000;
+		hot.mouse.y = (short)pt.y;
+		if(hot.mouse.y < 0)
+			hot.mouse.y = -10000;
+		return MouseMove;
+	case WM_LBUTTONDOWN:
+		if(msg.hwnd != hwnd)
+			break;
+		if(!use_mouse)
+			break;
+		hot.pressed = true;
+		return MouseLeft;
+	case WM_LBUTTONDBLCLK:
+		if(msg.hwnd != hwnd)
+			break;
+		if(!use_mouse)
+			break;
+		hot.pressed = true;
+		return MouseLeftDBL;
+	case WM_LBUTTONUP:
+		if(msg.hwnd != hwnd)
+			break;
+		if(!use_mouse)
+			break;
+		if(!hot.pressed)
+			break;
+		hot.pressed = false;
+		return MouseLeft;
+	case WM_RBUTTONDOWN:
+		if(!use_mouse)
+			break;
+		hot.pressed = true;
+		return MouseRight;
+	case WM_RBUTTONUP:
+		if(!use_mouse)
+			break;
+		hot.pressed = false;
+		return MouseRight;
+	case WM_MOUSEWHEEL:
+		if(!use_mouse)
+			break;
+		if(msg.wParam & 0x80000000)
+			return MouseWheelDown;
+		else
+			return MouseWheelUp;
+		break;
+	case WM_MOUSEHOVER:
+		if(!use_mouse)
+			break;
+		return InputIdle;
 	case WM_TIMER:
 		if(msg.hwnd != hwnd)
 			break;
