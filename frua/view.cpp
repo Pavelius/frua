@@ -98,21 +98,26 @@ static int window(int x, int y, int width, const char* string) {
 }
 
 static int button(int x, int y, const char* string) {
-	const int border = 2;
-	draw::state push;
-	//font = metrics::h3;
-	auto dy = texth();
-	auto dx1 = textw(string[0]) + 1;
-	auto dx2 = textw(string + 1);
-	auto dx = dx1 + dx2 + gui.padding + border * 2;
-	rect rc = {x, y, x + dx, y + dy};
-	window(rc, border);
-	auto old_fore = fore;
-	fore = fore.mix(colors::special, 128);
-	text(rc.x1, rc.y1, string, 1, TextBold); rc.x1 += dx1;
-	fore = old_fore;
-	text(rc.x1 + dx1, rc.y1, string + 1);
-	return dx + gui.padding + border * 2;
+	auto dx = textw(string);
+	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
+	if(draw::buttonv(rc, false, getfocus() == rc.x1, false, false, string, 0, false)) {
+	}
+	//const int border = 2;
+	//draw::state push;
+	////font = metrics::h3;
+	//auto dy = texth();
+	//auto dx1 = textw(string[0]) + 1;
+	//auto dx2 = textw(string + 1);
+	//auto dx = dx1 + dx2 + gui.padding + border * 2;
+	//rect rc = {x, y, x + dx, y + dy};
+	//window(rc, border);
+	//auto old_fore = fore;
+	//fore = fore.mix(colors::special, 128);
+	//text(rc.x1, rc.y1, string, 1, TextBold); rc.x1 += dx1;
+	//fore = old_fore;
+	//text(rc.x1 + dx1, rc.y1, string + 1);
+	//return dx + gui.padding + border * 2;
+	return rc.width();
 }
 
 static void render_picture(int x, int y) {
@@ -189,6 +194,14 @@ static void header(int x, int y, const char* title, const char* text) {
 	fore = colors::text;
 	font = metrics::font;
 	y += textf(x, y, width, text);
+}
+
+static picture_info* find(const picture_info& v) {
+	for(auto& e : file_data) {
+		if(e == v)
+			return &e;
+	}
+	return 0;
 }
 
 bool picture_info::pick() {

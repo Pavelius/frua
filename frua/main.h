@@ -204,6 +204,7 @@ struct picture_info {
 	point					position;
 	point					size;
 	constexpr picture_info() : folder(0), id(0), position(), size() {}
+	bool operator==(const picture_info& e) const;
 	bool					pick();
 };
 struct class_info {

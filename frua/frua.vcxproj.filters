@@ -102,6 +102,15 @@
     <ClCompile Include="draw_scroll.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="picture.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_button.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_tooltips.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

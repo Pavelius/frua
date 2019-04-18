@@ -7,7 +7,7 @@ int	main(int argc, char *argv[]) {
 	picture_info e;
 	e.folder = "tavern";
 	e.id = "tavern2";
-	e.pick();
+	//e.pick();
 	return 0;
 }
 
