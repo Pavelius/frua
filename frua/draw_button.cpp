@@ -101,6 +101,9 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 		}
 		if(border)
 			rectb(rc, focused ? colors::active : colors::border);
+		if(focused) {
+			rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		}
 	}
 	if(string)
 		text(rc, string, AlignCenterCenter);

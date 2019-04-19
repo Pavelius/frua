@@ -295,12 +295,14 @@ int draw::rawinput() {
 		if(m == InputNoUpdate)
 			continue;
 		if(m) {
-			if(GetKeyState(VK_SHIFT) < 0)
-				m |= Shift;
-			if(GetKeyState(VK_MENU) < 0)
-				m |= Alt;
-			if(GetKeyState(VK_CONTROL) < 0)
-				m |= Ctrl;
+			if(m != MouseMove && m >= (unsigned)MouseLeft) {
+				if(GetKeyState(VK_SHIFT) < 0)
+					m |= Shift;
+				if(GetKeyState(VK_MENU) < 0)
+					m |= Alt;
+				if(GetKeyState(VK_CONTROL) < 0)
+					m |= Ctrl;
+			}
 			return m;
 		}
 	}
