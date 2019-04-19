@@ -77,6 +77,8 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 	} else {
 		if(key && hot.key == key)
 			result = true;
+		if(focused && !key && hot.key == KeyEnter)
+			result = true;
 		if((a == AreaHilited || a == AreaHilitedPressed) && hot.key == MouseLeft && hot.pressed == press)
 			result = true;
 		if(checked)

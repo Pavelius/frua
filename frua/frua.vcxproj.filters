@@ -111,6 +111,12 @@
     <ClCompile Include="draw_tooltips.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_textedit.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_scrollable.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -157,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="draw_control.h">
       <Filter>Графика</Filter>
+    </ClInclude>
+    <ClInclude Include="pointl.h">
+      <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

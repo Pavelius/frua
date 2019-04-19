@@ -132,7 +132,9 @@
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
     <ClCompile Include="draw_scroll.cpp" />
+    <ClCompile Include="draw_scrollable.cpp" />
     <ClCompile Include="draw_text.cpp" />
+    <ClCompile Include="draw_textedit.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="draw_tooltips.cpp" />
     <ClCompile Include="io.cpp" />
@@ -163,6 +165,7 @@
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="point.h" />
+    <ClInclude Include="pointl.h" />
     <ClInclude Include="rect.h" />
     <ClInclude Include="stringcreator.h" />
     <ClInclude Include="win.h" />

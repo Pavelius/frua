@@ -1,3 +1,4 @@
+#include "pointl.h"
 #include "draw.h"
 
 #pragma once
@@ -110,6 +111,61 @@ struct table : list {
 	int						gettotal(const char* id) const;
 	void					row(const rect &rc, int index) override;
 	int						rowheader(const rect& rc) const;
+};
+struct scrollable : control {
+	pointl					origin;
+	pointl					maximum;
+	point					wheels;
+	scrollable();
+	rect					centerview(const rect& rc);
+	virtual void			invalidate();
+	virtual void			redraw(rect rc) {}
+	void					view(const rect& rc) override;
+};
+struct textedit : scrollable {
+	rect					rctext, rcclient;
+	list*					records;
+	unsigned				align;
+	bool					readonly;
+	bool					update_records;
+	bool					show_records;
+	bool					post_escape;
+	//
+	textedit(char* string, unsigned maximum_lenght, bool select_text);
+	//
+	void					clear();
+	virtual void			cashing(rect rc);
+	unsigned				copy(bool run);
+	void					correct();
+	bool					editing(rect rc);
+	void					ensurevisible(int linenumber);
+	int						getrecordsheight() const;
+	int						hittest(rect rc, point pt, unsigned state) const;
+	void					invalidate() override;
+	bool					isshowrecords() const;
+	bool					keyinput(unsigned id) override;
+	int						lineb(int index) const;
+	int						linee(int index) const;
+	int						linen(int index) const;
+	void					left(bool shift, bool ctrl);
+	int						getbegin() const;
+	int						getend() const;
+	point					getpos(rect rc, int index, unsigned state) const;
+	unsigned				paste(bool run);
+	void					paste(const char* string);
+	void					redraw(rect rc) override;
+	void					right(bool shift, bool ctrl);
+	void					select(int index, bool shift);
+	unsigned				select_all(bool run);
+	void					setrecordlist(const char* string);
+	void					updaterecords(bool setfilter);
+private:
+	char*					string;
+	unsigned				maxlenght;
+	int						cashed_width;
+	int						cashed_string;
+	int						cashed_origin;
+	int						p1, p2;
 };
 }
 }

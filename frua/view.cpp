@@ -5,22 +5,17 @@
 
 using namespace draw;
 
+const int padding = 8;
+const int border = 4;
 const int picture_width = 320;
 const int picture_height = 300;
+const int title_width = 100;
+const int field_width = 400;
+const int buttons_height = 16 + 8 * 2;
 
 static agrw<picture_info>		file_data;
 typedef adat<const char*, 256>	strings_array;
 
-static struct gui_info {
-	int	border, padding;
-	int	buttons_height;
-	void initialize() {
-		memset(this, 0, sizeof(*this));
-		border = 8;
-		padding = 8;
-		buttons_height = texth() + padding * 2;
-	}
-} gui;
 static struct char_code_info {
 	char ru, en;
 } char_code[] = {{'А', 'F'}, {'Б', ','}, {'В', 'D'},
@@ -45,7 +40,7 @@ struct main_picture_info : surface, picture_info {
 			return true;
 		this->id = szdup(id);
 		this->folder = szdup(folder);
-		if(*this)
+		if(*static_cast<surface*>(this))
 			this->clear();
 		char temp[260];
 		szprint(temp, zendof(temp), "art/%1/%2.png", folder, id);
@@ -74,13 +69,9 @@ struct string_view : controls::list {
 	constexpr string_view(strings_array& source) : source(source) {}
 };
 
-void view_initialize() {
-	gui.initialize();
-}
+void view_initialize() {}
 
-static void window(rect rc, int border = 0) {
-	if(border == 0)
-		border = gui.border;
+static void window(rect rc, int bw = border) {
 	rc.offset(-border, -border);
 	color c = colors::form;
 	color b = colors::border;
@@ -95,7 +86,7 @@ static int window(int x, int y, int width, const char* string) {
 	auto height = textf(rc, string);
 	window(rc);
 	textf(rc.x1, rc.y1, rc.width(), string);
-	return height + gui.border * 2;
+	return height + border * 2;
 }
 
 static int button(int x, int y, const char* string, const runable& ev) {
@@ -185,11 +176,11 @@ static void make_cash(strings_array& result, const agrw<picture_info>& source) {
 }
 
 static void header(int x, int y, const char* title, const char* text) {
-	int width = getwidth() - x - gui.padding;
+	int width = getwidth() - x - padding;
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
-	y += textf(x, y, width, title) + gui.padding;
+	y += textf(x, y, width, title) + padding;
 	fore = colors::text;
 	font = metrics::font;
 	y += textf(x, y, width, text);
@@ -221,7 +212,7 @@ bool picture_info::pick() {
 	string_view s2(filter);
 	const char* current_folder = 0;
 	const char* current_id = 0;
-	int y_buttons = getheight() - gui.buttons_height;
+	int y_buttons = getheight() - buttons_height;
 	while(ismodal()) {
 		render_background();
 		current_folder = s1.getcurrent();
@@ -235,7 +226,7 @@ bool picture_info::pick() {
 		s2.correction();
 		current_id = s2.getcurrent();
 		picture_info* current_picture = find(current_id, current_folder);
-		auto x = gui.padding, y = gui.padding;
+		auto x = padding, y = padding;
 		if(current_picture) {
 			picture.load(current_picture->folder, current_picture->id);
 			if(current_picture->position.x + picture_width > picture.width)
@@ -255,10 +246,10 @@ bool picture_info::pick() {
 			}
 			rectb(rc, colors::border);
 		}
-		y += picture_height + gui.padding;
-		s1.view({x, y, x + picture_width, y_buttons - gui.padding});
-		s2.view({x + picture_width + gui.padding, y, getwidth() - gui.padding, y_buttons - gui.padding});
-		header(x + picture_width + gui.padding, gui.padding, "Выбирайте картинку",
+		y += picture_height + padding;
+		s1.view({x, y, x + picture_width, y_buttons - padding});
+		s2.view({x + picture_width + padding, y, getwidth() - padding, y_buttons - padding});
+		header(x + picture_width + padding, padding, "Выбирайте картинку",
 			"Используйте [Ctrl] и клавиши движения чтобы перемещать отображаемую область картинки, если она превышает размер окна в [300] на [300] точек.\n\nНажмите [Enter] для подтверждения или [Esc] для отмены.");
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));
@@ -284,18 +275,33 @@ bool picture_info::pick() {
 	return false;
 }
 
-static void render_title(int x, int y, int width, const char* title) {
-	char temp[260]; szprint(temp, zendof(temp), "%1:", title);
-	textf(x, y, width - gui.padding, temp);
+static void render_title(int x, int y, int width, char* temp, const char* temp_end, const char* title) {
+	szprint(temp, temp_end, "%1:", title);
+	textf(x, y, width - padding, temp);
 }
 
-static int field(int x, int y, int width, const char* title, int title_width, const runable& ev) {
-	render_title(x, y, title_width, title);
+static void render_title(int x, int y, int width, const char* title) {
+	char temp[260];
+	render_title(x, y, width, temp, zendof(temp), title);
+}
+
+static void change_picture_info() {
+	auto p = (picture_info*)hot.param;
+	p->pick();
+}
+
+static int field(int x, int y, const char* title, picture_info& v) {
+	char temp[260];
+	int width = 300;
+	render_title(x, y + 4, title_width, temp, zendof(temp), title);
 	x += title_width;
 	width -= title_width;
-	rect rc = {x, y, x + width, y + texth() + gui.padding * 2};
-	//buttonh(rc, false, false, false, true, "sadaskdj");
-	return button(rc, "asdasAs", ev) + gui.border;
+	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+	if(v)
+		v.geturl(temp);
+	else
+		szprint(temp, zendof(temp), "Не изменяется");
+	return button(rc, temp, cmd(change_picture_info, (int)&v)) + padding;
 }
 
 static int event_header(int x, int y, const char* title) {
@@ -303,24 +309,20 @@ static int event_header(int x, int y, const char* title) {
 	font = metrics::h1;
 	fore = colors::yellow;
 	text(x, y, title);
-	return texth() + gui.padding;
-}
-
-static void edit_event() {
-	auto p = (event_info*)hot.param;
-	p->picture.pick();
+	return texth() + padding;
 }
 
 void event_info::edit() {
-	int y_buttons = getheight() - gui.buttons_height;
+	char ti1[4096]; controls::textedit te1(ti1, sizeof(ti1), false); ti1[0] = 0;
+	char ti2[4096]; controls::textedit te2(ti2, sizeof(ti2), false); ti2[0] = 0;
+	int y_buttons = getheight() - buttons_height;
 	const int width = 300;
 	while(ismodal()) {
 		render_background();
-		int x = gui.padding, y = gui.padding;
-		auto w = getwidth() - gui.padding - x;
+		int x = padding, y = padding;
 		y += event_header(x, y, "Боевая сцена");
-		y += field(x, y, w, "Картинка, которую видит партия", width, cmd(edit_event, (int)this));
-		y += field(x, y, w, "Текст, который написан под картинкой", width, cmd(edit_event, (int)this));
+		y += field(x, y, "Картинка", picture);
+		te1.view({x, y, getwidth() - padding, y + texth() * 4 + 4 * 2});
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));
 		x += button(x, y, "Отмена", cmd(buttoncancel));

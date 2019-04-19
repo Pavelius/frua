@@ -204,8 +204,10 @@ struct picture_info {
 	point					position;
 	point					size;
 	constexpr picture_info() : folder(0), id(0), position(), size() {}
+	explicit constexpr operator bool() const { return id != 0; }
 	bool operator==(const picture_info& e) const;
 	bool					pick();
+	const char*				geturl(char* temp) const;
 };
 struct class_info {
 	const char*				id;
