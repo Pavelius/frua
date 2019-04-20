@@ -57,6 +57,8 @@ enum skill_s : unsigned char {
 	FirstSave = SaveVsParalization, LastSave = SaveVsSpells,
 	//
 	PickPockets, OpenLocks, FindRemoveTraps, MoveSilently, HideInShadows, DetectNoise, ClimbWalls, ReadLanguages,
+	LearnSpell, OpenDoor, LiftGate,
+	LastSkill = LiftGate
 };
 enum god_s : unsigned char {
 	Bane, Mystra, Tor, Tempos
@@ -107,13 +109,10 @@ enum feat_s : unsigned char {
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, DwarfCombatTactic, SmallSizeCombatAdvantage, LightSteps,
-	HolyGrace
+	HolyGrace, NoExeptionalStrenght,
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
-};
-enum side_s : unsigned char {
-	PartySide, EnemySide,
 };
 enum save_result_s : unsigned char {
 	NoSave, Negate, Half,
@@ -227,7 +226,8 @@ struct class_info {
 	const char*				name;
 	ability_s				ability;
 	adat<class_s, 4>		classes;
-	cflags<feat_s>			flags;
+	cflags<feat_s>			feats;
+	char					minimum[Charisma + 1];
 };
 struct race_info {
 	const char*				id;
@@ -235,7 +235,7 @@ struct race_info {
 	char					minimum[Charisma + 1];
 	char					maximum[Charisma + 1];
 	char					adjustment[Charisma + 1];
-	char					theive_skills[ReadLanguages + 1];
+	char					theive_skills[(ReadLanguages - PickPockets) + 1];
 	feata					feats;
 	const char*				info;
 };
@@ -243,19 +243,16 @@ struct event_info {
 	picture_info			picture;
 	void					edit();
 };
-struct damageinfo {
+struct damage_info {
 	damage_s				type;
-	//dice					damage, damage_large;
-	//const dice&			getdamage(size_s value) const;
+	dice					damage;
 };
-struct attackinfo : damageinfo {
+struct attack_info : damage_info {
 	char					thac0;
 	char					attacks_per_two_rounds;
 	char					critical;
 	char					multiplier;
 	struct item*			weapon;
-	attackinfo() { clear(); }
-	void					clear();
 };
 struct itemweight {
 	item_s					key;
@@ -297,13 +294,18 @@ struct treasure {
 struct character {
 	operator bool() const { return name != 0; }
 	void					clear();
+	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment);
 	bool					generate();
+	void					get(wear_s id, attack_info& ai);
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
+	int						getac() const;
+	int						getstrex() const;
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isallow(alignment_s v) const;
 	static answer*			choose(const picture_info& image, aref<answer> source);
+	void					raise(class_s v);
 private:
 	gender_s				gender;
 	alignment_s				alignment;
@@ -314,7 +316,6 @@ private:
 	short					hp, hp_maximum;
 	char					initiative;
 	unsigned				feats;
-	side_s					side;
 	char					strenght_percent;
 	short unsigned			name;
 	char					levels[3];
@@ -322,6 +323,9 @@ private:
 	unsigned				coopers;
 	unsigned				experience;
 	friend struct character_view;
+	void					apply_class();
+	void					apply_race();
+	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
 extern alignment_info		alignment_data[];

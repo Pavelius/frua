@@ -2,13 +2,15 @@
 
 static char hit_probability[] = {
 	-5, -5, -3, -3, -2, -2, -1, -1, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3,
+	0, 0, 0, 0, 0, 0, 0, 1, 1,
+	1, 2, 2, 2, 3,
 	3, 4, 4, 5, 6, 7
 };
 static char damage_adjustment[] = {
 	-5, -5, -3, -3, -2, -2, -1, -1, 0, 0,
-	0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 4, 5, 6, 7,
-	8, 9, 10, 11, 12, 14
+	0, 0, 0, 0, 0, 0, 1, 1, 2,
+	3, 3, 4, 5, 6,
+	7, 8, 9, 10, 11, 12, 14
 };
 static int weight_allowance[] = {
 	1, 1, 1, 5, 10, 10, 20, 20, 35, 35,
@@ -18,20 +20,6 @@ static int weight_allowance[] = {
 static short unsigned max_press[] = {
 	0
 };
-static char open_doors[] = {
-	1, 1, 1, 2, 3, 3, 4, 4, 5, 5,
-	6, 6, 7, 7, 8, 8, 9, 10, 11, 12, 13, 14, 15, 16, 16,
-	17, 17, 18, 18, 19, 19
-};
-static char open_close_doors[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 6, 8,
-	10, 12, 14, 16, 17, 18
-};
-static char bend_bars[] = {
-	-5, -5, -3, -3, -2, -2, -1, -1, 0, 0,
-	0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 3,
-};
 char reaction_adjustment[26] = {
 	-6, -6, -4, -3, -2, -1, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 1, 2, 2, 3, 3,
@@ -39,8 +27,8 @@ char reaction_adjustment[26] = {
 };
 static char defence_adjustment[] = {
 	-6, -6, -4, -3, -2, -1, 0, 0, 0, 0,
-	0, 0, 0, 0, 0, -1, -2, -3, -4, -4, -4,
-	-5, -5, -5, -6, -6
+	0, 0, 0, 0, 0, 1, 2, 3, 4, 4, 4,
+	5, 5, 5, 6, 6
 };
 static char hit_points_adjustment[] = {
 	-3, -2, -2, -1, -1, -1, 0, 0, 0, 0,
@@ -55,11 +43,6 @@ static char number_languages[] = {
 	0, 0, 1, 1, 1, 1, 1, 1, 1, 2,
 	2, 2, 3, 3, 4, 4, 5, 6, 7, 8,
 	9, 10, 11, 12, 15, 20
-};
-static char chance_learn_spells[] = {
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 35,
-	40, 45, 50, 55, 60, 65, 70, 75, 85, 95,
-	96, 97, 98, 99, 100
 };
 static char wp_melee_attacks[] = {
 	0, 0, 1, 1
@@ -78,7 +61,69 @@ void character::roll_ability() {
 		auto v2 = dice::roll(3, 6);
 		abilities[i] = imax(v1, v2);
 	}
-	auto best_ability = class_data[type].ability;
+	// Лучшая способность всегда самая высокая
+	auto ability = class_data[type].ability;
+	auto ability_best = Strenght;
+	auto ability_value = 0;
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+		if(abilities[i] > ability_value) {
+			ability_value = abilities[i];
+			ability_best = i;
+		}
+	}
+	iswap(abilities[ability], abilities[ability_best]);
+}
+
+void character::apply_race() {
+	// Применим нужные особенности
+	feats |= race_data[race].feats.data;
+	// Приведем в порядок минимальные и максимаьные атрибуты
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+		if(abilities[i] < race_data[race].minimum[i])
+			abilities[i] = race_data[race].minimum[i];
+		if(abilities[i] > race_data[race].maximum[i])
+			abilities[i] = race_data[race].maximum[i];
+	}
+}
+
+void character::apply_class() {
+	// Применим нужные особенности
+	feats |= class_data[type].feats.data;
+	// Приведем в порядок минимальные и максимаьные атрибуты
+	for(auto e : class_data[type].classes) {
+		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+			if(class_data[e].minimum[i] == 0)
+				continue;
+			if(abilities[i] < class_data[e].minimum[i])
+				abilities[i] = class_data[e].minimum[i];
+		}
+	}
+}
+
+void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment) {
+	clear();
+	this->race = race;
+	this->gender = gender;
+	this->type = type;
+	this->alignment = alignment;
+	roll_ability();
+	apply_race();
+	apply_class();
+	if(!is(NoExeptionalStrenght))
+		strenght_percent = xrand(1, 100);
+	for(auto e : class_data[type].classes)
+		raise(e);
+}
+
+int character::getindex(class_s type, class_s v) {
+	return class_data[type].classes.indexof(v);
+}
+
+void character::raise(class_s v) {
+	auto index = getindex(type, v);
+	if(index == -1)
+		return;
+	levels[index]++;
 }
 
 bool character::isallow(alignment_s v) const {
@@ -89,4 +134,41 @@ bool character::isallow(alignment_s v) const {
 			return false;
 	}
 	return true;
+}
+
+int character::getstrex() const {
+	auto result = get(Strenght);
+	if(result > 18)
+		result += 6;
+	else if(result == 18 && strenght_percent > 0) {
+		if(strenght_percent <= 50)
+			result += 1;
+		else if(strenght_percent <= 75)
+			result += 2;
+		else if(strenght_percent <= 90)
+			result += 3;
+		else if(strenght_percent <= 99)
+			result += 4;
+		else
+			result += 5;
+	}
+	return result;
+}
+
+int character::getac() const {
+	auto result = 10;
+	auto dex = get(Dexterity);
+	result -= maptbl(defence_adjustment, dex);
+	return result;
+}
+
+void character::get(wear_s id, attack_info& ai) {
+	ai.thac0 = 20;
+	ai.damage = dice::create(1, 2);
+	ai.attacks_per_two_rounds = 2;
+	if(id == MeleeWeapon || id == OffhandWeapon) {
+		auto str = getstrex();
+		ai.thac0 -= maptbl(hit_probability, str);
+		ai.damage.b += maptbl(damage_adjustment, str);
+	}
 }

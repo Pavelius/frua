@@ -311,6 +311,30 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 	return rc.y2 - y + metrics::padding;
 }
 
+static int fieldv(int x, int y, int width, const char* title, const char* value) {
+	char temp[260]; zprint(temp, "%1:", title);
+	x += metrics::padding;
+	width -= metrics::padding * 2;
+	text(x, y, temp);
+	text(x + width - textw(value), y, value);
+	return texth() + 2;
+}
+
+static int fieldv(int x, int y, int width, const char* title, int value) {
+	char temp[16]; zprint(temp, "%1i", value);
+	return fieldv(x, y, width, title, temp);
+}
+
+static int fieldp(int x, int y, int width, const char* title, int value) {
+	char temp[16]; zprint(temp, "%1i%%", value);
+	return fieldv(x, y, width, title, temp);
+}
+
+static int fieldv(int x, int y, int width, const char* title, int value, int value_maximum) {
+	char temp[32]; zprint(temp, "%1i/%2i", value, value_maximum);
+	return fieldv(x, y, width, title, temp);
+}
+
 static int page_header(int x, int y, const char* title, int current_page, int maximum_page) {
 	if(!title)
 		return 0;
@@ -331,17 +355,12 @@ static int small_header(int x, int y, int width, const char* title) {
 	return texth() + metrics::padding;
 }
 
-static rect start_group(int& x, int& y, int& width, const char* title) {
-	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+static rect start_group(int x, int& y, int width, const char* title) {
+	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 	gradv(rc, colors::border, colors::edit);
 	text(rc, title, AlignCenterCenter);
-	y = rc.y2 + metrics::padding;
-	setposition(x, y, width);
+	y = rc.y2 + metrics::padding * 2;
 	return rc;
-}
-
-static rect start_group_nw(int& x, int& y, int width, const char* title) {
-	return start_group(x, y, width, title);
 }
 
 static int close_group(int x, int y, const rect& rc) {
@@ -366,6 +385,8 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	if(i1 >= i2)
 		return 0;
 	setposition(x, y, width);
+	x += metrics::padding;
+	width -= metrics::padding * 2;
 	auto rc = start_group(x, y, width, title);
 	for(auto i = i1; i <= i2; i++) {
 		auto p = (name_info*)((char*)source + i * size);
@@ -437,11 +458,11 @@ struct page_view {
 			render_background();
 			auto y = getheight() - texth() - metrics::padding * 3;
 			auto x = metrics::padding * 2;
+			x += button(x, y, "Далее", cmd(next_page, (int)this, !nextpage(false)), Alpha + 'N');
+			x += button(x, y, "Назад", cmd(prev_page, (int)this, !prevpage(false)), Alpha + 'P');
+			x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 			for(auto pc = getcommands(); pc && *pc; pc++)
-				x += button(x, y, pc->name, cmd(pc->proc, (int)this));
-			x += button(x, y, "Далее", cmd(next_page, (int)this, !nextpage(false)));
-			x += button(x, y, "Назад", cmd(prev_page, (int)this, !prevpage(false)));
-			x += button(x, y, "Отмена", cmd(buttoncancel));
+				x += button(x, y, pc->name, cmd(pc->proc, (int)this), pc->key);
 			y = metrics::padding * 2;
 			x = metrics::padding * 2;
 			y += page_header(x, y, getheader(), 1, 2);
@@ -457,9 +478,15 @@ struct character_view : page_view {
 	const char* getheader() const {
 		return "Создание персонажа";
 	}
+	void reroll() {
+		player->create(player->race, player->gender, player->type, player->alignment);
+	}
 	void clear() override {
 		player->clear();
-		player->roll_ability();
+		player->race = (race_s)xrand(Human, Halfling);
+		player->gender = (gender_s)xrand(Male, Female);
+		player->alignment = (alignment_s)xrand(LawfulGood, ChaoticEvil);
+		reroll();
 	}
 	void generate_page(int x, int y, int width) {
 		const int column_width = 200;
@@ -473,20 +500,9 @@ struct character_view : page_view {
 		y = y1;
 		y += group(x, y, column_width, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), player->alignment);
 	}
-	int fieldv(int x, int y, int title_width, int width, const char* title, int value, int value_maximum) {
-		char temp[260]; zprint(temp, "%1:", title);
-		text(x, y, temp);
-		x += title_width;
-		if(value_maximum)
-			zprint(temp, "%1i/%2i", value, value_maximum);
-		else
-			zprint(temp, "%1i", value);
-		text(x, y, temp);
-		return texth() + 2;
-	}
 	static void reroll_command() {
 		auto p = (character_view*)hot.param;
-		p->player->roll_ability();
+		p->reroll();
 	}
 	virtual const command* getcommands() {
 		static command information_command[] = {{"Перебросить", reroll_command, Alpha+'R'},
@@ -498,28 +514,49 @@ struct character_view : page_view {
 	}
 	void information(int x, int y, int width) {
 		char temp[260];
+		attack_info ai = {}; player->get(MeleeWeapon, ai);
 		draw::state push;
+		x += metrics::padding;
+		width -= metrics::padding;
 		y += texth();
+		auto wd1 = 160;
 		text(x, y, getstr(player->gender)); y += texth();
 		text(x, y, getstr(player->alignment)); y += texth();
 		for(unsigned i = 0; i < class_data[player->type].classes.count; i++) {
 			auto e = class_data[player->type].classes.data[i];
 			text(x, y, getstr(e));
 			zprint(temp, "%1i", player->levels[i]);
-			text(x + 100, y, temp);
+			text(x + wd1 - textw(temp), y, temp);
 			y += texth();
 		}
 		y += metrics::padding;
-		auto rga = start_group_nw(x, y, 160, "Атрибуты");
+		auto y1 = y;
+		auto rga = start_group(x, y, wd1, "Атрибуты");
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 			auto v = player->get(i);
 			if(i==Strenght && v==18)
-				y += fieldv(x, y, 100, 120, getstr(i), v, player->strenght_percent);
+				y += fieldv(x, y, wd1, getstr(i), v, player->strenght_percent);
 			else
-				y += fieldv(x, y, 100, 120, getstr(i), v, 0);
+				y += fieldv(x, y, wd1, getstr(i), v);
 		}
 		y += metrics::padding;
+		y += close_group(x, y, rga) + metrics::padding;
+		rga = start_group(x, y, wd1, "Боевые параметры");
+		y += fieldv(x, y, wd1, "Класс брони", player->getac());
+		y += fieldv(x, y, wd1, "THAC0", ai.thac0);
+		y += fieldv(x, y, wd1, "Урон", ai.damage.print(temp, zendof(temp)));
 		y += close_group(x, y, rga);
+		y = y1;
+		x += wd1 + metrics::padding * 4;
+		auto wd2 = 250;
+		rga = start_group(x, y, wd2, "Навыки");
+		for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
+			auto v = player->get(i);
+			if(v<=0)
+				continue;
+			y += fieldp(x, y, wd2, getstr(i), v);
+		}
+		y += close_group(x, y, rga) + metrics::padding;
 	}
 	void redraw(int x, int y, int width) override {
 		switch(page_current) {

@@ -21,9 +21,13 @@ struct skill_info {
 {"DetectNoise", "Слышать звуки", {Theif}},
 {"ClimbWalls", "Лазить по стенам", {Theif}},
 {"ReadLanguages", "Читать на всех языках", {Theif}},
+//
+{"LearnSpell", "Шанс выучить заклинание", {Mage}},
+{"OpenDoors", "Открывать двери"},
+{"LiftGate", "Поднимать ворота"},
 };
 getstr_enum(skill);
-assert_enum(skill, ReadLanguages);
+assert_enum(skill, LastSkill);
 
 static char savevs_data[4][5][22] = {
 	// Warriors - 0
@@ -89,6 +93,22 @@ static char save_index[] = {
 	4,
 };
 static_assert(sizeof(save_index) / sizeof(save_index[0]) == SaveVsSpells + 1, "Invalid count of save index elements");
+static char open_doors[] = {
+	18, 20, 22, 26, 28, 30, 32, 34, 36, 38,
+	40, 42, 44, 46, 48, 50, 54, 58, 62,
+	66, 72, 78, 84, 90,
+	92, 94, 95
+};
+static char bend_bars[] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+	2, 2, 4, 4, 7, 7, 10, 13, 16,
+	20, 25, 30, 35, 40, 45, 50,
+};
+static char chance_learn_spells[] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 35,
+	40, 45, 50, 55, 60, 65, 70, 75, 85, 95,
+	96, 97, 98, 99, 100
+};
 
 static int get_save_group(class_s value) {
 	switch(value) {
@@ -114,7 +134,7 @@ static int get_save_thrown(skill_s id, class_s type, const char* levels) {
 		if(v && v < result)
 			result = v;
 	}
-	return (result - 21) * 5;
+	return (21 - result) * 5;
 }
 
 static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
@@ -132,6 +152,16 @@ static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 		break;
 	}
 	return result;
+}
+
+static bool allow_skill(skill_s id, class_s type) {
+	if(!skill_data[id].allow)
+		return true;
+	for(auto e : class_data[type].classes) {
+		if(skill_data[id].allow.is(e))
+			return true;
+	}
+	return false;
 }
 
 int	character::get(skill_s id) const {
@@ -160,8 +190,20 @@ int	character::get(skill_s id) const {
 	} else if(id >= PickPockets && id <= ReadLanguages) {
 		auto dex = get(Dexterity);
 		result = get_theiv_skill(id, type, levels);
+		if(!result)
+			return 0;
 		result += race_data[race].theive_skills[id - PickPockets];
 		result += maptbl(theive_skills_by_dex[id], dex);
+	} else {
+		if(!allow_skill(id, type))
+			return 0;
+		auto str = getstrex();
+		auto ins = get(Intellegence);
+		switch(id) {
+		case OpenDoor: result = maptbl(open_doors, str); break;
+		case LiftGate: result = maptbl(bend_bars, str); break;
+		case LearnSpell: result = maptbl(chance_learn_spells, ins); break;
+		}
 	}
 	return result;
 }
