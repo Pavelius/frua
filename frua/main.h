@@ -102,11 +102,11 @@ enum duration_s : unsigned char {
 	Permanent,
 };
 enum feat_s : unsigned char {
-	NoFeat, Darkvision,
+	Darkvision,
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, DwarfCombatTactic, SmallSizeCombatAdvantage, LightSteps,
-	HolyGrace,
+	HolyGrace
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
@@ -186,7 +186,7 @@ struct character;
 
 typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
-typedef feat_s				feata[8];
+typedef cflags<feat_s>		feata;
 typedef class_s				classa[3];
 
 struct answer {
@@ -197,6 +197,10 @@ struct answers : adat<answer, 32> {
 	void					add(int id, const char* text);
 private:
 	char					text[4096];
+};
+struct name_info {
+	const char*				id;
+	const char*				name;
 };
 struct picture_info {
 	const char*				folder;
@@ -214,6 +218,16 @@ struct class_info {
 	const char*				name;
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			flags;
+};
+struct race_info {
+	const char*				id;
+	const char*				name;
+	char					minimum[Charisma + 1];
+	char					maximum[Charisma + 1];
+	char					adjustment[Charisma + 1];
+	char					theive_skills[ReadLanguages + 1];
+	feata					feats;
+	const char*				info;
 };
 struct event_info {
 	picture_info			picture;
@@ -271,9 +285,9 @@ struct treasure {
 	static item				gemquality(item_s type);
 };
 struct character {
-	character() = default;
 	operator bool() const { return name != 0; }
 	void					clear();
+	bool					generate();
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
@@ -300,3 +314,4 @@ private:
 extern adat<character, 128> characters;
 extern class_info			class_data[];
 extern adat<character*, 8>	party;
+extern race_info			race_data[];

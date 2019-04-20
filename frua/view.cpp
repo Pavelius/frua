@@ -213,6 +213,7 @@ bool picture_info::pick() {
 	const char* current_folder = 0;
 	const char* current_id = 0;
 	int y_buttons = getheight() - buttons_height;
+	setfocus(0, true); 
 	while(ismodal()) {
 		render_background();
 		current_folder = s1.getcurrent();
@@ -290,9 +291,8 @@ static void change_picture_info() {
 	p->pick();
 }
 
-static int field(int x, int y, const char* title, picture_info& v) {
+static int field(int x, int y, int width, const char* title, picture_info& v) {
 	char temp[260];
-	int width = 300;
 	render_title(x, y + 4, title_width, temp, zendof(temp), title);
 	x += title_width;
 	width -= title_width;
@@ -302,6 +302,12 @@ static int field(int x, int y, const char* title, picture_info& v) {
 	else
 		szprint(temp, zendof(temp), "Не изменяется");
 	return button(rc, temp, cmd(change_picture_info, (int)&v)) + padding;
+}
+
+static int field(int x, int y, int width, const char* title, controls::textedit& v) {
+	rect rc = {x, y, x + width, y + texth() * 4 + 4 * 2};
+	v.view(rc);
+	return rc.y1 - y + padding;
 }
 
 static int event_header(int x, int y, const char* title) {
@@ -316,16 +322,25 @@ void event_info::edit() {
 	char ti1[4096]; controls::textedit te1(ti1, sizeof(ti1), false); ti1[0] = 0;
 	char ti2[4096]; controls::textedit te2(ti2, sizeof(ti2), false); ti2[0] = 0;
 	int y_buttons = getheight() - buttons_height;
-	const int width = 300;
+	int width = getwidth() - padding*2;
+	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
 		int x = padding, y = padding;
 		y += event_header(x, y, "Боевая сцена");
-		y += field(x, y, "Картинка", picture);
-		te1.view({x, y, getwidth() - padding, y + texth() * 4 + 4 * 2});
+		y += field(x, y, width, "Картинка", picture);
+		y += field(x, y, width, "Текст, который увидят игроки", te1);
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));
 		x += button(x, y, "Отмена", cmd(buttoncancel));
 		domodal();
 	}
+}
+
+static int group(int x, int y, const name_info* source, unsigned i1, unsigned i2, unsigned size) {
+	auto y1 = y;
+	for(auto i = i1; i < i2; i++) {
+		auto p = (name_info*)((char*)source + i * size);
+	}
+	return y - y1;
 }

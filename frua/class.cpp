@@ -16,3 +16,5 @@ class_info class_data[] = {{},
 {"FighterClericMage", "Воин-священник-маг", {Fighter, Cleric, Mage}},
 {"FighterMageTheif", "Воин-маг-вор", {Fighter, Mage, Theif}},
 };
+assert_enum(class, FighterMageTheif);
+getstr_enum(class);

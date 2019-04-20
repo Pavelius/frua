@@ -117,6 +117,18 @@
     <ClCompile Include="draw_scrollable.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="win_clipboard.cpp">
+      <Filter>Платформа</Filter>
+    </ClCompile>
+    <ClCompile Include="alignment.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="gender.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="race.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

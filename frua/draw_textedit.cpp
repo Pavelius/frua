@@ -323,7 +323,7 @@ unsigned textedit::copy(bool run) {
 	if(run) {
 		char* s1 = string + imin(p1, p2);
 		char* s2 = string + imax(p1, p2);
-		//clipboard::copy(s1, s2 - s1);
+		clipboard::copy(s1, s2 - s1);
 	}
 	return 0;
 }
@@ -333,10 +333,10 @@ unsigned textedit::paste(bool run) {
 		return Disabled;
 	if(run) {
 		clear();
-		//auto p = clipboard::paste();
-		//if(p)
-		//	paste(p);
-		//delete p;
+		auto p = clipboard::paste();
+		if(p)
+			paste(p);
+		delete p;
 	}
 	return 0;
 }
@@ -350,8 +350,6 @@ unsigned textedit::paste(bool run) {
 //		}
 //		if(!readonly)
 //			clear();
-//		break;
-//	case Ctrl + Alpha + 'C':
 //		break;
 //	case Ctrl + Alpha + 'V':
 //		if(p1 == -1 || readonly)

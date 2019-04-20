@@ -3,6 +3,10 @@
 
 #pragma once
 
+namespace clipboard {
+void					copy(const void* string, int lenght);
+char*					paste();
+}
 namespace draw {
 enum column_size_s : unsigned char {
 	SizeDefault,
