@@ -456,22 +456,22 @@ struct character_view : page_view {
 	void clear() override {
 		player->clear();
 	}
-	void redraw(int x, int y, int width) override {
+	void generate_page(int x, int y, int width) {
 		const int column_width = 200;
 		auto y1 = y;
+		y += group(x, y, column_width, "Пол", gender_data, Male, Female, sizeof(gender_info), player->gender);
+		y += group(x, y, column_width, "Раса", race_data, Human, Halfling, sizeof(race_info), player->race);
+		x += column_width + metrics::padding;
+		y = y1;
+		y += group(x, y, column_width, "Класс", class_data, Cleric, FighterMageTheif, sizeof(class_info), player->type);
+		x += column_width + metrics::padding;
+		y = y1;
+		y += group(x, y, column_width, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), player->alignment);
+	}
+	void redraw(int x, int y, int width) override {
 		switch(page_current) {
-		case 0:
-			y += group(x, y, column_width, "Пол", gender_data, Male, Female, sizeof(gender_info), player->gender);
-			y += group(x, y, column_width, "Раса", race_data, Human, Halfling, sizeof(race_info), player->race);
-			x += column_width + metrics::padding;
-			y = y1;
-			y += group(x, y, column_width, "Класс", class_data, Cleric, FighterMageTheif, sizeof(class_info), player->type);
-			x += column_width + metrics::padding;
-			y = y1;
-			y += group(x, y, column_width, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), player->alignment);
-			break;
-		case 1:
-			break;
+		case 0: generate_page(x, y, width); break;
+		case 1: break;
 		}
 	}
 	constexpr character_view(character* player) : page_view(2), player(player) {}
