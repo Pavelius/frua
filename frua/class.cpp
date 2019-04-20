@@ -1,7 +1,6 @@
 #include "main.h"
 
-class_info class_data[] = {{},
-{"Cleric", "Священник", {Cleric}},
+class_info class_data[] = {{"Cleric", "Священник", {Cleric}},
 {"Fighter", "Боец", {Fighter}},
 {"Mage", "Маг", {Mage}},
 {"Paladin", "Паладин", {Paladin}, {HolyGrace}},

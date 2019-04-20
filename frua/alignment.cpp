@@ -1,18 +1,15 @@
 #include "main.h"
 
-static struct alignment_info {
-	const char*		id;
-	const char*		name;
-} alignment_data[] = {
-	{"Neutral", "Нейтральный"},
-	{"Lawful Good", "Законопослушный добрый"},
-	{"Neutral Good", "Нейтрально добрый"},
-	{"Chaotic Good", "Хаотично добрый"},
-	{"Lawful Neutral", "Законопослушный нейтральный"},
-	{"Chaotic Neutral", "Хаотично нейтральный"},
-	{"Lawful Evil", "Законопослушный злой"},
-	{"Neutral Evil", "Нейтрально злой"},
-	{"Chaotic Evil", "Хаотично злой"},
+alignment_info alignment_data[] = {
+	{"Neutral", "Нейтральный", {Ranger, Paladin}},
+	{"Lawful Good", "Законопослушный добрый", {Theif}},
+	{"Neutral Good", "Нейтрально добрый", {Paladin}},
+	{"Chaotic Good", "Хаотично добрый", {Paladin}},
+	{"Lawful Neutral", "Законопослушный нейтральный", {Theif, Ranger, Paladin}},
+	{"Chaotic Neutral", "Хаотично нейтральный", {Ranger, Paladin}},
+	{"Lawful Evil", "Законопослушный злой", {Theif, Ranger, Paladin}},
+	{"Neutral Evil", "Нейтрально злой", {Ranger, Paladin}},
+	{"Chaotic Evil", "Хаотично злой", {Ranger, Paladin}},
 };
 assert_enum(alignment, ChaoticEvil);
 getstr_enum(alignment);

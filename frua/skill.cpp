@@ -26,8 +26,8 @@ getstr_enum(skill);
 assert_enum(skill, ReadLanguages);
 
 static char savevs_data[4][5][22] = {
-// Warriors - 0
-{{16, 14, 14, 13, 13, 11, 11, 10, 10, 8, 8, 7, 7, 5, 5, 4, 4, 3, 3, 2, 2, 2},
+	// Warriors - 0
+	{{16, 14, 14, 13, 13, 11, 11, 10, 10, 8, 8, 7, 7, 5, 5, 4, 4, 3, 3, 2, 2, 2},
 {18, 16, 16, 15, 15, 13, 13, 12, 12, 10, 10, 9, 9, 7, 7, 6, 6, 5, 5, 3, 3, 2},
 {17, 15, 15, 14, 14, 12, 12, 11, 11, 9, 9, 8, 8, 6, 6, 5, 5, 4, 4, 3, 3, 2},
 {20, 17, 17, 16, 16, 13, 13, 12, 12, 9, 9, 8, 8, 5, 5, 4, 4, 3, 3, 3, 3, 3},
@@ -103,9 +103,11 @@ static int get_save_thrown(skill_s id, class_s type, const char* levels) {
 	auto index = save_index[id];
 	auto result = 20;
 	for(unsigned i = 0; i < class_data[type].classes.count; i++) {
+		auto n = levels[i];
+		if(n < 1)
+			continue;
 		auto e = class_data[type].classes.data[i];
 		auto g = get_save_group(e);
-		auto n = levels[i];
 		if(n >= sizeof(savevs_data[0][0]) / sizeof(savevs_data[0][0][0]))
 			n = sizeof(savevs_data[0][0]) / sizeof(savevs_data[0][0][0]) - 1;
 		auto v = savevs_data[g][index][n];
@@ -119,7 +121,7 @@ static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 	auto result = 0;
 	for(unsigned i = 0; i < class_data[type].classes.count; i++) {
 		auto n = levels[i];
-		if(n < 0)
+		if(n < 1)
 			continue;
 		auto e = class_data[type].classes.data[i];
 		if(skill_data[id].allow && !skill_data[id].allow.is(e))

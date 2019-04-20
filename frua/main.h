@@ -1,3 +1,4 @@
+#include "anyval.h"
 #include "collection.h"
 #include "crt.h"
 #include "point.h"
@@ -30,7 +31,6 @@ enum item_s : unsigned char {
 	LastItem = StarSapphire
 };
 enum class_s : unsigned char {
-	NoClass,
 	Cleric, Fighter, Mage, Paladin, Ranger, Theif,
 	FighterCleric, FighterMage, FighterTheif,
 	ClericMage, MageTheif,
@@ -166,7 +166,6 @@ enum magic_power_s : unsigned char {
 	Surprised, Blessed, Lighted,
 };
 enum gender_s : unsigned char {
-	NoGender,
 	Male, Female,
 };
 
@@ -199,6 +198,15 @@ private:
 	char					text[4096];
 };
 struct name_info {
+	const char*				id;
+	const char*				name;
+};
+struct alignment_info {
+	const char*				id;
+	const char*				name;
+	adat<class_s, 4>		restricted;
+};
+struct gender_info {
 	const char*				id;
 	const char*				name;
 };
@@ -292,6 +300,7 @@ struct character {
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
+	bool					isallow(alignment_s v) const;
 	static answer*			choose(const picture_info& image, aref<answer> source);
 private:
 	gender_s				gender;
@@ -310,8 +319,11 @@ private:
 	item					wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
+	friend struct character_view;
 };
+extern alignment_info		alignment_data[];
 extern adat<character, 128> characters;
 extern class_info			class_data[];
+extern gender_info			gender_data[];
 extern adat<character*, 8>	party;
 extern race_info			race_data[];

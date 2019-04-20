@@ -67,3 +67,17 @@ static char wp_melee_attacks[] = {
 static char wp_melee_thac0[] = {
 	0, 0, 1, 3,
 };
+
+void character::clear() {
+	memset(this, 0, sizeof(character));
+}
+
+bool character::isallow(alignment_s v) const {
+	auto& ev = class_data[type];
+	for(unsigned i = 0; i < ev.classes.count; i++) {
+		auto e = ev.classes.data[i];
+		if(alignment_data[v].restricted.indexof(e) != -1)
+			return false;
+	}
+	return true;
+}

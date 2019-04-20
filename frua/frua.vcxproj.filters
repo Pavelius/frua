@@ -129,6 +129,15 @@
     <ClCompile Include="race.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_clipart.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_dialog.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="anyval.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -177,6 +186,9 @@
       <Filter>Графика</Filter>
     </ClInclude>
     <ClInclude Include="pointl.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="anyval.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>

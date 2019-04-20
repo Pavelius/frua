@@ -1,10 +1,6 @@
 #include "main.h"
 
-static struct gender_info {
-	const char*		id;
-	const char*		name;
-} gender_data[] = {
-	{"No Gender", "Без пола"},
+gender_info gender_data[] = {
 	{"Male", "Мужчина"},
 	{"Female", "Женщина"},
 };

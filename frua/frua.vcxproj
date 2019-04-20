@@ -119,6 +119,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="alignment.cpp" />
+    <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
@@ -129,7 +130,9 @@
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
+    <ClCompile Include="draw_clipart.cpp" />
     <ClCompile Include="draw_control.cpp" />
+    <ClCompile Include="draw_dialog.cpp" />
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
     <ClCompile Include="draw_scroll.cpp" />
@@ -157,6 +160,7 @@
     <ClCompile Include="zip.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="anyval.h" />
     <ClInclude Include="archive.h" />
     <ClInclude Include="bstream.h" />
     <ClInclude Include="collection.h" />
