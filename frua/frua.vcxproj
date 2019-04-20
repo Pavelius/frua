@@ -118,6 +118,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ability.cpp" />
     <ClCompile Include="alignment.cpp" />
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
@@ -128,6 +129,7 @@
     <ClCompile Include="color.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
+    <ClCompile Include="dice.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
     <ClCompile Include="draw_clipart.cpp" />
@@ -167,6 +169,7 @@
     <ClInclude Include="color.h" />
     <ClInclude Include="converter.h" />
     <ClInclude Include="crt.h" />
+    <ClInclude Include="dice.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="draw_control.h" />
     <ClInclude Include="initializer_list.h" />

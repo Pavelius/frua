@@ -72,6 +72,15 @@ void character::clear() {
 	memset(this, 0, sizeof(character));
 }
 
+void character::roll_ability() {
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+		auto v1 = dice::roll(3, 6);
+		auto v2 = dice::roll(3, 6);
+		abilities[i] = imax(v1, v2);
+	}
+	auto best_ability = class_data[type].ability;
+}
+
 bool character::isallow(alignment_s v) const {
 	auto& ev = class_data[type];
 	for(unsigned i = 0; i < ev.classes.count; i++) {

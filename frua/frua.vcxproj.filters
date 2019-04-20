@@ -138,6 +138,12 @@
     <ClCompile Include="anyval.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
+    <ClCompile Include="ability.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="dice.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -189,6 +195,9 @@
       <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="anyval.h">
+      <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="dice.h">
       <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>

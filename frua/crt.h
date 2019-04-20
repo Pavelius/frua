@@ -92,7 +92,7 @@ template<class T> inline void		zcat(T* p1, const T e) { p1 = zend(p1); p1[0] = e
 template<class T> inline void		zcat(T* p1, const T* p2) { zcpy(zend(p1), p2); }
 template<class T> inline int		zlen(T* p) { return zend(p) - p; }
 template<class T> inline void		zshuffle(T* p, int count) { for(int i = 0; i < count; i++) iswap(p[i], p[rand() % count]); }
-template<unsigned N> char*			zprint(char(&result)[N], const char* format, ...) { return szprintvs(result, result + N, format, xva_start(format)); }
+template<unsigned N> char*			zprint(char(&result)[N], const char* format, ...) { return szprintvs(result, result + N - 1, format, xva_start(format)); }
 template<class T> inline T*			zskipsp(T* p) { if(p) while(*p == 32 || *p == 9) p++; return p; }
 template<class T> inline T*			zskipspcr(T* p) { if(p) while(*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++; return p; }
 // Inline other function

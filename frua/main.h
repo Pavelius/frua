@@ -1,6 +1,7 @@
 #include "anyval.h"
 #include "collection.h"
 #include "crt.h"
+#include "dice.h"
 #include "point.h"
 
 #pragma once
@@ -224,6 +225,7 @@ struct picture_info {
 struct class_info {
 	const char*				id;
 	const char*				name;
+	ability_s				ability;
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			flags;
 };
@@ -320,6 +322,7 @@ private:
 	unsigned				coopers;
 	unsigned				experience;
 	friend struct character_view;
+	void					roll_ability();
 };
 extern alignment_info		alignment_data[];
 extern adat<character, 128> characters;

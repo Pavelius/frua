@@ -25,8 +25,9 @@ static void set_command_value() {
 
 struct command {
 	const char*			name;
-	unsigned			key;
 	callback			proc;
+	unsigned			key;
+	explicit operator bool() const { return name != 0; }
 };
 
 static struct char_code_info {
@@ -97,30 +98,12 @@ private:
 
 void view_initialize() {}
 
-static void window(rect rc, int bw = border) {
-	rc.offset(-border, -border);
-	color c = colors::form;
-	color b = colors::border;
-	draw::rectf(rc, c);
-	draw::rectb(rc, b);
-}
-
-static int window(int x, int y, int width, const char* string) {
-	rect rc = {x, y, x + width, y};
-	draw::state push;
-	draw::font = metrics::font;
-	auto height = textf(rc, string);
-	window(rc);
-	textf(rc.x1, rc.y1, rc.width(), string);
-	return height + border * 2;
-}
-
-static int button(int x, int y, const char* string, const runable& ev) {
+static int button(int x, int y, const char* string, const runable& ev, unsigned key = 0) {
 	auto id = ev.getid();
 	auto dx = textw(string);
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
 	addelement(id, rc);
-	if(draw::buttonh(rc, false, getfocus() == ev.getid(), ev.isdisabled(), true, string, 0, false))
+	if(draw::buttonh(rc, false, getfocus() == ev.getid(), ev.isdisabled(), true, string, key, false))
 		ev.execute();
 	return rc.width() + 2;
 }
@@ -348,6 +331,24 @@ static int small_header(int x, int y, int width, const char* title) {
 	return texth() + metrics::padding;
 }
 
+static rect start_group(int& x, int& y, int& width, const char* title) {
+	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+	gradv(rc, colors::border, colors::edit);
+	text(rc, title, AlignCenterCenter);
+	y = rc.y2 + metrics::padding;
+	setposition(x, y, width);
+	return rc;
+}
+
+static rect start_group_nw(int& x, int& y, int width, const char* title) {
+	return start_group(x, y, width, title);
+}
+
+static int close_group(int x, int y, const rect& rc) {
+	rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+	return metrics::padding * 2;
+}
+
 static int group(int x, int y, int width, const char* title, const void* source, unsigned i1, unsigned i2, unsigned size, const anyval& value) {
 	struct cmd : runable {
 		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
@@ -365,8 +366,7 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	if(i1 >= i2)
 		return 0;
 	setposition(x, y, width);
-	setposition(x, y, width);
-	y += small_header(x, y, width, title);
+	auto rc = start_group(x, y, width, title);
 	for(auto i = i1; i <= i2; i++) {
 		auto p = (name_info*)((char*)source + i * size);
 		cmd ev(value, p, i);
@@ -375,7 +375,8 @@ static int group(int x, int y, int width, const char* title, const void* source,
 			flags |= Checked;
 		y += radio(x, y, width, flags, ev, p->name, 0);
 	}
-	return y - y1;
+	y += close_group(x, y, rc);
+	return y - y1 + metrics::padding;
 }
 
 void event_info::edit() {
@@ -404,6 +405,7 @@ struct page_view {
 	constexpr page_view(int page_maximum) : page_current(0), page_maximum(page_maximum) {}
 	virtual const char*	getheader() const { return "Нет названия"; }
 	virtual int	 getmaximum() const { return page_maximum; }
+	virtual const command* getcommands() { return 0; }
 	virtual bool nextpage(bool run) {
 		if(page_current >= getmaximum() - 1)
 			return false;
@@ -435,6 +437,8 @@ struct page_view {
 			render_background();
 			auto y = getheight() - texth() - metrics::padding * 3;
 			auto x = metrics::padding * 2;
+			for(auto pc = getcommands(); pc && *pc; pc++)
+				x += button(x, y, pc->name, cmd(pc->proc, (int)this));
 			x += button(x, y, "Далее", cmd(next_page, (int)this, !nextpage(false)));
 			x += button(x, y, "Назад", cmd(prev_page, (int)this, !prevpage(false)));
 			x += button(x, y, "Отмена", cmd(buttoncancel));
@@ -449,12 +453,13 @@ struct page_view {
 };
 
 struct character_view : page_view {
-	character* player;
+	character*	player;
 	const char* getheader() const {
 		return "Создание персонажа";
 	}
 	void clear() override {
 		player->clear();
+		player->roll_ability();
 	}
 	void generate_page(int x, int y, int width) {
 		const int column_width = 200;
@@ -468,10 +473,58 @@ struct character_view : page_view {
 		y = y1;
 		y += group(x, y, column_width, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), player->alignment);
 	}
+	int fieldv(int x, int y, int title_width, int width, const char* title, int value, int value_maximum) {
+		char temp[260]; zprint(temp, "%1:", title);
+		text(x, y, temp);
+		x += title_width;
+		if(value_maximum)
+			zprint(temp, "%1i/%2i", value, value_maximum);
+		else
+			zprint(temp, "%1i", value);
+		text(x, y, temp);
+		return texth() + 2;
+	}
+	static void reroll_command() {
+		auto p = (character_view*)hot.param;
+		p->player->roll_ability();
+	}
+	virtual const command* getcommands() {
+		static command information_command[] = {{"Перебросить", reroll_command, Alpha+'R'},
+		{}};
+		switch(page_current) {
+		case 1: return information_command;
+		default: return 0;
+		}
+	}
+	void information(int x, int y, int width) {
+		char temp[260];
+		draw::state push;
+		y += texth();
+		text(x, y, getstr(player->gender)); y += texth();
+		text(x, y, getstr(player->alignment)); y += texth();
+		for(unsigned i = 0; i < class_data[player->type].classes.count; i++) {
+			auto e = class_data[player->type].classes.data[i];
+			text(x, y, getstr(e));
+			zprint(temp, "%1i", player->levels[i]);
+			text(x + 100, y, temp);
+			y += texth();
+		}
+		y += metrics::padding;
+		auto rga = start_group_nw(x, y, 160, "Атрибуты");
+		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+			auto v = player->get(i);
+			if(i==Strenght && v==18)
+				y += fieldv(x, y, 100, 120, getstr(i), v, player->strenght_percent);
+			else
+				y += fieldv(x, y, 100, 120, getstr(i), v, 0);
+		}
+		y += metrics::padding;
+		y += close_group(x, y, rga);
+	}
 	void redraw(int x, int y, int width) override {
 		switch(page_current) {
 		case 0: generate_page(x, y, width); break;
-		case 1: break;
+		case 1: information(x, y, width); break;
 		}
 	}
 	constexpr character_view(character* player) : page_view(2), player(player) {}
