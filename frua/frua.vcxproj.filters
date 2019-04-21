@@ -153,6 +153,12 @@
     <ClCompile Include="main_util.cpp">
       <Filter>Утилиты</Filter>
     </ClCompile>
+    <ClCompile Include="map.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="combat.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

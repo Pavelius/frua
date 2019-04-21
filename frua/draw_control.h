@@ -36,7 +36,8 @@ private:
 	int						param;
 	bool					disabled;
 };
-int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips, int key);
+int							button(int x, int y, const char* string, const runable& ev, unsigned key = 0);
+int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);

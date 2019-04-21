@@ -50,6 +50,9 @@ static char wp_melee_attacks[] = {
 static char wp_melee_thac0[] = {
 	0, 0, 1, 3,
 };
+adat<character, 128> character_data;
+adat<character*, 8> party;
+static character* active_player;
 
 void character::clear() {
 	memset(this, 0, sizeof(character));
@@ -101,12 +104,13 @@ void character::apply_class() {
 	}
 }
 
-void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment) {
+void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
 	clear();
 	this->race = race;
 	this->gender = gender;
 	this->type = type;
 	this->alignment = alignment;
+	this->reaction = reaction;
 	roll_ability();
 	apply_race();
 	apply_class();
@@ -201,4 +205,40 @@ void character::get(wear_s id, attack_info& ai) {
 		ai.thac0 -= maptbl(hit_probability, str);
 		ai.damage.b += maptbl(damage_adjustment, str);
 	}
+}
+
+character* character::getactive() {
+	return active_player;
+}
+
+void character::setactive() {
+	active_player = this;
+}
+
+bool character::move(direction_s d) {
+	auto i1 = map::to(getposition(), d);
+	if(i1 == Blocked)
+		return false;
+	setposition(i1);
+	switch(d) {
+	case Left:
+	case Right:
+		direction = d;
+		break;
+	}
+	return true;
+}
+
+int character::getmovement() const {
+	return 12;
+}
+
+bool character::isenemy(const character* p) const {
+	if(this == p)
+		return false;
+	if(reaction == Player || reaction == Friendly)
+		return p->reaction == Hostile;
+	else if(reaction == Hostile)
+		return p->reaction == Player || p->reaction == Friendly;
+	return false;
 }

@@ -8,10 +8,10 @@ using namespace draw;
 const int border = 4;
 const int picture_width = 320;
 const int picture_height = 300;
-const int combat_grid = 32;
 const int title_width = 100;
 const int field_width = 400;
 const int buttons_height = 16 + 8 * 2;
+const int combat_moverate = 3;
 
 struct page_view;
 struct command;
@@ -117,7 +117,7 @@ void view_initialize() {
 	spr_monsters = (sprite*)loadb("art/monsters.pma");
 }
 
-static int button(int x, int y, const char* string, const runable& ev, unsigned key = 0) {
+int draw::button(int x, int y, const char* string, const runable& ev, unsigned key) {
 	auto id = ev.getid();
 	auto dx = textw(string);
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
@@ -335,7 +335,7 @@ static void change_down() {
 static int show_information(int x, int y, int width, const sprite* ps, const sprite::frame* pf) {
 	if(!pf)
 		return 0;
-	auto index = (pf - ps->frames)/2;
+	auto index = (pf - ps->frames) / 2;
 	auto pi = (sprite_name_info*)ps->edata() + index;
 	char temp[2048]; temp[0] = 0;
 	stringcreator sc(temp);
@@ -388,10 +388,10 @@ const picture_info* picture_info::pick_monster() {
 			}
 		}
 		y += picture_height + metrics::padding;
-		rectb({x, y, x + picture_width, y_buttons - metrics::padding*2}, colors::border);
+		rectb({x, y, x + picture_width, y_buttons - metrics::padding * 2}, colors::border);
 		y += metrics::padding;
 		y += show_information(x + metrics::padding, y, picture_width - metrics::padding, spr_monsters, current_frame);
-		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding*2});
+		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
 		x += button(x, y, "Сменить", cmd(change_monster_part), KeySpace);
@@ -612,7 +612,7 @@ struct character_view : page_view {
 		return "Создание персонажа";
 	}
 	void reroll() {
-		player->create(player->race, player->gender, player->type, player->alignment);
+		player->create(player->race, player->gender, player->type, player->alignment, Player);
 	}
 	void clear() override {
 		player->clear();
@@ -638,7 +638,7 @@ struct character_view : page_view {
 		p->reroll();
 	}
 	virtual const command* getcommands() {
-		static command information_command[] = {{"Перебросить", reroll_command, Alpha+'R'},
+		static command information_command[] = {{"Перебросить", reroll_command, Alpha + 'R'},
 		{}};
 		switch(page_current) {
 		case 1: return information_command;
@@ -687,7 +687,7 @@ struct character_view : page_view {
 		auto width = w1 + w2 + metrics::padding * 4;
 		auto old_stroke = fore_stroke;
 		fore_stroke = colors::black;
-		auto rga = start_group(x, y, width, "Павелиус великий", AlignCenterCenter|TextBold);
+		auto rga = start_group(x, y, width, "Павелиус великий", AlignCenterCenter | TextBold);
 		fore_stroke = old_stroke;
 		auto y2 = y;
 		zprint(temp, "%1 %-2", getstr(player->gender), getstr(player->race));
@@ -758,4 +758,122 @@ struct character_view : page_view {
 bool character::generate() {
 	character_view ev(this);
 	return ev.view() != 0;
+}
+
+struct image_info : point {
+	const sprite*			ps;
+	short unsigned			frame, flags;
+	unsigned char			alpha;
+	void clear() { memset(this, 0, sizeof(*this)); }
+};
+static adat<image_info, 1024> battle_images;
+
+static void draw_grid(int x0, int y0) {
+	color c = colors::form;
+	for(auto y = 0; y <= combat_map_y; y++) {
+		auto y1 = y0 + y * combat_grid;
+		auto x2 = x0 + combat_map_x * combat_grid;
+		line(x0, y1, x2, y1, c);
+	}
+	for(auto x = 0; x <= combat_map_x; x++) {
+		auto x1 = x0 + x * combat_grid;
+		auto y2 = x0 + combat_map_y * combat_grid;
+		line(x1, y0, x1, y2, c);
+	}
+}
+
+static void draw_cost(int x0, int y0) {
+	auto old_fore = fore;
+	fore = colors::form;
+	for(auto y = 0; y < combat_map_y; y++) {
+		for(auto x = 0; x < combat_map_x; x++) {
+			auto i = map::m2i(x, y);
+			auto c = map::getcost(i);
+			if(!c)
+				continue;
+			auto x1 = x0 + x * combat_grid + combat_grid / 2;
+			auto y1 = y0 + y * combat_grid + combat_grid / 2;
+			if(c == Blocked) {
+				line(x1 - combat_grid / 2, y1 - combat_grid / 2, x1 + combat_grid / 2, y1 + combat_grid / 2);
+				line(x1 - combat_grid / 2, y1 + combat_grid / 2, x1 + combat_grid / 2, y1 - combat_grid / 2);
+			} else {
+				char temp[16]; zprint(temp, "%1i", c);
+				text(x1 - textw(temp) / 2, y1 - texth() / 2, temp);
+			}
+		}
+	}
+	fore = old_fore;
+}
+
+void character::addbattle() {
+	if(!isalive())
+		return;
+	auto index = getposition();
+	if(index == Blocked)
+		return;
+	auto x = (index%combat_map_x)*combat_grid + combat_grid / 2;
+	auto y = (index / combat_map_y)*combat_grid + combat_grid / 2;
+	auto pi = battle_images.add();
+	pi->frame = getavatar() * 2;
+	pi->flags = 0;
+	pi->alpha = 0xFF;
+	pi->ps = spr_monsters;
+	pi->x = x;
+	pi->y = y;
+	if(direction == Right)
+		pi->flags |= ImageMirrorH;
+}
+
+void combat_info::update() {
+	battle_images.clear();
+	for(auto p : parcipants)
+		p->addbattle();
+}
+
+static combat_info* current_combat;
+
+static void move_direction() {
+	auto d = (direction_s)hot.param;
+	auto p = character::getactive();
+	if(!p)
+		return;
+	p->move(d);
+	current_combat->movement -= combat_moverate;
+}
+
+static void set_defend() {
+	auto p = character::getactive();
+	if(!p)
+		return;
+	current_combat->movement = 0;
+}
+
+void combat_info::move(character* player) {
+	current_combat = this;
+	player->setactive();
+	setfocus(0, true);
+	auto y_buttons = getheight() - buttons_height;
+	movement = player->getmovement();
+	makewave(player->getposition());
+	while(ismodal() && movement > 0) {
+		render_background();
+		auto x = metrics::padding, y = metrics::padding;
+		// Нарисуем все объекты, которые просчитали ранее
+		update();
+		draw_grid(x, y);
+		draw_cost(x, y);
+		for(auto& e : battle_images)
+			image(x + e.x, y + e.y, e.ps, e.frame, e.flags, e.alpha);
+		y = y_buttons;
+		x += button(x, y, "Атаковать", cmd(buttonok), Alpha + 'A');
+		x += button(x, y, "Стрелять", cmd(buttonok), Alpha + 'S');
+		x += button(x, y, "Метать", cmd(buttonok), Alpha + 'T');
+		x += button(x, y, "Заклинание", cmd(buttonok), Alpha + 'C');
+		x += button(x, y, "Вверх", cmd(move_direction, Up), KeyUp);
+		x += button(x, y, "Вниз", cmd(move_direction, Down), KeyDown);
+		x += button(x, y, "Вправо", cmd(move_direction, Right), KeyRight);
+		x += button(x, y, "Влево", cmd(move_direction, Left), KeyLeft);
+		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
+		domodal();
+	}
 }

@@ -1,11 +1,24 @@
 #include "draw.h"
 #include "main.h"
 
+static void add_position(aref<character*> source) {
+	for(auto p : source)
+		p->setposition(map::random());
+}
+
 int	main(int argc, char *argv[]) {
 	draw::initialize();
-	picture_info::pick_monster();
-	//character c1;
-	//c1.generate();
+	character_data.add()->create(Human, Male, Paladin, LawfulGood, Player);
+	character_data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
+	party.add(character_data.data + 0);
+	party.add(character_data.data + 1);
+	add_position(party);
+	combat_info ci;
+	ci.add(Elf, Female, FighterTheif);
+	ci.add(Elf, Male, Fighter);
+	ci.addenemies();
+	ci.addparty();
+	ci.play();
 	return 0;
 }
 

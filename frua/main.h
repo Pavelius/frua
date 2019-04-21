@@ -7,6 +7,12 @@
 
 #pragma once
 
+const short unsigned Blocked = 0xFFFF;
+const short unsigned DefaultCost = 0xFFFE;
+const int combat_grid = 32;
+const int combat_map_x = 16;
+const int combat_map_y = 16;
+
 enum item_s : unsigned char {
 	NoItem,
 	Axe, BattleAxe, Mace, MorningStar, Hammer,
@@ -170,6 +176,9 @@ enum magic_power_s : unsigned char {
 enum gender_s : unsigned char {
 	Male, Female,
 };
+enum direction_s : unsigned char {
+	Up, Right, Down, Left,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -185,6 +194,7 @@ const unsigned RYear = 12 * 30 * RDay;
 
 struct character;
 struct item;
+struct sprite;
 
 typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
@@ -302,32 +312,50 @@ struct treasure {
 };
 struct character {
 	operator bool() const { return name != 0; }
+	void					addbattle();
 	void					clear();
-	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment);
+	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
+	void					battle();
 	bool					generate();
 	void					get(wear_s id, attack_info& ai);
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
 	int						getac() const;
+	static character*		getactive();
+	int						getavatar() const { return avatar; }
 	int						gethpmax() const;
+	int						getmovement() const;
 	int						getstrex() const;
+	short unsigned			getposition() const { return index; }
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
+	bool					isalive() const { return hp>0; }
 	bool					isallow(alignment_s v) const;
+	bool					isenemy(const character* p) const;
+	bool					isplayable() const { return reaction==Player; }
+	bool					move(direction_s d);
 	static answer*			choose(const picture_info& image, aref<answer> source);
 	void					raise(class_s v);
+	void					setactive();
+	void					setavatar(int v) { avatar = v; }
+	void					setposition(short unsigned v) { index = v; }
+	static void				update_battle();
 private:
 	gender_s				gender;
 	alignment_s				alignment;
 	class_s					type;
 	race_s					race;
 	monster_s				monster;
+	reaction_s				reaction;
+	direction_s				direction;
 	char					abilities[Charisma + 1];
 	short					hp, hp_rolled;
 	char					initiative;
 	unsigned				feats;
 	char					strenght_percent;
 	short unsigned			name;
+	short unsigned			index;
+	short unsigned			avatar;
 	char					levels[3];
 	item					wears[Legs + 1];
 	unsigned				coopers;
@@ -338,8 +366,33 @@ private:
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
+struct combat_info {
+	int						round;
+	int						movement;
+	adat<character, 32>		enemies;
+	adat<character*, 64>	parcipants;
+	constexpr combat_info() : round(1), movement(0), enemies(), parcipants() {}
+	character*				add(race_s race, gender_s gender, class_s type, int level = 1, reaction_s reaction = Hostile);
+	void					addenemies();
+	void					addparty();
+	bool					isenemy() const;
+	void					makewave(short unsigned index);
+	void					move(character* player);
+	void					play();
+	void					playround();
+	void					setblock();
+	void					update();
+};
+namespace map {
+short unsigned				getcost(short unsigned index);
+void						makewave(short unsigned start_index);
+short unsigned				m2i(int x, int y);
+short unsigned				random();
+void						setblock();
+short unsigned				to(short unsigned i, direction_s d);
+}
 extern alignment_info		alignment_data[];
-extern adat<character, 128> characters;
+extern adat<character, 128> character_data;
 extern class_info			class_data[];
 extern gender_info			gender_data[];
 extern adat<character*, 8>	party;

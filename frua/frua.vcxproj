@@ -127,6 +127,7 @@
     <ClCompile Include="class.cpp" />
     <ClCompile Include="collection.cpp" />
     <ClCompile Include="color.cpp" />
+    <ClCompile Include="combat.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="dice.cpp" />
@@ -147,6 +148,7 @@
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_util.cpp" />
+    <ClCompile Include="map.cpp" />
     <ClCompile Include="picture.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
