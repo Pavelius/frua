@@ -45,6 +45,7 @@ struct agrw {
 	T*						begin() { return data; }
 	const T*				begin() const { return data; }
 	void					clear() { auto p = this; while(p) { p->count = 0; p = p->next; } }
+	int						indexof(const T* e) const { if(e >= data && e < data + count) return e - data; return -1; }
 	const T*				end() const { return data + count; }
 };
 // Reference to array with dymanic size

@@ -212,6 +212,9 @@ struct gender_info {
 	const char*				id;
 	const char*				name;
 };
+struct sprite_name_info {
+	char					name[16];
+};
 struct picture_info {
 	const char*				folder;
 	const char*				id;

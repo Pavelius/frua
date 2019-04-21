@@ -223,8 +223,11 @@ void color::convert(void* output, int width, int height, int output_bpp, const v
 	auto abs_output_bpp = iabs(output_bpp);
 	auto abs_input_bpp = iabs(input_bpp);
 	if(abs_output_bpp > abs_input_bpp && input==output) {
+		// При перекодировании результат займет больше места, чем вход
+		// Поэтому выделим дополнительную память
 		input_static = input;
 		input = new char[isc*height];
+		memcpy((char*)input, input_static, isc*height);
 	}
 	unsigned char* ip = (unsigned char*)input;
 	unsigned char* op = (unsigned char*)output;
