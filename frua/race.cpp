@@ -6,7 +6,7 @@ race_info race_data[] = {{"Human", "Человек", {3, 3, 3, 3, 3, 3}, {18, 18, 18, 1
 //
 {"Dwarf", "Карлик", {8, 3, 12, 3, 3, 3}, {18, 17, 18, 18, 18, 17}, {0, 0, 1, 0, 0, -1},
 {0, 10, 15, 0, 0, 0, -10, -5},
-{Darkvision, BonusSaveVsPoison, BonusSaveVsSpells, BonusSaveVsWands, DwarfCombatTactic, DetectUndegroundPassages},
+{Darkvision, BonusSaveVsPoison, BonusSaveVsSpells, BonusSaveVsWands, BonusToHitOrcs, SmallSizeCombatAdvantage, DetectUndegroundPassages},
 "Карлики - это невысокие, коренастые существа, которых легко отличить по их размеру и внешнему виду. Их рост составляет примерно 120-140 см. У них румяные щеки, темные глаза и темные волосы. Карлики в основном живут 350 лет."},
 //
 {"Elf", "Эльф", {3, 6, 7, 8, 3, 8}, {18, 18, 18, 18, 18, 18}, {0, 1, -1, 0, 0, 0},
@@ -16,7 +16,7 @@ race_info race_data[] = {{"Human", "Человек", {3, 3, 3, 3, 3, 3}, {18, 18, 18, 1
 //
 {"Gnome", "Гном", {6, 3, 8, 6, 3, 3}, {18, 18, 18, 18, 18, 18}, {0, 0, 0, 1, -1, 0},
 {0, 5, 10, 5, 5, 10, -15, 0},
-{BonusSaveVsSpells, BonusSaveVsWands, DwarfCombatTactic, DetectUndegroundPassages},
+{BonusSaveVsSpells, BonusSaveVsWands, BonusToHitOrcs, SmallSizeCombatAdvantage, DetectUndegroundPassages},
 "Находясь в родстве с карликами, гномы заметно меньше ростом, чем их дальние родственники. Также, как гномы гордо утверждают, они менее толстые, чем карлики. Однако их носы значительно больше. У большинства гномов темная желтовато-коричневая или коричневая кожа и белые волосы. Типичный гном живет 350 лет."},
 //
 {"Halfelf", "Полу-эльф", {3, 6, 6, 4, 3, 3}, {18, 18, 18, 18, 18, 18}, {0, 0, 0, 0, 0, 0},

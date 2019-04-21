@@ -83,13 +83,13 @@ void character::apply_race() {
 			abilities[i] = race_data[race].minimum[i];
 		if(abilities[i] > race_data[race].maximum[i])
 			abilities[i] = race_data[race].maximum[i];
+		abilities[i] += race_data[race].adjustment[i];
 	}
 }
 
 void character::apply_class() {
 	// ѕрименим нужные особенности
-	for(auto e : class_data[type].classes)
-		feats |= class_data[e].feats.data;
+	feats |= class_data[type].feats.data;
 	// ѕриведем в пор€док минимальные и максимальные атрибуты
 	for(auto e : class_data[type].classes) {
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -193,9 +193,9 @@ int	character::gethpmax() const {
 }
 
 void character::get(wear_s id, attack_info& ai) {
+	ai.attacks = 2;
 	ai.thac0 = 20;
 	ai.damage = dice::create(1, 2);
-	ai.attacks_per_two_rounds = 2;
 	if(id == MeleeWeapon || id == OffhandWeapon) {
 		auto str = getstrex();
 		ai.thac0 -= maptbl(hit_probability, str);

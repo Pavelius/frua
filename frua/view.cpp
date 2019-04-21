@@ -316,7 +316,10 @@ static int fieldv(int x, int y, int width, const char* title, const char* value)
 	x += metrics::padding;
 	width -= metrics::padding * 2;
 	text(x, y, temp);
+	auto old_fore = fore;
+	fore = fore.mix(colors::form, 192);
 	text(x + width - textw(value), y, value);
+	fore = old_fore;
 	return texth() + 2;
 }
 
@@ -355,10 +358,10 @@ static int small_header(int x, int y, int width, const char* title) {
 	return texth() + metrics::padding;
 }
 
-static rect start_group(int x, int& y, int width, const char* title) {
+static rect start_group(int x, int& y, int width, const char* title, unsigned flags = AlignCenterCenter) {
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 	gradv(rc, colors::border, colors::edit);
-	text(rc, title, AlignCenterCenter);
+	text(rc, title, flags);
 	y = rc.y2 + metrics::padding * 2;
 	return rc;
 }
@@ -512,52 +515,106 @@ struct character_view : page_view {
 		default: return 0;
 		}
 	}
-	void information(int x, int y, int width) {
-		char temp[260];
-		attack_info ai = {}; player->get(MeleeWeapon, ai);
-		draw::state push;
-		x += metrics::padding;
-		width -= metrics::padding;
-		y += texth();
-		auto wd1 = 160;
-		text(x, y, getstr(player->gender)); y += texth();
-		text(x, y, getstr(player->alignment)); y += texth();
-		for(unsigned i = 0; i < class_data[player->type].classes.count; i++) {
-			auto e = class_data[player->type].classes.data[i];
-			text(x, y, getstr(e));
-			zprint(temp, "%1i", player->levels[i]);
-			text(x + wd1 - textw(temp), y, temp);
-			y += texth();
+	char* show_attacks(char* result, const char* result_maximum, const attack_info& ai) {
+		auto format = "%1i/2";
+		auto value = ai.attacks;
+		if((value & 1) == 0) {
+			value /= 2;
+			format = "%1i";
 		}
-		y += metrics::padding;
+		return szprint(result, result_maximum, format, value);
+	}
+	int group_ability(int x, int y, int width) {
 		auto y1 = y;
-		auto rga = start_group(x, y, wd1, "Атрибуты");
+		auto rga = start_group(x, y, width, "Атрибуты");
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 			auto v = player->get(i);
-			if(i==Strenght && v==18)
-				y += fieldv(x, y, wd1, getstr(i), v, player->strenght_percent, "%1i/%2.2i");
+			if(i == Strenght && v == 18)
+				y += fieldv(x, y, width, getstr(i), v, player->strenght_percent, "%1i/%2.2i");
 			else
-				y += fieldv(x, y, wd1, getstr(i), v);
+				y += fieldv(x, y, width, getstr(i), v);
 		}
 		y += metrics::padding;
-		y += close_group(x, y, rga) + metrics::padding;
-		rga = start_group(x, y, wd1, "Боевые параметры");
-		y += fieldv(x, y, wd1, "Класс брони", player->getac());
-		y += fieldv(x, y, wd1, "THAC0", ai.thac0);
-		y += fieldv(x, y, wd1, "Урон", ai.damage.print(temp, zendof(temp)));
-		y += fieldv(x, y, wd1, "Хиты", player->hp, player->gethpmax());
 		y += close_group(x, y, rga);
-		y = y1;
-		x += wd1 + metrics::padding * 4;
-		auto wd2 = 250;
-		rga = start_group(x, y, wd2, "Навыки");
+		return y - y1;
+	}
+	int group_combat_ability(int x, int y, int width) {
+		char temp[260];
+		attack_info ai = {}; player->get(MeleeWeapon, ai);
+		auto y1 = y;
+		auto rga = start_group(x, y, width, "Боевые параметры");
+		y += fieldv(x, y, width, "Количество атак", show_attacks(temp, zendof(temp), ai));
+		y += fieldv(x, y, width, "THAC0", ai.thac0);
+		y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
+		y += fieldv(x, y, width, "Класс брони", player->getac());
+		y += fieldv(x, y, width, "Хиты", player->hp, player->gethpmax());
+		y += close_group(x, y, rga);
+		return y - y1;
+	}
+	int group_basic(int x, int y, int w1, int w2) {
+		char temp[260];
+		auto y1 = y;
+		auto width = w1 + w2 + metrics::padding * 4;
+		auto old_stroke = fore_stroke;
+		fore_stroke = colors::black;
+		auto rga = start_group(x, y, width, "Павелиус великий", AlignCenterCenter|TextBold);
+		fore_stroke = old_stroke;
+		auto y2 = y;
+		zprint(temp, "%1 %-2", getstr(player->gender), getstr(player->race));
+		text(x, y, temp); y += texth();
+		text(x, y, getstr(player->alignment)); y += texth();
+		y = y2;
+		auto x1 = x + w1 + metrics::padding * 4;
+		auto class_count = class_data[player->type].classes.count;
+		if(!class_count)
+			class_count = 1;
+		for(unsigned i = 0; i < class_data[player->type].classes.count; i++) {
+			auto e = class_data[player->type].classes.data[i];
+			text(x1, y, getstr(e));
+			auto exp = player->experience / class_count;
+			zprint(temp, "%1i уровень (опыт %2i)", player->levels[i], exp);
+			text(x1 + w2 - textw(temp), y, temp);
+			y += texth();
+		}
+		y2 += texth() * 3;
+		y2 += close_group(x, y2, rga);
+		return y2 - y1;
+	}
+	int group_skills(int x, int y, int width) {
+		auto y1 = y;
+		auto rga = start_group(x, y, width, "Навыки");
 		for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
 			auto v = player->get(i);
-			if(v<=0)
+			if(v <= 0)
 				continue;
-			y += fieldp(x, y, wd2, getstr(i), v);
+			y += fieldp(x, y, width, getstr(i), v);
 		}
-		y += close_group(x, y, rga) + metrics::padding;
+		y += close_group(x, y, rga);
+		return y - y1;
+	}
+	void information(int x, int y, int width) {
+		x += metrics::padding;
+		width -= metrics::padding;
+		auto w1 = 160;
+		auto w2 = 250;
+		auto y1 = y;
+		y += group_basic(x, y, w1, w2) + metrics::padding;
+		auto y2 = y;
+		y += group_ability(x, y, w1) + metrics::padding;
+		y += group_combat_ability(x, y, w1) + metrics::padding;
+		y = y2;
+		x += w1 + metrics::padding * 4;
+		y += group_skills(x, y, w2) + metrics::padding;
+	}
+	bool nextpage(bool run) override {
+		if(!page_view::nextpage(run))
+			return false;
+		if(run) {
+			switch(page_current) {
+			case 1: reroll(); break;
+			}
+		}
+		return true;
 	}
 	void redraw(int x, int y, int width) override {
 		switch(page_current) {

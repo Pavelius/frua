@@ -22,6 +22,7 @@ struct skill_info {
 {"ClimbWalls", "Лазить по стенам", {Theif}},
 {"ReadLanguages", "Читать на всех языках", {Theif}},
 //
+{"SystemShockSurvival", "Выживание после шока"},
 {"LearnSpell", "Шанс выучить заклинание", {Mage}},
 {"OpenDoors", "Открывать двери"},
 {"LiftGate", "Поднимать ворота"},
@@ -108,6 +109,10 @@ static char chance_learn_spells[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 35,
 	40, 45, 50, 55, 60, 65, 70, 75, 85, 95,
 	96, 97, 98, 99, 100
+};
+static char system_shock_survival[] = {
+	30, 30, 30, 35, 40, 45, 50, 55, 60, 65,
+	70, 75, 80, 85, 88, 91, 95, 97, 99
 };
 
 static int get_save_group(class_s value) {
@@ -199,10 +204,12 @@ int	character::get(skill_s id) const {
 			return 0;
 		auto str = getstrex();
 		auto ins = get(Intellegence);
+		auto con = get(Constitution);
 		switch(id) {
 		case OpenDoor: result = maptbl(open_doors, str); break;
 		case LiftGate: result = maptbl(bend_bars, str); break;
 		case LearnSpell: result = maptbl(chance_learn_spells, ins); break;
+		case SystemShockSurvival: result = maptbl(system_shock_survival, con); break;
 		}
 	}
 	return result;

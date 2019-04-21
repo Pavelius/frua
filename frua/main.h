@@ -57,7 +57,7 @@ enum skill_s : unsigned char {
 	FirstSave = SaveVsParalization, LastSave = SaveVsSpells,
 	//
 	PickPockets, OpenLocks, FindRemoveTraps, MoveSilently, HideInShadows, DetectNoise, ClimbWalls, ReadLanguages,
-	LearnSpell, OpenDoor, LiftGate,
+	SystemShockSurvival, LearnSpell, OpenDoor, LiftGate,
 	LastSkill = LiftGate
 };
 enum god_s : unsigned char {
@@ -108,8 +108,9 @@ enum feat_s : unsigned char {
 	Darkvision,
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells, BonusHits,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
-	ElfWeaponTraining, DwarfCombatTactic, SmallSizeCombatAdvantage, LightSteps,
-	HolyGrace, NoExeptionalStrenght,
+	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
+	HolyGrace, ExeptionalStrenght, NoExeptionalStrenght,
+	UseLeatherArmor, UseMetalArmor, UseShield,
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
@@ -182,6 +183,7 @@ const unsigned RMonth = 30 * RDay;
 const unsigned RYear = 12 * 30 * RDay;
 
 struct character;
+struct item;
 
 typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
@@ -250,11 +252,10 @@ struct damage_info {
 	dice					damage;
 };
 struct attack_info : damage_info {
+	char					attacks; // per two rounds
 	char					thac0;
-	char					attacks_per_two_rounds;
-	char					critical;
-	char					multiplier;
-	struct item*			weapon;
+	char					critical, multiplier;
+	item*					weapon;
 };
 struct itemweight {
 	item_s					key;
