@@ -48,7 +48,7 @@ artifacts/
 *_i.c
 *_p.c
 *_i.h
-*_util.coo
+*_util.cpp
 *.ilk
 *.meta
 *.obj

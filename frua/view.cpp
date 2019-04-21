@@ -24,10 +24,6 @@ static const char*				file_monster_exclude[] = {0};
 static const sprite*			spr_monsters;
 typedef adat<const char*, 256>	strings_array;
 
-int sprite_store(sprite* ps, const unsigned char* p, int width, int w, int h, int ox, int oy, sprite::encodes mode, unsigned char shadow_index, color* original_pallette, int explicit_frame, unsigned char transparent_index);
-void sprite_create(sprite* p, int count, int cicles = 0, int additional_bytes = 0);
-void sprite_write(const sprite* p, const char* url);
-
 static void set_command_value() {
 	command_value = (const int)hot.param;
 }
@@ -76,7 +72,7 @@ struct main_picture_info : surface, picture_info {
 } picture;
 
 struct string_view : controls::list {
-	strings_array& source;
+	aref<const char*> source;
 	int getmaximum() const override {
 		return source.count;
 	}
@@ -92,7 +88,7 @@ struct string_view : controls::list {
 			return 0;
 		return source.data[current];
 	}
-	constexpr string_view(strings_array& source) : source(source) {}
+	constexpr string_view(const aref<const char*>& source) : source(source) {}
 };
 
 struct cmdv : runable {
@@ -108,7 +104,9 @@ private:
 	int						param;
 };
 
-void view_initialize() {}
+void view_initialize() {
+	spr_monsters = (sprite*)loadb("art/monsters.pma");
+}
 
 static int button(int x, int y, const char* string, const runable& ev, unsigned key = 0) {
 	auto id = ev.getid();
@@ -194,79 +192,6 @@ static void make_cash(strings_array& result, const agrw<picture_info>& source) {
 			*pp = v;
 		}
 	}
-}
-
-static void make_monsters_cash(agrw<picture_info>& source) {
-	char temp[260];
-	for(auto file = io::file::find("art/monsters"); file; file.next()) {
-		auto pn = file.name();
-		if(pn[0] == '.')
-			continue;
-		auto ext = szext(pn);
-		if(!ext)
-			continue;
-		if(!szpmatch(pn, "*_1.*"))
-			continue;
-		auto pi = source.add();
-		szfnamewe(temp, pn); temp[zlen(temp) - 2] = 0;
-		memset(pi, 0, sizeof(pi));
-		pi->folder = "monsters";
-		pi->id = szdup(temp);
-	}
-}
-
-static const sprite* create_monsters() {
-	color tc = color::create(248, 0, 248);
-	color tt = color::create(0, 0, 0);
-	color t1 = color::create(0, 0, 0);
-	tc.a = 255;
-	tt.a = 255;
-	t1.a = 128;
-	auto maximum = file_monster_data.count;
-	sprite* ps = (sprite*)new char[128 * 128 * 4 * 2 * file_monster_data.count];
-	sprite_create(ps, maximum * 2, 0, sizeof(sprite_name_info) * maximum);
-	for(unsigned index = 0; index < maximum; index++) {
-		char temp[260];
-		for(int part = 1; part <= 2; part++) {
-			surface bm(file_monster_data.data[index].geturl(temp, part));
-			if(!bm) {
-				delete ps;
-				return 0;
-			}
-			// Найдем прозрачные пиксели и заменим их на прозрачный черный;
-			rect rc = {bm.width, bm.height, 0, 0};
-			for(int y = 0; y < bm.height; y++) {
-				for(int x = 0; x < bm.width; x++) {
-					auto pc = (color*)((char*)bm.bits + x * sizeof(color) + y * bm.scanline);
-					if(*pc == tc) {
-						if(x < rc.x1)
-							rc.x1 = x;
-						if(y < rc.y1)
-							rc.y1 = y;
-						if(x > rc.x2)
-							rc.x2 = x;
-						if(y > rc.y2)
-							rc.y2 = y;
-						*pc = t1;
-					} else if(*pc==tt)
-						pc->a = 0;
-				}
-			}
-			auto x = rc.x1 + rc.width() / 2;
-			auto y = rc.y1 + rc.height() / 2;
-			if(rc.y2 == 0 && rc.x2 == 0) {
-				x = rc.width();
-				y = rc.height() - 2;
-			}
-			sprite_store(ps, bm.bits, bm.scanline, bm.width, bm.height, x, y,
-				sprite::Auto, 0, 0, index*2 + part - 1, 0);
-		}
-	}
-	auto pd = (sprite_name_info*)(ps->frames + ps->count);
-	for(unsigned index = 0; index < maximum; index++) {
-		szprint(pd->name, zendof(pd->name), file_monster_data.data[index].id);
-	}
-	return ps;
 }
 
 static void header(int x, int y, const char* title, const char* text) {
@@ -381,72 +306,45 @@ static void change_monster_part() {
 
 const picture_info* picture_info::pick_monster() {
 	struct string_view : controls::list {
-		const aref<picture_info>& source;
+		aref<sprite_name_info> source;
 		int getmaximum() const override {
 			return source.count;
 		}
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
 			if(source.data) {
-				switch(column) {
-				case 0: return source.data[line].id;
-				case 1: return source.data[line].folder;
-				default: return "";
-				}
+				if(column == 0)
+					return source.data[line].name;
 			}
 			return "";
 		}
-		const picture_info* getcurrent() const {
-			if(source.count == 0)
-				return 0;
-			return source.data + current;
-		}
-		constexpr string_view(const aref<picture_info>& source) : source(source) {}
+		constexpr string_view(const aref<sprite_name_info>& source) : source(source) {}
 	};
-	if(!file_data) {
-		make_monsters_cash(file_monster_data);
-		spr_monsters = create_monsters();
-		if(spr_monsters)
-			sprite_write(spr_monsters, "art/monsters.pma");
-	}
-	string_view s1(aref<picture_info>(file_monster_data.data, file_monster_data.count));
+	if(!spr_monsters)
+		return 0;
+	unsigned index_maximum = spr_monsters->count / 2;
+	string_view s1(aref<sprite_name_info>((sprite_name_info*)spr_monsters->edata(), index_maximum));
 	int y_buttons = getheight() - buttons_height;
 	setfocus(0, true);
-	const picture_info* current_picture = 0;
 	while(ismodal()) {
 		render_background();
 		auto x = metrics::padding, y = metrics::padding;
-		current_picture = s1.getcurrent();
-		if(current_picture) {
-			if(spr_monsters) {
-				auto index = file_monster_data.indexof(current_picture);
-				auto x1 = x + picture_width / 2;
-				auto y1 = y + picture_height / 2;
-				rectb({x1 - combat_grid / 2, y1 - combat_grid / 2, x1 + combat_grid / 2, y1 + combat_grid / 2}, colors::white);
-				if(index != -1)
-					image(x1, y1, spr_monsters, index * 2 + monster_part, 0);
-			} else {
-				picture.load(current_picture->folder, current_picture->id, 1);
-				rect rc = {x, y, x + picture_width, y + picture_height};
-				if(true) {
-					draw::state push;
-					setclip(rc);
-					auto w = imin(picture_width, picture.width);
-					auto h = imin(picture_height, picture.height);
-					blit(*canvas, x, y, w, h, 0,
-						picture, current_picture->position.x, current_picture->position.y);
-				}
-				rectb(rc, colors::border);
-			}
+		auto index = s1.current;
+		if(spr_monsters) {
+			auto x1 = x + picture_width / 2;
+			auto y1 = y + picture_height / 2;
+			rectb({x1 - combat_grid / 2, y1 - combat_grid / 2, x1 + combat_grid / 2, y1 + combat_grid / 2}, colors::white);
+			if(index != -1)
+				image(x1, y1, spr_monsters, index * 2 + monster_part, 0);
 		}
 		y += picture_height + metrics::padding;
-		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding});
+		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding*2});
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));
 		x += button(x, y, "Сменить", cmd(change_monster_part), Alpha + 'C');
 		x += button(x, y, "Отмена", cmd(buttoncancel));
 		domodal();
 	}
-	return getresult() ? current_picture : 0;
+	return 0;
 }
 
 static void render_title(int x, int y, int width, char* temp, const char* temp_end, const char* title) {

@@ -146,11 +146,13 @@
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="main_util.cpp" />
     <ClCompile Include="picture.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="race.cpp" />
     <ClCompile Include="skill.cpp" />
+    <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
     <ClCompile Include="string_value.cpp" />
     <ClCompile Include="surface_serial.cpp" />

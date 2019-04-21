@@ -16,6 +16,9 @@
     <Filter Include="Коллекция">
       <UniqueIdentifier>{aecc7538-d01c-47b5-b792-99cf89d6dc23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Утилиты">
+      <UniqueIdentifier>{422f50ab-a9ba-4fe9-a4e6-3240ff644b6a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="draw.cpp">
@@ -143,6 +146,12 @@
     </ClCompile>
     <ClCompile Include="dice.cpp">
       <Filter>Поддержка</Filter>
+    </ClCompile>
+    <ClCompile Include="sprite_util.cpp">
+      <Filter>Утилиты</Filter>
+    </ClCompile>
+    <ClCompile Include="main_util.cpp">
+      <Filter>Утилиты</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
