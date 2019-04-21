@@ -40,22 +40,27 @@ static short unsigned map_block[combat_map_x*combat_map_x];
 
 void map::makewave(short unsigned start_index) {
 	static direction_s directions[] = {Left, Right, Up, Down};
-	short unsigned stack[256 * 256];
-	short unsigned push_counter = 0;
-	short unsigned pop_counter = 0;
+	short unsigned stack[256 * 64];
+	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
+	auto push_counter = stack;
+	auto pop_counter = stack;
 	map_block[start_index] = 0;
-	stack[push_counter++] = start_index;
+	*push_counter++ = start_index;
 	while(pop_counter != push_counter) {
-		auto index = stack[pop_counter++];
+		auto index = *pop_counter++;
+		if(pop_counter >= stack_end)
+			pop_counter = stack;
 		auto cost = map_block[index] + 1;
 		for(auto d : directions) {
 			auto i1 = map::to(index, d);
 			if(i1 == Blocked || map_block[i1] == Blocked)
 				continue;
-			if(map_block[i1] < cost)
+			if(map_block[i1] <= cost)
 				continue;
 			map_block[i1] = cost;
-			stack[push_counter++] = i1;
+			*push_counter++ = i1;
+			if(push_counter >= stack_end)
+				push_counter = stack;
 		}
 	}
 }
