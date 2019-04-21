@@ -99,6 +99,9 @@ struct list : control {
 	virtual bool			treemarking(bool run) { return true; }
 	void					view(const rect& rc) override;
 };
+struct listh : list {
+	void					view(const rect& rc) override;
+};
 struct column {
 	unsigned				flags;
 	const char*				id;

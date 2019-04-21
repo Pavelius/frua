@@ -3,6 +3,7 @@
 #include "crt.h"
 #include "dice.h"
 #include "point.h"
+#include "stringcreator.h"
 
 #pragma once
 
@@ -213,7 +214,7 @@ struct gender_info {
 	const char*				name;
 };
 struct sprite_name_info {
-	char					name[16];
+	char					name[32];
 };
 struct picture_info {
 	const char*				folder;

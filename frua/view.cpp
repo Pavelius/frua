@@ -104,6 +104,15 @@ private:
 	int						param;
 };
 
+static void sprite_write(const sprite* p, const char* url) {
+	io::file file(url, StreamWrite);
+	if(!file)
+		return;
+	file.write(p, p->size);
+	pma trail = {0};
+	file.write(&trail, sizeof(trail));
+}
+
 void view_initialize() {
 	spr_monsters = (sprite*)loadb("art/monsters.pma");
 }
@@ -304,6 +313,43 @@ static void change_monster_part() {
 		monster_part++;
 }
 
+static void change_position(sprite::frame* frame, int ox, int oy) {
+	if(!frame)
+		return;
+	frame->ox += ox;
+	frame->oy += oy;
+}
+static void change_left() {
+	change_position((sprite::frame*)hot.param, 1, 0);
+}
+static void change_right() {
+	change_position((sprite::frame*)hot.param, -1, 0);
+}
+static void change_up() {
+	change_position((sprite::frame*)hot.param, 0, 1);
+}
+static void change_down() {
+	change_position((sprite::frame*)hot.param, 0, -1);
+}
+
+static int show_information(int x, int y, int width, const sprite* ps, const sprite::frame* pf) {
+	if(!pf)
+		return 0;
+	auto index = (pf - ps->frames)/2;
+	auto pi = (sprite_name_info*)ps->edata() + index;
+	char temp[2048]; temp[0] = 0;
+	stringcreator sc(temp);
+	sc.add("#%1", pi->name);
+	sc.addn("Ширина [%1i], высота [%2i]", pf->sx, pf->sy);
+	sc.addn("Сдвиг влево [%1i], вправо [%2i]", pf->ox, pf->oy);
+	return textf(x, y, width, temp) + metrics::padding;
+}
+
+static void save_monsters() {
+	auto ps = (const sprite*)hot.param;
+	sprite_write(ps, "art/monsters.pma");
+}
+
 const picture_info* picture_info::pick_monster() {
 	struct string_view : controls::list {
 		aref<sprite_name_info> source;
@@ -329,19 +375,32 @@ const picture_info* picture_info::pick_monster() {
 		render_background();
 		auto x = metrics::padding, y = metrics::padding;
 		auto index = s1.current;
+		sprite::frame* current_frame = 0;
 		if(spr_monsters) {
+			rectb({x, y, x + picture_width, y + picture_height}, colors::border);
 			auto x1 = x + picture_width / 2;
 			auto y1 = y + picture_height / 2;
 			rectb({x1 - combat_grid / 2, y1 - combat_grid / 2, x1 + combat_grid / 2, y1 + combat_grid / 2}, colors::white);
-			if(index != -1)
-				image(x1, y1, spr_monsters, index * 2 + monster_part, 0);
+			if(index != -1) {
+				auto frame = index * 2 + monster_part;
+				image(x1, y1, spr_monsters, frame, 0);
+				current_frame = (sprite::frame*)spr_monsters->frames + frame;
+			}
 		}
 		y += picture_height + metrics::padding;
+		rectb({x, y, x + picture_width, y_buttons - metrics::padding*2}, colors::border);
+		y += metrics::padding;
+		y += show_information(x + metrics::padding, y, picture_width - metrics::padding, spr_monsters, current_frame);
 		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding*2});
 		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(buttonok));
-		x += button(x, y, "Сменить", cmd(change_monster_part), Alpha + 'C');
-		x += button(x, y, "Отмена", cmd(buttoncancel));
+		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Сменить", cmd(change_monster_part), KeySpace);
+		x += button(x, y, "Вверх", cmd(change_up, (int)current_frame), Ctrl + KeyUp);
+		x += button(x, y, "Вниз", cmd(change_down, (int)current_frame), Ctrl + KeyDown);
+		x += button(x, y, "Вправо", cmd(change_right, (int)current_frame), Ctrl + KeyRight);
+		x += button(x, y, "Влево", cmd(change_left, (int)current_frame), Ctrl + KeyLeft);
+		x += button(x, y, "Сохранить", cmd(save_monsters, (int)spr_monsters), Ctrl + Alpha + 'S');
+		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 		domodal();
 	}
 	return 0;
