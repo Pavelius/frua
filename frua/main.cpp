@@ -4,8 +4,9 @@
 int	main(int argc, char *argv[]) {
 	answer source[] = {{0, "Персонаж"}, {0, "Магия"}, {0, "Отменить"}};
 	draw::initialize();
-	character c1;
-	c1.generate();
+	picture_info::pick_monster();
+	//character c1;
+	//c1.generate();
 	return 0;
 }
 

@@ -221,7 +221,9 @@ struct picture_info {
 	explicit constexpr operator bool() const { return id != 0; }
 	bool operator==(const picture_info& e) const;
 	bool					pick();
+	static const picture_info* pick_monster();
 	const char*				geturl(char* temp) const;
+	const char*				geturl(char* temp, int part) const;
 };
 struct class_info {
 	const char*				id;

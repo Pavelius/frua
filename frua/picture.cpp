@@ -5,5 +5,9 @@ bool picture_info::operator==(const picture_info& e) const {
 }
 
 const char* picture_info::geturl(char* temp) const {
-	return szprint(temp, temp + 260, "%1/%2.png", folder, id);
+	return szprint(temp, temp + 260, "art/%1/%2.png", folder, id);
+}
+
+const char* picture_info::geturl(char* temp, int part) const {
+	return szprint(temp, temp + 260, "art/%1/%2_%3i.png", folder, id, part);
 }

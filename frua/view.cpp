@@ -17,7 +17,12 @@ struct command;
 
 static anyval					command_value;
 static agrw<picture_info>		file_data;
+static agrw<picture_info>		file_monster_data;
+static const char*				file_exclude[] = {"fonts", 0};
+static const char*				file_monster_exclude[] = {0};
 typedef adat<const char*, 256>	strings_array;
+
+int sprite_store(sprite* ps, const unsigned char* p, int width, int w, int h, int ox, int oy, sprite::encodes mode, unsigned char shadow_index, color* original_pallette, int explicit_frame, unsigned char transparent_index);
 
 static void set_command_value() {
 	command_value = (const int)hot.param;
@@ -45,7 +50,7 @@ static struct char_code_info {
 {'Ю', '.'}, {'Я', 'Z'},
 };
 struct main_picture_info : surface, picture_info {
-	bool load(const char* folder, const char* id) {
+	bool load(const char* folder, const char* id, int part = -1) {
 		if(!id || !id[0])
 			return false;
 		if(this->id
@@ -57,7 +62,10 @@ struct main_picture_info : surface, picture_info {
 		if(*static_cast<surface*>(this))
 			this->clear();
 		char temp[260];
-		szprint(temp, zendof(temp), "art/%1/%2.png", folder, id);
+		if(part == -1)
+			geturl(temp);
+		else
+			geturl(temp, part);
 		this->read(temp);
 		return true;
 	}
@@ -138,7 +146,7 @@ answer* character::choose(const picture_info& image, aref<answer> source) {
 	return 0;
 }
 
-static void make_cash(agrw<picture_info>& source, const char* folder) {
+static void make_cash(agrw<picture_info>& source, const char* folder, const char** exclude) {
 	char temp[260];
 	char url_folder[260]; szprint(url_folder, zendof(url_folder), "art/%1", folder);
 	for(auto file = io::file::find(url_folder); file; file.next()) {
@@ -147,13 +155,22 @@ static void make_cash(agrw<picture_info>& source, const char* folder) {
 			continue;
 		auto ext = szext(pn);
 		if(!ext) {
-			if(strcmp(pn, "fonts") == 0)
-				continue;
+			if(exclude) {
+				auto need_exclude = false;
+				for(auto pe = exclude; *pe; pe++) {
+					if(strcmp(pn, *pe) == 0) {
+						need_exclude = true;
+						break;
+					}
+				}
+				if(need_exclude)
+					continue;
+			}
 			if(folder[0])
 				szprint(temp, zendof(temp), "%1/%2", folder, pn);
 			else
 				szprint(temp, zendof(temp), pn);
-			make_cash(source, temp);
+			make_cash(source, temp, exclude);
 		} else {
 			auto pi = source.add();
 			szfnamewe(temp, pn);
@@ -172,6 +189,32 @@ static void make_cash(strings_array& result, const agrw<picture_info>& source) {
 			auto pp = result.add();
 			*pp = v;
 		}
+	}
+}
+
+static void make_monsters_cash(agrw<picture_info>& source) {
+	char temp[260];
+	for(auto file = io::file::find("art/monsters"); file; file.next()) {
+		auto pn = file.name();
+		if(pn[0] == '.')
+			continue;
+		auto ext = szext(pn);
+		if(!ext)
+			continue;
+		if(!szpmatch(pn, "*_1.*"))
+			continue;
+		auto pi = source.add();
+		szfnamewe(temp, pn); temp[zlen(temp) - 2] = 0;
+		memset(pi, 0, sizeof(pi));
+		pi->folder = "monsters";
+		pi->id = szdup(temp);
+	}
+}
+
+static const sprite* create_monsters() {
+	sprite* ps = (sprite*)new char[128 * 128 * 4 * 2 * file_monster_data.count];
+	for(auto& e : file_monster_data) {
+
 	}
 }
 
@@ -206,7 +249,7 @@ bool picture_info::pick() {
 	strings_array folders;
 	strings_array filter;
 	if(!file_data)
-		make_cash(file_data, "");
+		make_cash(file_data, "", file_exclude);
 	make_cash(folders, file_data);
 	string_view s1(folders);
 	string_view s2(filter);
@@ -274,6 +317,62 @@ bool picture_info::pick() {
 		return true;
 	}
 	return false;
+}
+
+const picture_info* picture_info::pick_monster() {
+	struct string_view : controls::list {
+		const aref<picture_info>& source;
+		int getmaximum() const override {
+			return source.count;
+		}
+		const char*	getname(char* result, const char* result_max, int line, int column) const {
+			if(source.data) {
+				switch(column) {
+				case 0: return source.data[line].id;
+				case 1: return source.data[line].folder;
+				default: return "";
+				}
+			}
+			return "";
+		}
+		const picture_info* getcurrent() const {
+			if(source.count == 0)
+				return 0;
+			return source.data + current;
+		}
+		constexpr string_view(const aref<picture_info>& source) : source(source) {}
+	};
+	if(!file_data)
+		make_monsters_cash(file_monster_data);
+	string_view s1(aref<picture_info>(file_monster_data.data, file_monster_data.count));
+	int y_buttons = getheight() - buttons_height;
+	setfocus(0, true);
+	const picture_info* current_picture = 0;
+	while(ismodal()) {
+		render_background();
+		auto x = metrics::padding, y = metrics::padding;
+		current_picture = s1.getcurrent();
+		if(current_picture) {
+			picture.load(current_picture->folder, current_picture->id, 1);
+			rect rc = {x, y, x + picture_width, y + picture_height};
+			if(true) {
+				draw::state push;
+				setclip(rc);
+				auto w = imin(picture_width, picture.width);
+				auto h = imin(picture_height, picture.height);
+				blit(*canvas, x, y, w, h, 0,
+					picture, current_picture->position.x, current_picture->position.y);
+			}
+			rectb(rc, colors::border);
+		}
+		y += picture_height + metrics::padding;
+		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding});
+		y = y_buttons;
+		x += button(x, y, "Выбрать", cmd(buttonok));
+		x += button(x, y, "Отмена", cmd(buttoncancel));
+		domodal();
+	}
+	return getresult() ? current_picture : 0;
 }
 
 static void render_title(int x, int y, int width, char* temp, const char* temp_end, const char* title) {
