@@ -106,7 +106,7 @@ enum duration_s : unsigned char {
 };
 enum feat_s : unsigned char {
 	Darkvision,
-	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells,
+	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells, BonusHits,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, DwarfCombatTactic, SmallSizeCombatAdvantage, LightSteps,
 	HolyGrace, NoExeptionalStrenght,
@@ -224,10 +224,12 @@ struct picture_info {
 struct class_info {
 	const char*				id;
 	const char*				name;
+	char					hd;
 	ability_s				ability;
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			feats;
 	char					minimum[Charisma + 1];
+	char					bonus_hd;
 };
 struct race_info {
 	const char*				id;
@@ -301,6 +303,7 @@ struct character {
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
 	int						getac() const;
+	int						gethpmax() const;
 	int						getstrex() const;
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isallow(alignment_s v) const;
@@ -313,7 +316,7 @@ private:
 	race_s					race;
 	monster_s				monster;
 	char					abilities[Charisma + 1];
-	short					hp, hp_maximum;
+	short					hp, hp_rolled;
 	char					initiative;
 	unsigned				feats;
 	char					strenght_percent;

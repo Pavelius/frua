@@ -330,8 +330,8 @@ static int fieldp(int x, int y, int width, const char* title, int value) {
 	return fieldv(x, y, width, title, temp);
 }
 
-static int fieldv(int x, int y, int width, const char* title, int value, int value_maximum) {
-	char temp[32]; zprint(temp, "%1i/%2i", value, value_maximum);
+static int fieldv(int x, int y, int width, const char* title, int value, int value_maximum, const char* format = "%1i/%2i") {
+	char temp[32]; zprint(temp, format, value, value_maximum);
 	return fieldv(x, y, width, title, temp);
 }
 
@@ -535,7 +535,7 @@ struct character_view : page_view {
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 			auto v = player->get(i);
 			if(i==Strenght && v==18)
-				y += fieldv(x, y, wd1, getstr(i), v, player->strenght_percent);
+				y += fieldv(x, y, wd1, getstr(i), v, player->strenght_percent, "%1i/%2.2i");
 			else
 				y += fieldv(x, y, wd1, getstr(i), v);
 		}
@@ -545,6 +545,7 @@ struct character_view : page_view {
 		y += fieldv(x, y, wd1, "Класс брони", player->getac());
 		y += fieldv(x, y, wd1, "THAC0", ai.thac0);
 		y += fieldv(x, y, wd1, "Урон", ai.damage.print(temp, zendof(temp)));
+		y += fieldv(x, y, wd1, "Хиты", player->hp, player->gethpmax());
 		y += close_group(x, y, rga);
 		y = y1;
 		x += wd1 + metrics::padding * 4;

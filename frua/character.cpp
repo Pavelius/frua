@@ -88,8 +88,9 @@ void character::apply_race() {
 
 void character::apply_class() {
 	// Применим нужные особенности
-	feats |= class_data[type].feats.data;
-	// Приведем в порядок минимальные и максимаьные атрибуты
+	for(auto e : class_data[type].classes)
+		feats |= class_data[e].feats.data;
+	// Приведем в порядок минимальные и максимальные атрибуты
 	for(auto e : class_data[type].classes) {
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 			if(class_data[e].minimum[i] == 0)
@@ -113,6 +114,7 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 		strenght_percent = xrand(1, 100);
 	for(auto e : class_data[type].classes)
 		raise(e);
+	hp = gethpmax();
 }
 
 int character::getindex(class_s type, class_s v) {
@@ -124,6 +126,19 @@ void character::raise(class_s v) {
 	if(index == -1)
 		return;
 	levels[index]++;
+	// Случайным образом определим хиты
+	if(class_data[v].hd) {
+		int r = 0;
+		if(levels[index] == 1) {
+			auto r1 = xrand(1, class_data[v].hd);
+			auto r2 = xrand(1, class_data[v].hd);
+			r = imax(r1, r2);
+			if(class_data[v].bonus_hd)
+				r += xrand(1, class_data[v].hd);
+		} else
+			r = xrand(1, class_data[v].hd);
+		hp_rolled += r;
+	}
 }
 
 bool character::isallow(alignment_s v) const {
@@ -159,6 +174,21 @@ int character::getac() const {
 	auto result = 10;
 	auto dex = get(Dexterity);
 	result -= maptbl(defence_adjustment, dex);
+	return result;
+}
+
+int	character::gethpmax() const {
+	if(!class_data[type].classes.count)
+		return 0;
+	int result = hp_rolled / class_data[type].classes.count;
+	int level = levels[0];
+	int con = get(Constitution);
+	if(is(BonusHits))
+		result += maptbl(hit_points_adjustment_warriors, con)*level;
+	else
+		result += maptbl(hit_points_adjustment, con)*level;
+	if(result < level)
+		result = level;
 	return result;
 }
 
