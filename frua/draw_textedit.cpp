@@ -14,10 +14,6 @@ p1(0), p2(-1),
 align(0),
 readonly(false),
 rctext(metrics::edit),
-records(0),
-update_records(true),
-show_records(true),
-post_escape(true),
 cashed_width(-1),
 cashed_string(0),
 cashed_origin(0) {
@@ -47,8 +43,6 @@ void textedit::clear() {
 		*s1 = 0;
 		if(p1 > p2)
 			p1 = p2;
-		if(records)
-			update_records = true;
 	}
 	p2 = -1;
 }
@@ -60,8 +54,6 @@ void textedit::paste(const char* input) {
 	memmove(string + p1 + i2, string + p1, (i1 - p1 + 1) * sizeof(char));
 	memcpy(string + p1, input, i2);
 	select(p1 + i2, false);
-	if(records)
-		update_records = true;
 	invalidate();
 }
 
@@ -165,13 +157,9 @@ void textedit::cashing(rect rc) {
 	}
 }
 
-bool textedit::isshowrecords() const {
-	return show_records
-		&& getrecordsheight() != 0;
-}
-
 void textedit::invalidate() {
 	cashed_width = -1;
+	string[maxlenght] = 0;
 }
 
 void textedit::redraw(rect rc) {
@@ -180,7 +168,7 @@ void textedit::redraw(rect rc) {
 	cashing(rc);
 	if(isfocused()) {
 		auto ev = hot.key&CommandMask;
-		if((ev == MouseMove || ev == MouseLeft || ev == MouseLeftDBL || ev == MouseRight)
+		if((/*ev==MouseMove || */ev == MouseLeft || ev == MouseRight || ev == MouseLeftDBL)
 			&& draw::mouseinput && hot.pressed) {
 			auto lenght = zlen(string);
 			auto index = hittest(rc, hot.mouse, align);
@@ -209,40 +197,9 @@ void textedit::redraw(rect rc) {
 		text(rc, string, align);
 }
 
-int textedit::getrecordsheight() const {
-	if(!records)
-		return 0;
-	auto line_count = records->getmaximum();
-	auto line_height = records->pixels_per_line;
-	return line_height * imin(10, line_count);
-}
-
-void textedit::setrecordlist(const char* string) {
-	auto index = records->find(0, 0, string, -1);
-	if(index != -1) {
-		records->current = index;
-		ensurevisible(records->current);
-	}
-}
-
-void textedit::updaterecords(bool setfilter) {
-	if(!records)
-		return;
-	//records->updaterowheight();
-	//if(setfilter)
-	//	records->filter = string;
-	//records->update();
-	//if(!setfilter)
-	//	setrecordlist(string);
-}
-
 bool textedit::keyinput(unsigned id) {
 	switch(id) {
 	case KeyDown:
-		if(isshowrecords()) {
-			records->keyinput(id);
-			break;
-		}
 		if(true) {
 			auto pt = getpos(rcclient, p1, align);
 			auto i = hittest(rcclient, {pt.x, (short)(pt.y + texth())}, align);
@@ -340,28 +297,3 @@ unsigned textedit::paste(bool run) {
 	}
 	return 0;
 }
-
-//	case Ctrl + Alpha + 'X':
-//		if(p2 != -1 && p1 != p2)
-//		{
-//			char* s1 = string + imin(p1, p2);
-//			char* s2 = string + imax(p1, p2);
-//			clipboard::copy(s1, s2 - s1);
-//		}
-//		if(!readonly)
-//			clear();
-//		break;
-//	case Ctrl + Alpha + 'V':
-//		if(p1 == -1 || readonly)
-//			return true;
-//		n = clipboard::paste(0, maxlenght - p1);
-//		if(n > (int)sizeof(char))
-//		{
-//			clear();
-//			int i = zlen(string);
-//			int x = (n / sizeof(string[0])) - 1;
-//			memmove(string + p1 + x, string + p1, (i - p1 + x) * sizeof(string[0]));
-//			clipboard::paste(string + p1, x * sizeof(string[0]));
-//			select(p1 + x, false);
-//		}
-//		break;

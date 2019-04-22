@@ -21,6 +21,7 @@ extern rect		sys_static_area;
 static int		current_focus;
 static bool		break_modal;
 static int		break_result;
+static callback	leave_focus;
 callback		draw::domodal;
 
 static void standart_domodal() {
@@ -176,12 +177,16 @@ int draw::getnext(int id, int key) {
 	}
 }
 
+void save_focus();
+
 void draw::setfocus(int id, bool instant) {
 	if(id == current_focus)
 		return;
-	if(instant)
+	if(instant) {
+		if(current_focus!=id)
+			save_focus();
 		current_focus = id;
-	else
+	} else
 		execute(setfocus_callback, id);
 }
 
@@ -225,13 +230,14 @@ bool draw::ismodal() {
 	if(!break_modal)
 		return true;
 	break_modal = false;
+	setfocus(0, true);
 	return false;
 }
 
 void set_dark_theme() {
 	colors::active = color::create(172, 128, 0);
 	colors::border = color::create(73, 73, 80);
-	colors::button = color::create(0, 122, 204);
+	colors::button = color::create(0x42, 0x42, 0x42);
 	colors::form = color::create(64, 64, 64);
 	colors::window = color::create(32, 32, 32);
 	colors::text = color::create(255, 255, 255);

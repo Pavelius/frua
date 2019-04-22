@@ -42,7 +42,7 @@ int							button(int x, int y, const char* string, const runable& ev, unsigned k
 int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
-int							field(int x, int y, int width, unsigned flags, const anyval& ev, const char* header_label, int header_width, const char* tips);
+int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width = 120, int digits = -1);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
 void						setposition(int& x, int& y, int& width, int padding = -1);
 namespace controls {
@@ -53,7 +53,7 @@ struct control {
 	virtual const char*		getlabel(char* result, const char* result_maximum) const { return 0; }
 	virtual bool			isdisabled() const { return false; }
 	virtual bool			isfocusable() const { return true; }
-	bool					isfocused() const;
+	virtual bool			isfocused() const;
 	bool					ishilited() const;
 	virtual bool			keyinput(unsigned id) { return false; }
 	virtual void			mouseinput(unsigned id, point mouse); // Default behaivor set focus
@@ -140,12 +140,8 @@ struct scrollable : control {
 };
 struct textedit : scrollable {
 	rect					rctext, rcclient;
-	list*					records;
 	unsigned				align;
 	bool					readonly;
-	bool					update_records;
-	bool					show_records;
-	bool					post_escape;
 	//
 	textedit(char* string, unsigned maximum_lenght, bool select_text);
 	//
@@ -154,10 +150,8 @@ struct textedit : scrollable {
 	unsigned				copy(bool run);
 	void					correct();
 	void					ensurevisible(int linenumber);
-	int						getrecordsheight() const;
 	int						hittest(rect rc, point pt, unsigned state) const;
 	void					invalidate() override;
-	bool					isshowrecords() const;
 	bool					keyinput(unsigned id) override;
 	int						lineb(int index) const;
 	int						linee(int index) const;
@@ -172,8 +166,7 @@ struct textedit : scrollable {
 	void					right(bool shift, bool ctrl);
 	void					select(int index, bool shift);
 	unsigned				select_all(bool run);
-	void					setrecordlist(const char* string);
-	void					updaterecords(bool setfilter);
+	void					setcount(unsigned v) { maxlenght = v; }
 private:
 	char*					string;
 	unsigned				maxlenght;

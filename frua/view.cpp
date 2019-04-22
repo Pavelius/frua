@@ -127,8 +127,11 @@ int draw::button(int x, int y, const char* string, const runable& ev, unsigned k
 	auto dx = textw(string);
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
 	addelement(id, rc);
-	if(draw::buttonh(rc, false, getfocus() == ev.getid(), ev.isdisabled(), true, string, key, false))
+	auto focused = getfocus() == ev.getid();
+	if(draw::buttonh(rc, false, focused, ev.isdisabled(), true, string, key, false))
 		ev.execute();
+	if(focused)
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
 	return rc.width() + 2;
 }
 
@@ -426,21 +429,29 @@ static void change_picture_info() {
 }
 
 static int field(int x, int y, int width, const char* title, picture_info& v) {
-	titletext(x, y + 4, width, 0, title, title_width);
-	x += title_width;
-	width -= title_width;
+	setposition(x, y, width);
+	titletext(x, y, width, 0, title, title_width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
 	char temp[260];
 	if(v)
 		v.geturl(temp);
 	else
 		szprint(temp, zendof(temp), "Не изменяется");
-	return button(x, y, width, 0, cmd(change_picture_info, (int)&v), temp, 0, 0) + metrics::padding;
+	unsigned flags = 0;
+	focusing((int)&v, flags, rc);
+	if(buttonh(rc,
+		ischecked(flags), isfocused(flags), isdisabled(flags), true, temp, 0, false, 0)
+		|| (isfocused(flags) && hot.key == KeyEnter)) {
+		execute(change_picture_info, (int)&v);
+	}
+	if(isfocused(flags))
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+	return rc.height() + metrics::padding * 2;
 }
 
 static int field(int x, int y, int width, const char* title, controls::textedit& v) {
-	rect rc = {x, y, x + width, y + texth() * 4 + 4 * 2};
 	setposition(x, y, width);
+	rect rc = {x, y, x + width, y + texth() * 4 + 4 * 2};
 	v.view(rc);
 	return rc.y2 - y + metrics::padding;
 }
@@ -541,14 +552,14 @@ void event_info::edit() {
 	char ti2[4096]; controls::textedit te2(ti2, sizeof(ti2), false); ti2[0] = 0;
 	int y_buttons = getheight() - buttons_height;
 	int width = getwidth() - metrics::padding * 2;
-	auto race = Elf;
-	auto gender = Male;
+	int strenght = 10;
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
 		auto x = metrics::padding;
 		auto y = page_header("Боевая сцена", 1, 2);
 		y += field(x, y, width, "Картинка", picture);
+		y += field(x, y, 160, "Число", strenght, title_width, 2);
 		y += field(x, y, width, "Текст, который увидят игроки", te1);
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));

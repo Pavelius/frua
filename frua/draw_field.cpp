@@ -6,7 +6,6 @@
 using namespace draw;
 
 static anyval		edit_value;
-static callback		edit_proc;
 
 static const char* getvalue(const anyval& v, char* result, const char* result_end) {
 	if(!v)
@@ -17,70 +16,60 @@ static const char* getvalue(const anyval& v, char* result, const char* result_en
 static void setvalue(const anyval& v, const char* result) {
 	if(!v)
 		return;
+	auto value = sz2num(result);
+	v = value;
 }
 
-static struct edit_field_widget : controls::textedit {
-
-	char	buffer[4192];
+static class edit_driver : public controls::textedit {
+	char	source[32];
 	anyval	value;
-
-	edit_field_widget() : textedit(buffer, sizeof(buffer) - 1, false) {
-		buffer[0] = 0;
-		show_border = false;
-	}
-
-	//bool isfocused() const override {
-	//	return (void*)getfocus() == value.getptr();
-	//}
-
+public:
+	constexpr edit_driver() : textedit(source, sizeof(source) / sizeof(source), false), value(), source() {}
 	bool isfocusable() const override {
 		return false;
 	}
-
-	void setfocus(bool instant) {
-		draw::setfocus((int)value.getptr(), instant);
+	bool isfocused() const override {
+		return getfocus() == (int)value.getptr();
 	}
-
-	void write() {
-		setvalue(value, buffer);
-	}
-
-	void read() {
-		getvalue(value, buffer, zendof(buffer));
-		select_all(true);
+	void load() {
+		getvalue(value, source, source + sizeof(source) / sizeof(source[0]) - 1);
 		invalidate();
 	}
-
-	void set(const anyval& e) {
-		if(value==e)
-			return;
-		write();
-		value = e;
-		read();
+	void save() {
+		setvalue(value, source);
 	}
-
+	void update(const anyval& ev, int digits = -1) {
+		if(value == ev)
+			return;
+		value = ev;
+		if(digits==-1)
+			setcount(sizeof(source)/ sizeof(source[0]));
+		else
+			setcount(digits);
+		load();
+		select_all(true);
+	}
+	void clear() {
+		textedit::clear();
+		value.clear();
+	}
 } edit;
 
-void draw::updatefocus() {
+void save_focus() {
 	if(edit.isfocused())
-		edit.write();
-}
-
-static void loadfocus() {
-	if(edit.isfocused())
-		edit.read();
+		edit.save();
 }
 
 static void field_up() {
-	edit.write();
 	edit_value = edit_value + 1;
-	loadfocus();
+	edit.load();
+	edit.invalidate();
 }
 
 static void field_down() {
-	edit.write();
 	edit_value = edit_value - 1;
-	loadfocus();
+	edit.load();
+	edit.invalidate();
 }
 
 static void execute(callback proc, const anyval& ev) {
@@ -88,15 +77,13 @@ static void execute(callback proc, const anyval& ev) {
 	draw::execute(proc);
 }
 
-int draw::field(int x, int y, int width, unsigned flags, const anyval& ev, const char* header_label, int header_width, const char* tips) {
+int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits) {
 	draw::state push;
 	setposition(x, y, width);
-	decortext(flags);
 	if(header_label && header_label[0])
-		titletext(x, y, width, flags, header_label, header_width);
+		titletext(x, y, width, 0, header_label, header_width);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
-	if(!isdisabled(flags))
-		draw::rectf(rc, colors::window);
+	unsigned flags = AlignRight;
 	focusing((int)ev.getptr(), flags, rc);
 	bool focused = isfocused(flags);
 	draw::rectb(rc, colors::border);
@@ -110,14 +97,13 @@ int draw::field(int x, int y, int width, unsigned flags, const anyval& ev, const
 	}
 	auto a = area(rc);
 	if(isfocused(flags)) {
-		edit.set(ev);
+		edit.align = flags & AlignMask;
+		edit.update(ev, digits);
 		edit.view(rc);
 	} else {
 		char temp[260];
-		auto p = getvalue(ev, temp, temp + sizeof(temp)/ sizeof(temp[0]));
+		auto p = getvalue(ev, temp, temp + sizeof(temp) / sizeof(temp[0]));
 		draw::texte(rc + metrics::edit, p, flags, -1, -1);
 	}
-	if(tips && a == AreaHilited)
-		tooltips(tips);
 	return rc.height() + metrics::padding * 2;
 }
