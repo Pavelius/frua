@@ -4,7 +4,7 @@
 using namespace draw;
 
 void draw::setposition(int& x, int& y, int& width, int padding) {
-	if(padding==-1)
+	if(padding == -1)
 		padding = metrics::padding;
 	x += padding;
 	y += padding;
@@ -29,8 +29,10 @@ void draw::titletext(int& x, int y, int& width, unsigned flags, const char* labe
 	char temp[1024];
 	if(!title)
 		title = 128;
-	zcpy(temp, label, sizeof(temp) - 2);
-	zcat(temp, ":");
+	if(label[0] == ':')
+		zprint(temp, "%1", label + 1);
+	else
+		zprint(temp, "%1:", label);
 	text(x, y + 4, temp);
 	x += title;
 	width -= title;
@@ -75,7 +77,7 @@ int draw::radio(int x, int y, int width, unsigned flags, const runable& cmd, con
 			need_select = true;
 	}
 	if(need_select)
-  		cmd.execute();
+		cmd.execute();
 	rc = rc1; rc.offset(2);
 	draw::text(rc, label);
 	if(tips && a == AreaHilited)

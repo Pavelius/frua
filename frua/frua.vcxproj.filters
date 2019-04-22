@@ -165,6 +165,15 @@
     <ClCompile Include="draw_field.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_dropdown.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="screenshoot.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
+    <ClCompile Include="enum.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -220,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="dice.h">
       <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="screenshoot.h">
+      <Filter>Графика</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

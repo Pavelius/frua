@@ -8,8 +8,11 @@ static void add_position(aref<character*> source) {
 
 int	main(int argc, char *argv[]) {
 	draw::initialize();
-	event_info ev;
+	character ev;
+	ev.clear();
 	ev.edit();
+	//event_info ei;
+	//ei.edit();
 	//picture_info::pick_monster();
 	//character::choose_avatar("character*", 10);
 	//character_data.add()->generate();

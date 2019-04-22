@@ -56,6 +56,8 @@ static character* active_player;
 
 void character::clear() {
 	memset(this, 0, sizeof(character));
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1))
+		abilities[i] = 10;
 }
 
 void character::roll_ability() {

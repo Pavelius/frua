@@ -137,6 +137,7 @@
     <ClCompile Include="draw_clipart.cpp" />
     <ClCompile Include="draw_control.cpp" />
     <ClCompile Include="draw_dialog.cpp" />
+    <ClCompile Include="draw_dropdown.cpp" />
     <ClCompile Include="draw_field.cpp" />
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
@@ -146,6 +147,7 @@
     <ClCompile Include="draw_textedit.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="draw_tooltips.cpp" />
+    <ClCompile Include="enum.cpp" />
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />
@@ -155,6 +157,7 @@
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="race.cpp" />
+    <ClCompile Include="screenshoot.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
@@ -184,6 +187,7 @@
     <ClInclude Include="point.h" />
     <ClInclude Include="pointl.h" />
     <ClInclude Include="rect.h" />
+    <ClInclude Include="screenshoot.h" />
     <ClInclude Include="stringcreator.h" />
     <ClInclude Include="win.h" />
   </ItemGroup>

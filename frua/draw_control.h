@@ -38,14 +38,6 @@ private:
 	int						param;
 	bool					disabled;
 };
-int							button(int x, int y, const char* string, const runable& ev, unsigned key = 0);
-int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
-int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
-int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
-int							field(int x, int y, int width, const char* header_label, const char*& ev, int header_width);
-int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width = 120, int digits = -1);
-int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
-void						setposition(int& x, int& y, int& width, int padding = -1);
 namespace controls {
 struct control {
 	bool					show_border;
@@ -177,4 +169,13 @@ private:
 	int						p1, p2;
 };
 }
+int							button(int x, int y, const char* string, const runable& ev, unsigned key = 0);
+int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
+int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
+int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
+bool						dropdown(const rect& rc, draw::controls::control& e);
+int							field(int x, int y, int width, const char* header_label, const char*& ev, int header_width);
+int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width = 120, int digits = -1);
+int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
+void						setposition(int& x, int& y, int& width, int padding = -1);
 }

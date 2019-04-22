@@ -13,6 +13,9 @@ const int combat_grid = 32;
 const int combat_map_x = 16;
 const int combat_map_y = 16;
 
+#define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
+enum_info e##_enum_info(e##_data, 0, last, sizeof(e##_data[0]))
+
 enum item_s : unsigned char {
 	NoItem,
 	Axe, BattleAxe, Mace, MorningStar, Hammer,
@@ -214,6 +217,15 @@ struct name_info {
 	const char*				id;
 	const char*				name;
 };
+struct enum_info {
+	const void*				data;
+	int						i1, i2;
+	unsigned				size;
+	constexpr enum_info() : data(), i1(), i2(), size() {}
+	constexpr enum_info(const void* data, int i1, int i2, unsigned size) : data(data),
+		i1(i1), i2(i2), size(size) {}
+	const char*				get(int index) const;
+};
 struct alignment_info {
 	const char*				id;
 	const char*				name;
@@ -319,6 +331,7 @@ struct character {
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	static int				select_avatar(const char* mask);
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
+	bool					edit();
 	bool					generate();
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
@@ -351,6 +364,7 @@ struct character {
 	void					setposition(short unsigned v) { index = v; }
 	static void				update_battle();
 private:
+	const char*				name;
 	gender_s				gender;
 	alignment_s				alignment;
 	class_s					type;
@@ -363,7 +377,6 @@ private:
 	char					initiative;
 	unsigned				feats;
 	char					strenght_percent;
-	short unsigned			name;
 	short unsigned			index;
 	short unsigned			avatar;
 	char					levels[3];
@@ -373,13 +386,10 @@ private:
 	friend struct character_view;
 	void					apply_class();
 	void					apply_race();
+	int						edit_abilities(int x, int y, int width);
+	int						edit_basic(int x, int y, int width);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
-};
-struct monster_info {
-	const char*				name;
-	char					abilities[Charisma + 1];
-	char					hd;
 };
 struct combat_info {
 	int						round;
@@ -409,9 +419,13 @@ void						setblock();
 short unsigned				to(short unsigned i, direction_s d);
 }
 extern alignment_info		alignment_data[];
+extern enum_info			alignment_enum_info;
 extern aref<sprite_name_info> avatar_data;
 extern adat<character, 128> character_data;
 extern class_info			class_data[];
+extern enum_info			class_enum_info;
 extern gender_info			gender_data[];
+extern enum_info			gender_enum_info;
 extern adat<character*, 8>	party;
 extern race_info			race_data[];
+extern enum_info			race_enum_info;
