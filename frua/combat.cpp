@@ -18,14 +18,18 @@ void combat_info::addparty() {
 		parcipants.add(p);
 }
 
+void combat_info::automove(character* player) {
+	makewave(player->getposition());
+}
+
 void combat_info::playround() {
 	for(auto p : parcipants) {
 		if(!isenemy())
 			return;
 		if(p->isplayable())
 			move(p);
-		else {
-		}
+		else
+			automove(p);
 	}
 	round++;
 }

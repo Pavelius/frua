@@ -346,8 +346,8 @@ static int show_information(int x, int y, int width, const sprite* ps, const spr
 }
 
 static void save_monsters() {
-	auto ps = (const sprite*)hot.param;
-	sprite_write(ps, "art/monsters.pma");
+	sprite_write(spr_monsters, "art/monsters.pma");
+	buttonok();
 }
 
 const picture_info* picture_info::pick_monster() {
@@ -393,13 +393,12 @@ const picture_info* picture_info::pick_monster() {
 		y += show_information(x + metrics::padding, y, picture_width - metrics::padding, spr_monsters, current_frame);
 		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Выбрать", cmd(save_monsters, (int)spr_monsters), KeyEscape);
 		x += button(x, y, "Сменить", cmd(change_monster_part), KeySpace);
 		x += button(x, y, "Вверх", cmd(change_up, (int)current_frame), Ctrl + KeyUp);
 		x += button(x, y, "Вниз", cmd(change_down, (int)current_frame), Ctrl + KeyDown);
 		x += button(x, y, "Вправо", cmd(change_right, (int)current_frame), Ctrl + KeyRight);
 		x += button(x, y, "Влево", cmd(change_left, (int)current_frame), Ctrl + KeyLeft);
-		x += button(x, y, "Сохранить", cmd(save_monsters, (int)spr_monsters), Ctrl + Alpha + 'S');
 		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 		domodal();
 	}
@@ -876,4 +875,125 @@ void combat_info::move(character* player) {
 		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
 		domodal();
 	}
+}
+
+int	character::select_avatar(short unsigned* result, unsigned count, const char* mask) {
+	auto pb = result;
+	auto pe = result + count;
+	auto ps = (sprite_name_info*)spr_monsters->edata();
+	auto pc = spr_monsters->count / 2;
+	for(auto i = 0; i < pc; i++) {
+		if(mask && !szpmatch(ps[i].name, mask))
+			continue;
+		if(pb < pe)
+			*pb++ = i;
+	}
+	return pb - result;
+}
+
+int character::choose_avatar(const char* mask, int current) {
+	struct avatar_view : controls::control {
+		adat<short unsigned, 512>	elements;
+		point		size, origin;
+		int			current, current_hilite, scanline;
+		rect		view_rect;
+		static void choose_mouse() {
+			auto p = (avatar_view*)hot.param;
+			p->current = p->current_hilite;
+		}
+		void view(const rect& rc) override {
+			control::view(rc);
+			view_rect = rc;
+			auto x = rc.x1;
+			auto y = rc.y1;
+			auto c = 0;
+			current_hilite = -1;
+			for(unsigned i = 0; i < elements.count; i++) {
+				if(c >= scanline) {
+					x = rc.x1;
+					y += size.y;
+					c = 0;
+				}
+				rect rc = {x, y, x + size.x, y + size.y};
+				rectb(rc, colors::border);
+				auto index = elements.data[i];
+				if(current == i) {
+					rect rx = rc;
+					rx.offset(2, 2);
+					rectf({rx.x1, rx.y1, rx.x2 + 1, rx.y2 + 1}, colors::edit);
+					if(isfocused())
+						rectx(rx, colors::border);
+				}
+				image(x + origin.x, y + origin.y, spr_monsters, index * 2, 0);
+				auto a = area(rc);
+				if((a == AreaHilited || a == AreaHilitedPressed)) {
+					current_hilite = i;
+					if(hot.key == MouseLeft && hot.pressed)
+						execute(choose_mouse, (int)this);
+				}
+				c++;
+				x += size.x;
+			}
+		}
+		unsigned getmaximum() const {
+			return elements.count;
+		}
+		int gethorizcount() const {
+			if(!size.x || !view_rect)
+				return 0;
+			return view_rect.width() / size.x;
+		}
+		int getcurrent() const {
+			if(!elements.count)
+				return -1;
+			return elements.data[current];
+		}
+		void correct() {
+			if(current > (int)elements.count - 1)
+				current = elements.count - 1;
+			if(current < 0)
+				current = 0;
+		}
+		bool keyinput(unsigned id) override {
+			switch(id) {
+			case KeyLeft:
+				current--;
+				correct();
+				break;
+			case KeyRight:
+				current++;
+				correct();
+				break;
+			case KeyUp:
+				current -= scanline;
+				correct();
+				break;
+			case KeyDown:
+				current += scanline;
+				correct();
+				break;
+			default:
+				return control::keyinput(id);
+			}
+			return false;
+		}
+		constexpr avatar_view() : elements(), size{64, 64}, origin{32, 48},
+			current(0), current_hilite(-1), scanline(12), view_rect() {}
+	};
+	avatar_view s1;
+	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
+	s1.current = s1.elements.indexof(current);
+	s1.correct();
+	setfocus(0, true);
+	auto y_buttons = getheight() - buttons_height;
+	while(ismodal()) {
+		render_background();
+		auto x = metrics::padding, y = metrics::padding;
+		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
+		y = y_buttons;
+		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
+		domodal();
+	}
+	return s1.getcurrent();
 }

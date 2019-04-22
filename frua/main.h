@@ -314,6 +314,8 @@ struct character {
 	operator bool() const { return name != 0; }
 	void					addbattle();
 	void					clear();
+	static int				choose_avatar(const char* mask, int current);
+	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					battle();
 	bool					generate();
@@ -375,6 +377,7 @@ struct combat_info {
 	character*				add(race_s race, gender_s gender, class_s type, int level = 1, reaction_s reaction = Hostile);
 	void					addenemies();
 	void					addparty();
+	void					automove(character* player);
 	bool					isenemy() const;
 	void					makewave(short unsigned index);
 	void					move(character* player);
