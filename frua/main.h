@@ -376,6 +376,11 @@ private:
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
+struct monster_info {
+	const char*				name;
+	char					abilities[Charisma + 1];
+	char					hd;
+};
 struct combat_info {
 	int						round;
 	int						movement;

@@ -5,11 +5,9 @@
 
 using namespace draw;
 
-const int border = 4;
 const int picture_width = 320;
 const int picture_height = 300;
 const int title_width = 100;
-const int field_width = 400;
 const int buttons_height = 16 + 8 * 2;
 const int combat_moverate = 3;
 
@@ -52,59 +50,19 @@ static struct char_code_info {
 {'Ю', '.'}, {'Я', 'Z'},
 };
 struct main_picture_info : surface, picture_info {
-	bool load(const char* folder, const char* id, int part = -1) {
-		if(!id || !id[0])
-			return false;
-		if(this->id
-			&& strcmp(this->id, id) == 0
-			&& strcmp(this->folder, folder) == 0)
+	bool load(const picture_info& pi) {
+		if(id && folder 
+			&& strcmp(id, pi.id) == 0
+			&& strcmp(folder, pi.folder) == 0)
 			return true;
-		this->id = szdup(id);
-		this->folder = szdup(folder);
+		*static_cast<picture_info*>(this) = pi;
 		if(*static_cast<surface*>(this))
 			this->clear();
-		char temp[260];
-		if(part == -1)
-			geturl(temp);
-		else
-			geturl(temp, part);
+		char temp[260]; geturl(temp);
 		this->read(temp);
 		return true;
 	}
 } picture;
-
-struct string_view : controls::list {
-	aref<const char*> source;
-	int getmaximum() const override {
-		return source.count;
-	}
-	const char*	getname(char* result, const char* result_max, int line, int column) const {
-		if(source.data) {
-			if(column == 0)
-				return source.data[line];
-		}
-		return "";
-	}
-	const char* getcurrent() const {
-		if(source.count == 0)
-			return 0;
-		return source.data[current];
-	}
-	constexpr string_view(const aref<const char*>& source) : source(source) {}
-};
-
-struct cmdv : runable {
-	cmdv(const anyval& source, int param = 0) : source(source), param(param) {}
-	void					execute() const override {
-		command_value = source;
-		draw::execute(set_command_value, param);
-	}
-	int						getid() const override { return (int)source.getptr(); }
-	bool					isdisabled() const { return false; }
-private:
-	const anyval&			source;
-	int						param;
-};
 
 static void sprite_write(const sprite* p, const char* url) {
 	io::file file(url, StreamWrite);
@@ -137,13 +95,23 @@ int draw::button(int x, int y, const char* string, const runable& ev, unsigned k
 }
 
 static void render_picture(int x, int y) {
-	auto w = 300;
-	if(w > picture.width)
+	auto x1 = x, y1 = y;
+	auto w = picture_width;
+	if(w > picture.width) {
+		x = x + (picture_width - picture_width) / 2;
 		w = picture.width;
-	auto h = 300;
-	if(h > picture.height)
+	}
+	auto h = picture_height;
+	if(h > picture.height) {
+		y = y + (picture.height - picture_height) / 2;
 		h = picture.height;
-	blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
+	}
+	if(true) {
+		rect rc = {x, y, x + w, y + h};
+		draw::state push; setclip(rc);
+		blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
+	}
+	rectb({x1, y1, x1 + picture_width, y1 + picture_height}, colors::border);
 }
 
 static void render_background() {
@@ -152,7 +120,6 @@ static void render_background() {
 }
 
 answer* character::choose(const picture_info& image, aref<answer> source) {
-	picture.load("tavern", "tavern2");
 	while(ismodal()) {
 		render_background();
 		render_picture(8, 8);
@@ -212,22 +179,6 @@ static void header(int x, int y, int width, const char* title, const char* text)
 	y += textf(x, y, width, text);
 }
 
-static picture_info* find(const picture_info& v) {
-	for(auto& e : file_data) {
-		if(e == v)
-			return &e;
-	}
-	return 0;
-}
-
-static picture_info* find(const char* id, const char* folder) {
-	for(auto& e : file_data) {
-		if(strcmp(e.id, id) == 0 && strcmp(e.folder, folder) == 0)
-			return &e;
-	}
-	return 0;
-}
-
 const picture_info* picture_info::choose_image() {
 	struct string_view : controls::list {
 		aref<picture_info> source;
@@ -262,23 +213,9 @@ const picture_info* picture_info::choose_image() {
 		auto x = metrics::padding, y = metrics::padding;
 		s1.view({x + picture_width + metrics::padding, y, getwidth() - metrics::padding, y_buttons - metrics::padding});
 		if(current_picture) {
-			picture.load(current_picture->folder, current_picture->id);
-			if(current_picture->position.x + picture_width > picture.width)
-				current_picture->position.x = picture.width - picture_width;
-			if(current_picture->position.x < 0)
-				current_picture->position.x = 0;
-			if(current_picture->position.y + picture_height > picture.height)
-				current_picture->position.y = picture.height - picture_height;
-			if(current_picture->position.y < 0)
-				current_picture->position.y = 0;
-			rect rc = {x, y, x + picture_width, y + picture_height};
-			if(true) {
-				draw::state push;
-				setclip(rc);
-				blit(*canvas, x, y, picture_width, picture_height, 0,
-					picture, current_picture->position.x, current_picture->position.y);
-			}
-			rectb(rc, colors::border);
+			picture.load(*current_picture);
+			picture.position = current_picture->position;
+			render_picture(x, y);
 		}
 		y += picture_height + metrics::padding;
 		header(x, y, picture_width, "Выбирайте картинку",
@@ -295,6 +232,14 @@ const picture_info* picture_info::choose_image() {
 			case Ctrl | KeyDown: current_picture->position.y++; break;
 			default: break;
 			}
+			if(current_picture->position.x + picture_width > picture.width)
+				current_picture->position.x = picture.width - picture_width;
+			if(current_picture->position.y + picture_height > picture.height)
+				current_picture->position.y = picture.height - picture_height;
+			if(current_picture->position.x < 0)
+				current_picture->position.x = 0;
+			if(current_picture->position.y < 0)
+				current_picture->position.y = 0;
 		}
 	}
 	if(getresult())
@@ -303,7 +248,6 @@ const picture_info* picture_info::choose_image() {
 }
 
 static int monster_part = 0;
-
 static void change_monster_part() {
 	if(monster_part >= 1)
 		monster_part = 0;
@@ -413,13 +357,6 @@ static void render_title(int x, int y, int width, const char* title) {
 	render_title(x, y, width, temp, zendof(temp), title);
 }
 
-static void change_picture_info() {
-	auto p = (picture_info*)hot.param;
-	auto pi = p->choose_image();
-	if(pi)
-		*p = *pi;
-}
-
 static int field(int x, int y, int width, const char* title, picture_info& v) {
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
@@ -432,10 +369,16 @@ static int field(int x, int y, int width, const char* title, picture_info& v) {
 	unsigned flags = 0;
 	focusing((int)&v, flags, rc);
 	if(buttonh(rc,
-		ischecked(flags), isfocused(flags), isdisabled(flags), true, temp, 0, false, 0)
+		ischecked(flags), isfocused(flags), isdisabled(flags), true, 0, 0, false, 0)
 		|| (isfocused(flags) && hot.key == KeyEnter)) {
-		execute(change_picture_info, (int)&v);
+		execute([] {
+			auto p = (picture_info*)hot.param;
+			auto pi = p->choose_image();
+			if(pi)
+				*p = *pi;
+		}, (int)&v);
 	}
+	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4*2, temp);
 	if(isfocused(flags))
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
 	return rc.height() + metrics::padding * 2;
@@ -544,7 +487,8 @@ void event_info::edit() {
 	char ti2[4096]; controls::textedit te2(ti2, sizeof(ti2), false); ti2[0] = 0;
 	int y_buttons = getheight() - buttons_height;
 	int width = getwidth() - metrics::padding * 2;
-	int strenght = 10;
+	char strenght = 10;
+	const char* name = 0;
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
@@ -552,6 +496,7 @@ void event_info::edit() {
 		auto y = page_header("Боевая сцена", 1, 2);
 		y += field(x, y, width, "Картинка", picture);
 		y += field(x, y, 160, "Число", strenght, title_width, 2);
+		y += field(x, y, width, "Имя", name, title_width);
 		y += field(x, y, width, "Текст, который увидят игроки", te1);
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok));

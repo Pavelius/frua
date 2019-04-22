@@ -5,26 +5,46 @@
 
 using namespace draw;
 
+enum field_type_s : unsigned char {
+	FieldNumber, FieldText,
+};
+
 static anyval		edit_value;
 
-static const char* getvalue(const anyval& v, char* result, const char* result_end) {
+static const char* getvalue(const anyval& v, field_type_s t, char* result, const char* result_end) {
 	if(!v)
 		return "";
-	return szprint(result, result_end, "%1i", (int)v);
+	const char* p;
+	switch(t) {
+	case FieldNumber: return szprint(result, result_end, "%1i", (int)v);
+	case FieldText:
+		p = (const char*)((int)v);
+		if(p)
+			return szprint(result, result_end, p);
+		result[0] = 0;
+		return result;
+	default: return "";
+	}
 }
 
-static void setvalue(const anyval& v, const char* result) {
+static void setvalue(const anyval& v, field_type_s t, const char* result) {
 	if(!v)
 		return;
-	auto value = sz2num(result);
+	int value = 0;
+	switch(t) {
+	case FieldNumber: value = sz2num(result); break;
+	case FieldText: value = (int)szdup(result); break;
+	}
 	v = value;
 }
 
 static class edit_driver : public controls::textedit {
-	char	source[32];
-	anyval	value;
+	char			source[2048];
+	anyval			value;
+	field_type_s	type;
 public:
-	constexpr edit_driver() : textedit(source, sizeof(source) / sizeof(source), false), value(), source() {}
+	constexpr edit_driver() : textedit(source, sizeof(source) / sizeof(source), false),
+		value(), source(), type(FieldNumber) {}
 	bool isfocusable() const override {
 		return false;
 	}
@@ -32,18 +52,21 @@ public:
 		return getfocus() == (int)value.getptr();
 	}
 	void load() {
-		getvalue(value, source, source + sizeof(source) / sizeof(source[0]) - 1);
+		auto p = getvalue(value, type, source, source + sizeof(source) / sizeof(source[0]) - 1);
+		if(p != source)
+			zcpy(source, p, sizeof(source));
 		invalidate();
 	}
 	void save() {
-		setvalue(value, source);
+		setvalue(value, type, source);
 	}
-	void update(const anyval& ev, int digits = -1) {
+	void update(const anyval& ev, field_type_s et, int digits = -1) {
 		if(value == ev)
 			return;
 		value = ev;
+		type = et;
 		if(digits==-1)
-			setcount(sizeof(source)/ sizeof(source[0]));
+			setcount(sizeof(source)/ sizeof(source[0]) - 1);
 		else
 			setcount(digits);
 		load();
@@ -98,11 +121,36 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	auto a = area(rc);
 	if(isfocused(flags)) {
 		edit.align = flags & AlignMask;
-		edit.update(ev, digits);
+		edit.update(ev, FieldNumber, digits);
+		edit.view(rc);
+	} else {
+		char temp[32];
+		auto p = getvalue(ev, FieldNumber, temp, temp + sizeof(temp) / sizeof(temp[0]));
+		draw::texte(rc + metrics::edit, p, flags, -1, -1);
+	}
+	return rc.height() + metrics::padding * 2;
+}
+
+
+int draw::field(int x, int y, int width, const char* header_label, const char*& sev, int header_width) {
+	draw::state push;
+	setposition(x, y, width);
+	if(header_label && header_label[0])
+		titletext(x, y, width, 0, header_label, header_width);
+	rect rc = {x, y, x + width, y + draw::texth() + 8};
+	unsigned flags = 0;
+	anyval ev = sev;
+	focusing((int)ev.getptr(), flags, rc);
+	bool focused = isfocused(flags);
+	draw::rectb(rc, colors::border);
+	auto a = area(rc);
+	if(isfocused(flags)) {
+		edit.align = flags & AlignMask;
+		edit.update(ev, FieldText);
 		edit.view(rc);
 	} else {
 		char temp[260];
-		auto p = getvalue(ev, temp, temp + sizeof(temp) / sizeof(temp[0]));
+		auto p = getvalue(ev, FieldText, temp, temp + sizeof(temp) / sizeof(temp[0]));
 		draw::texte(rc + metrics::edit, p, flags, -1, -1);
 	}
 	return rc.height() + metrics::padding * 2;
