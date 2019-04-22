@@ -234,8 +234,8 @@ struct picture_info {
 	constexpr picture_info() : folder(0), id(0), position(), size() {}
 	explicit constexpr operator bool() const { return id != 0; }
 	bool operator==(const picture_info& e) const;
-	bool					pick();
-	static const picture_info* pick_monster();
+	static const picture_info* choose_image();
+	static const picture_info* edit_monsters();
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
 };

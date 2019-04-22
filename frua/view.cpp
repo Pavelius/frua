@@ -19,7 +19,8 @@ struct command;
 static anyval					command_value;
 static agrw<picture_info>		file_data;
 static agrw<picture_info>		file_monster_data;
-static const char*				file_exclude[] = {"fonts", 0};
+static const char*				file_exclude[] = {"fonts", "monsters", 0};
+static const char*				file_ext_exclude[] = {"pma", 0};
 static const char*				file_monster_exclude[] = {0};
 static const sprite*			spr_monsters;
 aref<sprite_name_info>			avatar_data;
@@ -165,7 +166,15 @@ answer* character::choose(const picture_info& image, aref<answer> source) {
 	return 0;
 }
 
-static void make_cash(agrw<picture_info>& source, const char* folder, const char** exclude) {
+static bool need_exclude(const char* text, const char** exclude) {
+	for(auto pe = exclude; *pe; pe++) {
+		if(strcmp(text, *pe) == 0)
+			return true;
+	}
+	return false;
+}
+
+static void make_cash(agrw<picture_info>& source, const char* folder, const char** exclude, const char** exclude_ext) {
 	char temp[260];
 	char url_folder[260]; szprint(url_folder, zendof(url_folder), "art/%1", folder);
 	for(auto file = io::file::find(url_folder); file; file.next()) {
@@ -174,23 +183,16 @@ static void make_cash(agrw<picture_info>& source, const char* folder, const char
 			continue;
 		auto ext = szext(pn);
 		if(!ext) {
-			if(exclude) {
-				auto need_exclude = false;
-				for(auto pe = exclude; *pe; pe++) {
-					if(strcmp(pn, *pe) == 0) {
-						need_exclude = true;
-						break;
-					}
-				}
-				if(need_exclude)
-					continue;
-			}
+			if(exclude && need_exclude(pn, exclude))
+				continue;
 			if(folder[0])
 				szprint(temp, zendof(temp), "%1/%2", folder, pn);
 			else
 				szprint(temp, zendof(temp), pn);
-			make_cash(source, temp, exclude);
+			make_cash(source, temp, exclude, exclude_ext);
 		} else {
+			if(exclude_ext && need_exclude(ext, exclude_ext))
+				continue;
 			auto pi = source.add();
 			szfnamewe(temp, pn);
 			memset(pi, 0, sizeof(pi));
@@ -200,19 +202,7 @@ static void make_cash(agrw<picture_info>& source, const char* folder, const char
 	}
 }
 
-static void make_cash(strings_array& result, const agrw<picture_info>& source) {
-	const char* v = 0;
-	for(auto& e : source) {
-		if(e.folder != v) {
-			v = e.folder;
-			auto pp = result.add();
-			*pp = v;
-		}
-	}
-}
-
-static void header(int x, int y, const char* title, const char* text) {
-	int width = getwidth() - x - metrics::padding;
+static void header(int x, int y, int width, const char* title, const char* text) {
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
@@ -238,32 +228,39 @@ static picture_info* find(const char* id, const char* folder) {
 	return 0;
 }
 
-bool picture_info::pick() {
-	strings_array folders;
-	strings_array filter;
+const picture_info* picture_info::choose_image() {
+	struct string_view : controls::list {
+		aref<picture_info> source;
+		int getmaximum() const override {
+			return source.count;
+		}
+		const char*	getname(char* result, const char* result_max, int line, int column) const {
+			if(source.data) {
+				switch(column) {
+				case 0: return source.data[line].id;
+				case 1: return source.data[line].folder;
+				default: return "";
+				}
+			}
+			return "";
+		}
+		picture_info* getcurrent() const {
+			if(!source)
+				return 0;
+			return source.data + current;
+		}
+		constexpr string_view(const aref<picture_info>& source) : source(source) {}
+	};
 	if(!file_data)
-		make_cash(file_data, "", file_exclude);
-	make_cash(folders, file_data);
-	string_view s1(folders);
-	string_view s2(filter);
-	const char* current_folder = 0;
-	const char* current_id = 0;
+		make_cash(file_data, "", file_exclude, file_ext_exclude);
+	string_view s1(aref<picture_info>(file_data.data, file_data.count));
 	int y_buttons = getheight() - buttons_height;
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
-		current_folder = s1.getcurrent();
-		filter.clear();
-		for(auto& e : file_data) {
-			if(e.folder != current_folder)
-				continue;
-			filter.add(e.id);
-		}
-		s1.correction();
-		s2.correction();
-		current_id = s2.getcurrent();
-		picture_info* current_picture = find(current_id, current_folder);
+		auto current_picture = s1.getcurrent();
 		auto x = metrics::padding, y = metrics::padding;
+		s1.view({x + picture_width + metrics::padding, y, getwidth() - metrics::padding, y_buttons - metrics::padding});
 		if(current_picture) {
 			picture.load(current_picture->folder, current_picture->id);
 			if(current_picture->position.x + picture_width > picture.width)
@@ -284,13 +281,11 @@ bool picture_info::pick() {
 			rectb(rc, colors::border);
 		}
 		y += picture_height + metrics::padding;
-		s1.view({x, y, x + picture_width, y_buttons - metrics::padding});
-		s2.view({x + picture_width + metrics::padding, y, getwidth() - metrics::padding, y_buttons - metrics::padding});
-		header(x + picture_width + metrics::padding, metrics::padding, "Выбирайте картинку",
-			"Используйте [Ctrl] и клавиши движения чтобы перемещать отображаемую область картинки, если она превышает размер окна в [300] на [300] точек.\n\nНажмите [Enter] для подтверждения или [Esc] для отмены.");
+		header(x, y, picture_width, "Выбирайте картинку",
+			"Используйте [Ctrl] и клавиши движения чтобы перемещать отображаемую область картинки, если она превышает размер окна в [300] на [300] точек.");
 		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(buttonok));
-		x += button(x, y, "Отмена", cmd(buttoncancel));
+		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 		domodal();
 		if(current_picture) {
 			switch(hot.key) {
@@ -302,14 +297,9 @@ bool picture_info::pick() {
 			}
 		}
 	}
-	if(getresult()) {
-		picture_info* current_picture = find(current_id, current_folder);
-		if(!current_picture)
-			return false;
-		*this = *current_picture;
-		return true;
-	}
-	return false;
+	if(getresult())
+		return s1.getcurrent();
+	return 0;
 }
 
 static int monster_part = 0;
@@ -358,7 +348,7 @@ static void save_monsters() {
 	buttonok();
 }
 
-const picture_info* picture_info::pick_monster() {
+const picture_info* picture_info::edit_monsters() {
 	struct string_view : controls::list {
 		aref<sprite_name_info> source;
 		int getmaximum() const override {
@@ -425,7 +415,9 @@ static void render_title(int x, int y, int width, const char* title) {
 
 static void change_picture_info() {
 	auto p = (picture_info*)hot.param;
-	p->pick();
+	auto pi = p->choose_image();
+	if(pi)
+		*p = *pi;
 }
 
 static int field(int x, int y, int width, const char* title, picture_info& v) {
@@ -899,7 +891,7 @@ void combat_info::move(character* player) {
 	makewave(player->getposition());
 	while(ismodal() && movement > 0) {
 		render_background();
-		auto x = metrics::padding, y = y_buttons - metrics::padding*2 - combat_grid*combat_map_y;
+		auto x = metrics::padding, y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y;
 		// Нарисуем все объекты, которые просчитали ранее
 		update();
 		draw_grid(x, y);
@@ -1006,8 +998,8 @@ int character::choose_avatar(const char* title, const char* mask, int size, int 
 			}
 			return false;
 		}
-		constexpr avatar_view(int size) : elements(), size{(short)size, (short)size}, origin{(short)size/2, ((short)size/4)*3},
-			current(0), current_hilite(-1), scanline((short)(800/size)), view_rect() {}
+		constexpr avatar_view(int size) : elements(), size{(short)size, (short)size}, origin{(short)size / 2, ((short)size / 4) * 3},
+			current(0), current_hilite(-1), scanline((short)(800 / size)), view_rect() {}
 	};
 	avatar_view s1(size);
 	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
