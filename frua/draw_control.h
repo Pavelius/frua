@@ -3,6 +3,8 @@
 
 #pragma once
 
+class					anyval;
+
 namespace clipboard {
 void					copy(const void* string, int lenght);
 char*					paste();
@@ -40,6 +42,7 @@ int							button(int x, int y, const char* string, const runable& ev, unsigned k
 int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
+int							field(int x, int y, int width, unsigned flags, const anyval& ev, const char* header_label, int header_width, const char* tips);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
 void						setposition(int& x, int& y, int& width, int padding = -1);
 namespace controls {
@@ -150,7 +153,6 @@ struct textedit : scrollable {
 	virtual void			cashing(rect rc);
 	unsigned				copy(bool run);
 	void					correct();
-	bool					editing(rect rc);
 	void					ensurevisible(int linenumber);
 	int						getrecordsheight() const;
 	int						hittest(rect rc, point pt, unsigned state) const;

@@ -159,6 +159,12 @@
     <ClCompile Include="combat.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="attack.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="draw_field.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

@@ -104,6 +104,12 @@ void character::apply_class() {
 	}
 }
 
+static int random_avatar(race_s race) {
+	static const char* source[] = {"character9", "character49", "character10",
+		"character40", "character2", "character24"};
+	return character::select_avatar(maptbl(source, race));
+}
+
 void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
 	clear();
 	this->race = race;
@@ -119,6 +125,7 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	for(auto e : class_data[type].classes)
 		raise(e);
 	hp = gethpmax();
+	avatar = random_avatar(race);
 }
 
 int character::getindex(class_s type, class_s v) {
@@ -196,7 +203,7 @@ int	character::gethpmax() const {
 	return result;
 }
 
-void character::get(wear_s id, attack_info& ai) {
+void character::get(wear_s id, attack_info& ai) const {
 	ai.attacks = 2;
 	ai.thac0 = 20;
 	ai.damage = dice::create(1, 2);
@@ -243,4 +250,26 @@ bool character::isenemy(const character* p) const {
 	else if(reaction == Hostile)
 		return p->reaction == Player || p->reaction == Friendly;
 	return false;
+}
+
+int	character::select_avatar(short unsigned* result, unsigned count, const char* mask) {
+	auto pb = result;
+	auto pe = result + count;
+	auto ps = avatar_data.data;
+	auto pc = avatar_data.count;
+	for(unsigned i = 0; i < pc; i++) {
+		if(mask && !szpmatch(ps[i].name, mask))
+			continue;
+		if(pb < pe)
+			*pb++ = i;
+	}
+	return pb - result;
+}
+
+int character::select_avatar(const char* mask) {
+	short unsigned source[256];
+	auto count = select_avatar(source, sizeof(source) / sizeof(source[0]), mask);
+	if(!count)
+		return -1;
+	return source[rand() % count];
 }

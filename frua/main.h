@@ -272,6 +272,7 @@ struct attack_info : damage_info {
 	char					thac0;
 	char					critical, multiplier;
 	item*					weapon;
+	char*					getattacks(char* result, const char* result_maximum) const;
 };
 struct itemweight {
 	item_s					key;
@@ -314,22 +315,29 @@ struct character {
 	operator bool() const { return name != 0; }
 	void					addbattle();
 	void					clear();
-	static int				choose_avatar(const char* mask, int current);
+	static int				choose_avatar(const char* title, const char* mask, int size, int current);
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
+	static int				select_avatar(const char* mask);
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
-	void					battle();
 	bool					generate();
-	void					get(wear_s id, attack_info& ai);
+	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
 	int						getac() const;
 	static character*		getactive();
+	alignment_s				getalignment() const { return alignment; }
 	int						getavatar() const { return avatar; }
+	class_s					getclass() const { return type; }
+	gender_s				getgender() const { return gender; }
+	int						gethp() const { return hp; }
 	int						gethpmax() const;
 	int						getmovement() const;
+	race_s					getrace() const { return race; }
 	int						getstrex() const;
+	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
+	void					group_generate(int x, int y, int width);
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isalive() const { return hp>0; }
 	bool					isallow(alignment_s v) const;
@@ -385,6 +393,7 @@ struct combat_info {
 	void					playround();
 	void					setblock();
 	void					update();
+	void					visualize();
 };
 namespace map {
 short unsigned				getcost(short unsigned index);
@@ -395,6 +404,7 @@ void						setblock();
 short unsigned				to(short unsigned i, direction_s d);
 }
 extern alignment_info		alignment_data[];
+extern aref<sprite_name_info> avatar_data;
 extern adat<character, 128> character_data;
 extern class_info			class_data[];
 extern gender_info			gender_data[];

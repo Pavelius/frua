@@ -122,6 +122,7 @@
     <ClCompile Include="alignment.cpp" />
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
+    <ClCompile Include="attack.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
     <ClCompile Include="class.cpp" />
@@ -136,6 +137,7 @@
     <ClCompile Include="draw_clipart.cpp" />
     <ClCompile Include="draw_control.cpp" />
     <ClCompile Include="draw_dialog.cpp" />
+    <ClCompile Include="draw_field.cpp" />
     <ClCompile Include="draw_input.cpp" />
     <ClCompile Include="draw_list.cpp" />
     <ClCompile Include="draw_scroll.cpp" />

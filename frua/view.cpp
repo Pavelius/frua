@@ -22,6 +22,7 @@ static agrw<picture_info>		file_monster_data;
 static const char*				file_exclude[] = {"fonts", 0};
 static const char*				file_monster_exclude[] = {0};
 static const sprite*			spr_monsters;
+aref<sprite_name_info>			avatar_data;
 typedef adat<const char*, 256>	strings_array;
 
 static void set_command_value() {
@@ -115,6 +116,10 @@ static void sprite_write(const sprite* p, const char* url) {
 
 void view_initialize() {
 	spr_monsters = (sprite*)loadb("art/monsters.pma");
+	if(spr_monsters) {
+		avatar_data.data = (sprite_name_info*)spr_monsters->edata();
+		avatar_data.count = spr_monsters->count / 2;
+	}
 }
 
 int draw::button(int x, int y, const char* string, const runable& ev, unsigned key) {
@@ -467,14 +472,16 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 	return fieldv(x, y, width, title, temp);
 }
 
-static int page_header(int x, int y, const char* title, int current_page, int maximum_page) {
+static int page_header(const char* title, int current_page, int maximum_page) {
 	if(!title)
 		return 0;
+	auto x = metrics::padding, y = metrics::padding;
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
 	text(x, y, title);
-	return texth() + metrics::padding;
+	y += texth() + metrics::padding;
+	return y;
 }
 
 static int small_header(int x, int y, int width, const char* title) {
@@ -516,9 +523,6 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	auto y1 = y;
 	if(i1 >= i2)
 		return 0;
-	setposition(x, y, width);
-	x += metrics::padding;
-	width -= metrics::padding * 2;
 	auto rc = start_group(x, y, width, title);
 	for(auto i = i1; i <= i2; i++) {
 		auto p = (name_info*)((char*)source + i * size);
@@ -542,8 +546,8 @@ void event_info::edit() {
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
-		int x = metrics::padding, y = metrics::padding;
-		y += page_header(x, y, "Боевая сцена", 1, 2);
+		auto x = metrics::padding;
+		auto y = page_header("Боевая сцена", 1, 2);
 		y += field(x, y, width, "Картинка", picture);
 		y += field(x, y, width, "Текст, который увидят игроки", te1);
 		y = y_buttons;
@@ -590,6 +594,7 @@ struct page_view {
 			render_background();
 			auto y = getheight() - texth() - metrics::padding * 3;
 			auto x = metrics::padding * 2;
+			x += button(x, y, "Готово", cmd(buttonok), KeyEnter);
 			x += button(x, y, "Далее", cmd(next_page, (int)this, !nextpage(false)), Alpha + 'N');
 			x += button(x, y, "Назад", cmd(prev_page, (int)this, !prevpage(false)), Alpha + 'P');
 			x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
@@ -597,13 +602,55 @@ struct page_view {
 				x += button(x, y, pc->name, cmd(pc->proc, (int)this), pc->key);
 			y = metrics::padding * 2;
 			x = metrics::padding * 2;
-			y += page_header(x, y, getheader(), 1, 2);
+			y = page_header(getheader(), 1, 2);
 			redraw(x, y, getwidth() - x * 2);
 			domodal();
 		}
 		return getresult();
 	}
 };
+
+static int group_combat_ability(int x, int y, int width, const character* player) {
+	char temp[260];
+	attack_info ai = {}; player->get(MeleeWeapon, ai);
+	auto y1 = y;
+	auto rga = start_group(x, y, width, "Боевые параметры");
+	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
+	y += fieldv(x, y, width, "THAC0", ai.thac0);
+	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
+	y += fieldv(x, y, width, "Класс брони", player->getac());
+	y += fieldv(x, y, width, "Хиты", player->gethp(), player->gethpmax());
+	y += close_group(x, y, rga);
+	return y - y1;
+}
+
+static int group_ability(int x, int y, int width, const character* player) {
+	auto y1 = y;
+	auto rga = start_group(x, y, width, "Атрибуты");
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+		auto v = player->get(i);
+		if(i == Strenght && v == 18)
+			y += fieldv(x, y, width, getstr(i), v, player->getstrper(), "%1i/%2.2i");
+		else
+			y += fieldv(x, y, width, getstr(i), v);
+	}
+	y += metrics::padding;
+	y += close_group(x, y, rga);
+	return y - y1;
+}
+
+void character::group_generate(int x, int y, int width) {
+	const int w1 = 200;
+	auto y1 = y;
+	y += group(x, y, w1, "Пол", gender_data, Male, Female, sizeof(gender_info), gender);
+	y += group(x, y, w1, "Раса", race_data, Human, Halfling, sizeof(race_info), race);
+	x += w1 + metrics::padding * 3;
+	y = y1;
+	y += group(x, y, w1, "Класс", class_data, Cleric, FighterMageTheif, sizeof(class_info), type);
+	x += w1 + metrics::padding * 3;
+	y = y1;
+	y += group(x, y, w1, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), alignment);
+}
 
 struct character_view : page_view {
 	character*	player;
@@ -620,18 +667,6 @@ struct character_view : page_view {
 		player->alignment = (alignment_s)xrand(LawfulGood, ChaoticEvil);
 		reroll();
 	}
-	void generate_page(int x, int y, int width) {
-		const int column_width = 200;
-		auto y1 = y;
-		y += group(x, y, column_width, "Пол", gender_data, Male, Female, sizeof(gender_info), player->gender);
-		y += group(x, y, column_width, "Раса", race_data, Human, Halfling, sizeof(race_info), player->race);
-		x += column_width + metrics::padding;
-		y = y1;
-		y += group(x, y, column_width, "Класс", class_data, Cleric, FighterMageTheif, sizeof(class_info), player->type);
-		x += column_width + metrics::padding;
-		y = y1;
-		y += group(x, y, column_width, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), player->alignment);
-	}
 	static void reroll_command() {
 		auto p = (character_view*)hot.param;
 		p->reroll();
@@ -643,42 +678,6 @@ struct character_view : page_view {
 		case 1: return information_command;
 		default: return 0;
 		}
-	}
-	char* show_attacks(char* result, const char* result_maximum, const attack_info& ai) {
-		auto format = "%1i/2";
-		auto value = ai.attacks;
-		if((value & 1) == 0) {
-			value /= 2;
-			format = "%1i";
-		}
-		return szprint(result, result_maximum, format, value);
-	}
-	int group_ability(int x, int y, int width) {
-		auto y1 = y;
-		auto rga = start_group(x, y, width, "Атрибуты");
-		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
-			auto v = player->get(i);
-			if(i == Strenght && v == 18)
-				y += fieldv(x, y, width, getstr(i), v, player->strenght_percent, "%1i/%2.2i");
-			else
-				y += fieldv(x, y, width, getstr(i), v);
-		}
-		y += metrics::padding;
-		y += close_group(x, y, rga);
-		return y - y1;
-	}
-	int group_combat_ability(int x, int y, int width) {
-		char temp[260];
-		attack_info ai = {}; player->get(MeleeWeapon, ai);
-		auto y1 = y;
-		auto rga = start_group(x, y, width, "Боевые параметры");
-		y += fieldv(x, y, width, "Количество атак", show_attacks(temp, zendof(temp), ai));
-		y += fieldv(x, y, width, "THAC0", ai.thac0);
-		y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
-		y += fieldv(x, y, width, "Класс брони", player->getac());
-		y += fieldv(x, y, width, "Хиты", player->hp, player->gethpmax());
-		y += close_group(x, y, rga);
-		return y - y1;
 	}
 	int group_basic(int x, int y, int w1, int w2) {
 		char temp[260];
@@ -722,15 +721,13 @@ struct character_view : page_view {
 		return y - y1;
 	}
 	void information(int x, int y, int width) {
-		x += metrics::padding;
-		width -= metrics::padding;
 		auto w1 = 160;
 		auto w2 = 250;
 		auto y1 = y;
 		y += group_basic(x, y, w1, w2) + metrics::padding;
 		auto y2 = y;
-		y += group_ability(x, y, w1) + metrics::padding;
-		y += group_combat_ability(x, y, w1) + metrics::padding;
+		y += group_ability(x, y, w1, player) + metrics::padding;
+		y += group_combat_ability(x, y, w1, player) + metrics::padding;
 		y = y2;
 		x += w1 + metrics::padding * 4;
 		y += group_skills(x, y, w2) + metrics::padding;
@@ -747,7 +744,7 @@ struct character_view : page_view {
 	}
 	void redraw(int x, int y, int width) override {
 		switch(page_current) {
-		case 0: generate_page(x, y, width); break;
+		case 0: player->group_generate(x, y, width); break;
 		case 1: information(x, y, width); break;
 		}
 	}
@@ -756,7 +753,13 @@ struct character_view : page_view {
 
 bool character::generate() {
 	character_view ev(this);
-	return ev.view() != 0;
+	if(!ev.view())
+		return false;
+	avatar = 0;
+	auto index = choose_avatar("Как выглядит ваш герой?", "character*", 64, avatar);
+	if(index != -1)
+		avatar = index;
+	return true;
 }
 
 struct image_info : point {
@@ -765,7 +768,7 @@ struct image_info : point {
 	unsigned char			alpha;
 	void clear() { memset(this, 0, sizeof(*this)); }
 };
-static adat<image_info, 1024> battle_images;
+static adat<image_info, 1024> scene_images;
 
 static void draw_grid(int x0, int y0) {
 	color c = colors::form;
@@ -776,9 +779,23 @@ static void draw_grid(int x0, int y0) {
 	}
 	for(auto x = 0; x <= combat_map_x; x++) {
 		auto x1 = x0 + x * combat_grid;
-		auto y2 = x0 + combat_map_y * combat_grid;
+		auto y2 = y0 + combat_map_y * combat_grid;
 		line(x1, y0, x1, y2, c);
 	}
+}
+
+static void draw_active_player(int x0, int y0) {
+	auto player = character::getactive();
+	if(!player)
+		return;
+	auto i = player->getposition();
+	if(i == Blocked)
+		return;
+	auto x = i % combat_map_x;
+	auto y = i / combat_map_x;
+	auto x1 = x0 + x * combat_grid;
+	auto y1 = y0 + y * combat_grid;
+	rectb({x1 + 1, y1 + 1, x1 + combat_grid - 1, y1 + combat_grid - 1}, colors::white);
 }
 
 static void draw_cost(int x0, int y0) {
@@ -812,7 +829,7 @@ void character::addbattle() {
 		return;
 	auto x = (index%combat_map_x)*combat_grid + combat_grid / 2;
 	auto y = (index / combat_map_y)*combat_grid + combat_grid / 2;
-	auto pi = battle_images.add();
+	auto pi = scene_images.add();
 	pi->frame = getavatar() * 2;
 	pi->flags = 0;
 	pi->alpha = 0xFF;
@@ -824,7 +841,7 @@ void character::addbattle() {
 }
 
 void combat_info::update() {
-	battle_images.clear();
+	scene_images.clear();
 	for(auto p : parcipants)
 		p->addbattle();
 }
@@ -847,6 +864,21 @@ static void set_defend() {
 	current_combat->movement = 0;
 }
 
+static void draw_images(int x, int y) {
+	for(auto& e : scene_images)
+		image(x + e.x, y + e.y, e.ps, e.frame, e.flags, e.alpha);
+}
+
+void combat_info::visualize() {
+	auto y_buttons = getheight() - buttons_height;
+	render_background();
+	auto x = metrics::padding, y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y;
+	update();
+	draw_grid(x, y);
+	draw_active_player(x, y);
+	draw_images(x, y);
+}
+
 void combat_info::move(character* player) {
 	current_combat = this;
 	player->setactive();
@@ -856,13 +888,13 @@ void combat_info::move(character* player) {
 	makewave(player->getposition());
 	while(ismodal() && movement > 0) {
 		render_background();
-		auto x = metrics::padding, y = metrics::padding;
+		auto x = metrics::padding, y = y_buttons - metrics::padding*2 - combat_grid*combat_map_y;
 		// Нарисуем все объекты, которые просчитали ранее
 		update();
 		draw_grid(x, y);
 		draw_cost(x, y);
-		for(auto& e : battle_images)
-			image(x + e.x, y + e.y, e.ps, e.frame, e.flags, e.alpha);
+		draw_active_player(x, y);
+		draw_images(x, y);
 		y = y_buttons;
 		x += button(x, y, "Атаковать", cmd(buttonok), Alpha + 'A');
 		x += button(x, y, "Стрелять", cmd(buttonok), Alpha + 'S');
@@ -877,21 +909,7 @@ void combat_info::move(character* player) {
 	}
 }
 
-int	character::select_avatar(short unsigned* result, unsigned count, const char* mask) {
-	auto pb = result;
-	auto pe = result + count;
-	auto ps = (sprite_name_info*)spr_monsters->edata();
-	auto pc = spr_monsters->count / 2;
-	for(auto i = 0; i < pc; i++) {
-		if(mask && !szpmatch(ps[i].name, mask))
-			continue;
-		if(pb < pe)
-			*pb++ = i;
-	}
-	return pb - result;
-}
-
-int character::choose_avatar(const char* mask, int current) {
+int character::choose_avatar(const char* title, const char* mask, int size, int current) {
 	struct avatar_view : controls::control {
 		adat<short unsigned, 512>	elements;
 		point		size, origin;
@@ -977,10 +995,10 @@ int character::choose_avatar(const char* mask, int current) {
 			}
 			return false;
 		}
-		constexpr avatar_view() : elements(), size{64, 64}, origin{32, 48},
-			current(0), current_hilite(-1), scanline(12), view_rect() {}
+		constexpr avatar_view(int size) : elements(), size{(short)size, (short)size}, origin{(short)size/2, ((short)size/4)*3},
+			current(0), current_hilite(-1), scanline((short)(800/size)), view_rect() {}
 	};
-	avatar_view s1;
+	avatar_view s1(size);
 	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
 	s1.current = s1.elements.indexof(current);
 	s1.correct();
@@ -988,7 +1006,8 @@ int character::choose_avatar(const char* mask, int current) {
 	auto y_buttons = getheight() - buttons_height;
 	while(ismodal()) {
 		render_background();
-		auto x = metrics::padding, y = metrics::padding;
+		auto x = metrics::padding;
+		auto y = page_header(title, 0, 0);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		y = y_buttons;
 		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
