@@ -394,11 +394,6 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 	return rc.y2 - y + metrics::padding;
 }
 
-struct enum_events {
-	virtual bool isallow(const enum_info& ei, int index) { return true; };
-	virtual void changed() {};
-};
-
 static void choose_enum() {
 	struct enum_view : controls::list, adat<int, 256> {
 		const enum_info&	source;
@@ -1042,17 +1037,30 @@ int character::edit_abilities(int x, int y, int width) {
 	return y - y0;
 }
 
-int character::edit_basic(int x, int y, int width) {
+struct character_events : enum_events {
+	friend struct character;
+	character&		player;
+	bool isallow(const enum_info& ei, int index) const override {
+		if(ei == alignment_enum_info) {
+			if(!player.isallow((alignment_s)index))
+				return false;
+		}
+		return true;
+	}
+	constexpr character_events(character& player) : player(player) {}
+};
+
+int character::edit_basic(int x, int y, int width, enum_events* pev) {
 	const int nw = 58;
 	const int tw = 12;
 	auto y0 = y;
 	auto x0 = x;
 	auto rga = start_group(x, y, width, "Базовые значения");
 	y += field(x, y, width, "Имя", name, title_width);
-	y += field(x, y, width, "Мировозрение", alignment, alignment_enum_info);
-	y += field(x, y, width, "Раса", race, race_enum_info);
-	y += field(x, y, width, "Пол", gender, gender_enum_info);
-	y += field(x, y, width, "Классы", type, class_enum_info);
+	y += field(x, y, width, "Мировозрение", alignment, alignment_enum_info, pev);
+	y += field(x, y, width, "Раса", race, race_enum_info, pev);
+	y += field(x, y, width, "Пол", gender, gender_enum_info, pev);
+	y += field(x, y, width, "Классы", type, class_enum_info, pev);
 	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width); x += title_width + nw;
 	field(x, y, tw + nw, ":/", levels[1], tw); x += tw + nw;
 	field(x, y, tw + nw, ":/", levels[2], tw);
@@ -1064,6 +1072,7 @@ int character::edit_basic(int x, int y, int width) {
 
 bool character::edit() {
 	setfocus(0, true);
+	character_events events(*this);
 	while(ismodal()) {
 		render_background();
 		auto x = metrics::padding * 2;
@@ -1071,7 +1080,7 @@ bool character::edit() {
 		auto y0 = y;
 		auto c1 = 300;
 		auto c2 = 160;
-		y += edit_basic(x, y, c1);
+		y += edit_basic(x, y, c1, &events);
 		y = y0;
 		x += c1 + metrics::padding * 3;
 		y += edit_abilities(x, y, c2);

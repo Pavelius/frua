@@ -224,9 +224,14 @@ struct enum_info {
 	constexpr enum_info() : data(), i1(), i2(), size() {}
 	constexpr enum_info(const void* data, int i1, int i2, unsigned size) : data(data),
 		i1(i1), i2(i2), size(size) {}
+	constexpr bool operator==(const enum_info& e) const { return data == e.data && size==e.size; }
 	const char*				get(int index) const;
 	constexpr const name_info* begin() const { return (name_info*)data; }
 	constexpr const name_info* end() const { return (name_info*)((char*)data + size*(i2+1)); }
+};
+struct enum_events {
+	virtual bool			isallow(const enum_info& ei, int index) const { return true; };
+	virtual void			changed() {};
 };
 struct alignment_info {
 	const char*				id;
@@ -389,7 +394,7 @@ private:
 	void					apply_class();
 	void					apply_race();
 	int						edit_abilities(int x, int y, int width);
-	int						edit_basic(int x, int y, int width);
+	int						edit_basic(int x, int y, int width, enum_events* pev = 0);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
