@@ -12,12 +12,14 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 const int combat_moverate = 3;
 
+struct enum_events;
 struct page_view;
 struct command;
 
 static anyval					command_value;
 static rect						command_rect;
 static enum_info				command_enum;
+static enum_events*				command_enum_events;
 static agrw<picture_info>		file_data;
 static agrw<picture_info>		file_monster_data;
 static const char*				file_exclude[] = {"fonts", "monsters", 0};
@@ -392,23 +394,64 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 	return rc.y2 - y + metrics::padding;
 }
 
+struct enum_events {
+	virtual bool isallow(const enum_info& ei, int index) { return true; };
+	virtual void changed() {};
+};
+
 static void choose_enum() {
-	draw::controls::list ev;
+	struct enum_view : controls::list, adat<int, 256> {
+		const enum_info&	source;
+		const char*	getname(char* result, const char* result_max, int line, int column) const {
+			switch(column) {
+			case 0: return source.get(data[line]);
+			default: return "";
+			}
+			return "";
+		}
+		int getmaximum() const override {
+			return count;
+		}
+		int getcurrent() const {
+			if(!count)
+				return 0;
+			return data[current];
+		}
+		constexpr enum_view(const enum_info& source) : source(source) {}
+	};
+	enum_view ev(command_enum);
+	ev.hilite_odd_lines = false;
+	for(auto i = command_enum.i1; i <= command_enum.i2; i++) {
+		if(command_enum_events) {
+			if(!command_enum_events->isallow(command_enum, i))
+				continue;
+		}
+		ev.add(i);
+	}
+	auto mc = imin(12, ev.getmaximum());
 	auto rc = command_rect;
+	auto ci = ev.indexof(command_value);
+	if(ci != -1)
+		ev.current = ci;
 	rc.y1 = rc.y2;
-	rc.y2 = rc.y1 + texth() * 10;
-	rectf(rc, colors::window);
-	draw::dropdown(rc, ev);
+	rc.y2 = rc.y1 + ev.getrowheight() * mc + 1;
+	//rectf(rc, colors::window.mix(colors::form, 192));
+	rectf(rc, colors::form);
+	if(draw::dropdown(rc, ev, true)) {
+		command_value = ev.getcurrent();
+		if(command_enum_events)
+			command_enum_events->changed();
+	}
 }
 
-static int field(int x, int y, int width, const char* title, const anyval& ev, const enum_info& ei) {
+static int field(int x, int y, int width, const char* title, const anyval& ev, const enum_info& ei, enum_events* pev = 0) {
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
 	unsigned flags = 0;
 	focusing((int)ev.getptr(), flags, rc);
 	auto focused = isfocused(flags);
-	auto result = focused && (hot.key == KeyEnter || hot.key == F4);
+	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key==KeyDown);
 	if(buttonh(rc, ischecked(flags), focused, isdisabled(flags), true, 0, 0, false, 0))
 		result = true;
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, ei.get(ev));
@@ -418,6 +461,7 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, c
 		command_value = ev;
 		command_rect = rc;
 		command_enum = ei;
+		command_enum_events = pev;
 		execute(choose_enum);
 	}
 	return rc.height() + metrics::padding * 2;
@@ -1012,8 +1056,8 @@ int character::edit_basic(int x, int y, int width) {
 	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width); x += title_width + nw;
 	field(x, y, tw + nw, ":/", levels[1], tw); x += tw + nw;
 	field(x, y, tw + nw, ":/", levels[2], tw);
-	x = x0;
-	y += d;
+	x = x0; y += d;
+	y += metrics::padding;
 	y += close_group(x, y, rga);
 	return y - y0;
 }

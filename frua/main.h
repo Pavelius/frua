@@ -225,6 +225,8 @@ struct enum_info {
 	constexpr enum_info(const void* data, int i1, int i2, unsigned size) : data(data),
 		i1(i1), i2(i2), size(size) {}
 	const char*				get(int index) const;
+	constexpr const name_info* begin() const { return (name_info*)data; }
+	constexpr const name_info* end() const { return (name_info*)((char*)data + size*(i2+1)); }
 };
 struct alignment_info {
 	const char*				id;

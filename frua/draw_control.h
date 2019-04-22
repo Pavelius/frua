@@ -173,7 +173,7 @@ int							button(int x, int y, const char* string, const runable& ev, unsigned k
 int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
-bool						dropdown(const rect& rc, draw::controls::control& e);
+bool						dropdown(const rect& rc, draw::controls::control& e, bool choose_mode = false);
 int							field(int x, int y, int width, const char* header_label, const char*& ev, int header_width);
 int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width = 120, int digits = -1);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);

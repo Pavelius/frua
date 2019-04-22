@@ -1,7 +1,7 @@
 #include "draw_control.h"
 #include "screenshoot.h"
 
-bool draw::dropdown(const rect& rc, draw::controls::control& e) {
+bool draw::dropdown(const rect& rc, draw::controls::control& e, bool choose_mode) {
 	screenshoot screen;
 	auto push_focus = getfocus();
 	setfocus((int)&e, true);
@@ -13,6 +13,12 @@ bool draw::dropdown(const rect& rc, draw::controls::control& e) {
 		case KeyEscape:
 			breakmodal(0);
 			hot.zero();
+			break;
+		case KeyEnter:
+			if(choose_mode) {
+				breakmodal(1);
+				hot.zero();
+			}
 			break;
 		case KeyTab:
 		case KeyTab | Shift:
@@ -28,9 +34,11 @@ bool draw::dropdown(const rect& rc, draw::controls::control& e) {
 				if(!areb(rc))
 					breakmodal(0);
 				else {
-					// Уже обработали команду
-					//hot.key = InputUpdate;
 				}
+			}
+			if(choose_mode && !hot.pressed) {
+				breakmodal(1);
+				hot.zero();
 			}
 			break;
 		}
