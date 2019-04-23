@@ -94,7 +94,9 @@ struct list : control {
 	virtual bool			treemarking(bool run) { return true; }
 	void					view(const rect& rc) override;
 };
-struct listh : list {
+struct picker : list {
+	int						pixel_per_column;
+	constexpr picker() : pixel_per_column(0) {}
 	void					view(const rect& rc) override;
 };
 struct column {

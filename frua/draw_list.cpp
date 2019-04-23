@@ -285,3 +285,7 @@ int list::find(int line, int column, const char* value, int lenght) const {
 	}
 	return -1;
 }
+
+void picker::view(const rect& rc) {
+
+}
