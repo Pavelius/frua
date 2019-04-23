@@ -5,7 +5,7 @@ class anyval {
 	unsigned			size;
 public:
 	constexpr anyval() : data(0), size(0) {}
-	constexpr anyval(const anyval& v) = default;
+	constexpr anyval(const anyval& v) : data(v.data), size(v.size) {}
 	template<class T> constexpr anyval(T& v) : data(&v), size(sizeof(T)) {}
 	constexpr explicit operator bool() const { return data != 0; }
 	constexpr bool operator==(const anyval& v) const { return data==v.data && size==v.size; }

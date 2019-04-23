@@ -1,4 +1,5 @@
 #include "anyval.h"
+#include "bsreq.h"
 #include "collection.h"
 #include "crt.h"
 #include "dice.h"
@@ -15,7 +16,12 @@ const int combat_map_x = 16;
 const int combat_map_y = 16;
 
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
-enum_info e##_enum_info(e##_data, 0, last, sizeof(e##_data[0]))
+enum_info e##_enum_info(e##_data, 0, last, sizeof(e##_data[0]));\
+const bsreq e##_type[] = {BSREQ(e##_info, id), BSREQ(e##_info, name), {}}
+#define DECLENUM(e) extern const bsreq e##_type[];\
+extern e##_info e##_data[];\
+extern enum_info e##_enum_info;\
+template<> constexpr const bsreq* bsreq::getmeta<e##_s>() { return e##_type; }
 
 enum item_s : unsigned char {
 	NoItem,
@@ -124,10 +130,7 @@ enum feat_s : unsigned char {
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
 };
-enum save_result_s : unsigned char {
-	NoSave, Negate, Half,
-};
-enum damage_s : unsigned char {
+enum dam_s : unsigned char {
 	Bludgeon, Piercing, Slashing,
 	Acid, Cold, Electricity, Fire,
 };
@@ -222,6 +225,10 @@ struct gender_info {
 	const char*				id;
 	const char*				name;
 };
+struct dam_info {
+	const char*				id;
+	const char*				name;
+};
 struct sprite_name_info {
 	char					name[32];
 };
@@ -267,7 +274,7 @@ struct event_info {
 };
 struct damage_info {
 	dice					damage;
-	damage_s				type;
+	dam_s				type;
 	char					thac0;
 	char					critical, multiplier;
 	explicit constexpr operator bool() const { return damage.d != 0; }
@@ -326,7 +333,7 @@ struct character {
 	void					apply_ability_restriction();
 	void					apply_feats();
 	void					clear();
-	static int				choose_avatar(const char* title, const char* mask, int size, int current);
+	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	static int				select_avatar(const char* mask);
 	void					correct();
@@ -363,6 +370,7 @@ struct character {
 	bool					isenemy(const character* p) const;
 	bool					isplayable() const { return reaction == Player; }
 	bool					move(direction_s d);
+	static const bsreq		metadata[];
 	static answer*			choose(const picture_info& image, aref<answer> source);
 	void					raise(class_s v);
 	void					setactive();
@@ -427,15 +435,12 @@ short unsigned				random();
 void						setblock();
 short unsigned				to(short unsigned i, direction_s d);
 }
-extern alignment_info		alignment_data[];
-extern enum_info			alignment_enum_info;
+DECLENUM(alignment);
+DECLENUM(class);
+DECLENUM(dam);
+DECLENUM(gender);
+DECLENUM(race);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character, 128> character_data;
-extern class_info			class_data[];
-extern enum_info			class_enum_info;
-extern gender_info			gender_data[];
-extern enum_info			gender_enum_info;
 extern adat<character*, 8>	party;
-extern race_info			race_data[];
-extern enum_info			race_enum_info;
 extern enum_info			size_enum_info;

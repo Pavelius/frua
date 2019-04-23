@@ -180,6 +180,9 @@
     <ClCompile Include="damage.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="bsreq.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -241,6 +244,9 @@
     </ClInclude>
     <ClInclude Include="enum_info.h">
       <Filter>Поддержка</Filter>
+    </ClInclude>
+    <ClInclude Include="bsreq.h">
+      <Filter>Коллекция</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

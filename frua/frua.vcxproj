@@ -123,6 +123,7 @@
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="attack.cpp" />
+    <ClCompile Include="bsreq.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
     <ClCompile Include="class.cpp" />
@@ -175,6 +176,7 @@
   <ItemGroup>
     <ClInclude Include="anyval.h" />
     <ClInclude Include="archive.h" />
+    <ClInclude Include="bsreq.h" />
     <ClInclude Include="bstream.h" />
     <ClInclude Include="collection.h" />
     <ClInclude Include="color.h" />

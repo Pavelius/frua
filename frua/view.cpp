@@ -19,6 +19,7 @@ static anyval					command_value;
 static rect						command_rect;
 static enum_info				command_enum;
 static draw_events*				command_draw_events;
+static char						command_mask[260];
 static agrw<picture_info>		file_data;
 static agrw<picture_info>		file_monster_data;
 static const char*				file_exclude[] = {"fonts", "monsters", 0};
@@ -359,6 +360,33 @@ static void render_title(int x, int y, int width, const char* title) {
 	render_title(x, y, width, temp, zendof(temp), title);
 }
 
+static void move_focus_prev() {
+	auto id = getnext(draw::getfocus(), Shift + KeyTab);
+	if(id)
+		setfocus(id, true);
+}
+
+static void move_focus_next() {
+	auto id = getnext(draw::getfocus(), KeyTab);
+	if(id)
+		setfocus(id, true);
+}
+
+static void button_handle(bool& result) {
+	switch(hot.key) {
+	case KeyEnter:
+	case F2:
+		result = true;
+		break;
+	case KeyUp:
+		execute(move_focus_prev);
+		break;
+	case KeyDown:
+		execute(move_focus_next);
+		break;
+	}
+}
+
 static int button(int x, int y, int width, callback proc, void* param, const char* string, unsigned flags = AlignCenterCenter, unsigned key = 0) {
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
 	focusing((int)param, flags, rc);
@@ -368,8 +396,7 @@ static int button(int x, int y, int width, callback proc, void* param, const cha
 		result = true;
 	if(focused) {
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-		if(hot.key == KeyEnter || hot.key == F2)
-			result = true;
+		button_handle(focused);
 	}
 	if(result)
 		execute(proc, (int)param);
@@ -392,6 +419,36 @@ static int field(int x, int y, int width, const char* title, picture_info& v) {
 	else
 		szprint(temp, zendof(temp), "Не меняется");
 	return button(x, y, width, choose_picture, &v, temp, AlignLeftCenter);
+}
+
+static int get_field_width(int digits) {
+	return 12 * (digits + 1) + 4 * 2 + 16;;
+}
+
+static int field(int x, int y, const char* title, const anyval& v, int digits) {
+	return draw::field(x, y, title_width + get_field_width(digits), title, v, title_width, digits);
+}
+
+static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2, const anyval& v2) {
+	auto w = get_field_width(digits);
+	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
+	x += title_width + w - 4;
+	auto tw = textw(t2);
+	draw::field(x, y, tw + w, t2, v2, tw, digits);
+	return d;
+}
+
+static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2, const anyval& v2, const char* t3, const anyval& v3) {
+	int tw;
+	auto w = get_field_width(digits);
+	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
+	x += title_width + w - 4;
+	tw = textw(t2);
+	draw::field(x, y, tw + w, t2, v2, tw, digits);
+	x += tw + w - 4;
+	tw = textw(t3);
+	draw::field(x, y, tw + w, t3, v3, tw, digits);
+	return d;
 }
 
 static int field(int x, int y, int width, const char* title, controls::textedit& v) {
@@ -436,7 +493,6 @@ static void choose_enum() {
 		ev.current = ci;
 	rc.y1 = rc.y2;
 	rc.y2 = rc.y1 + ev.getrowheight() * mc + 1;
-	//rectf(rc, colors::window.mix(colors::form, 192));
 	rectf(rc, colors::form);
 	if(draw::dropdown(rc, ev, true)) {
 		command_value = ev.getcurrent();
@@ -468,13 +524,13 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, c
 	return rc.height() + metrics::padding * 2;
 }
 
-static int field(int x, int y, int width, const char* title, const special_info& ev) {
-	setposition(x, y, width);
-	titletext(x, y, width, 0, title, title_width);
-	rect rc = {x, y, x + width, y + texth() + 4 * 2};
-	unsigned flags = 0;
-	focusing((int)&ev, flags, rc);
-	return rc.height() + metrics::padding * 2;
+static void choose_avatar() {
+	auto p = (short unsigned*)hot.param;
+	if(!p)
+		return;
+	auto old_focus = getfocus();
+	character::choose(*p, "Какую картинку использовать?", command_mask, 64);
+	setfocus(old_focus, true);
 }
 
 static int fieldv(int x, int y, int width, const char* title, const char* value) {
@@ -504,16 +560,25 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 	return fieldv(x, y, width, title, temp);
 }
 
-static int page_header(const char* title, int current_page, int maximum_page) {
-	if(!title)
-		return 0;
-	auto x = metrics::padding, y = metrics::padding;
+static void page_header(int& x, int& y, const char* title) {
+	x = metrics::padding;
+	y = metrics::padding;
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
 	text(x, y, title);
 	y += texth() + metrics::padding;
-	return y;
+	x += metrics::padding;
+}
+
+static void page_footer(int& x, int& y, bool allow_cancel = false) {
+	x = metrics::padding;
+	y = y_buttons;
+	if(allow_cancel) {
+		x += button(x, y, "OK", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
+	} else
+		x += button(x, y, "Готово", cmd(buttonok), KeyEnter);
 }
 
 static int small_header(int x, int y, int width, const char* title) {
@@ -585,19 +650,54 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	return y - y1 + metrics::padding;
 }
 
+static int field_picture(int x, int y, int width, int height, short unsigned& ev, const char* title, const char* mask) {
+	auto y0 = y;
+	unsigned flags = 0;
+	rect rgo = start_group(x, y, width, title);
+	rect rc = {x, y, x + width, y + height};
+	focusing((int)&ev, flags, rc);
+	auto focused = isfocused(flags);
+	auto a = area(rc);
+	if(a == AreaHilited || a == AreaHilitedPressed)
+		rectf(rc, colors::edit);
+	rectb(rc, colors::border);
+	if(spr_monsters) {
+		auto dx = width / 4;
+		auto y1 = y + (height / 4) * 3;
+		image(x + dx * 1, y1, spr_monsters, ev * 2 + 0, 0);
+		image(x + dx * 3, y1, spr_monsters, ev * 2 + 1, 0);
+	}
+	auto result = false;
+	if(focused) {
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		button_handle(result);
+	}
+	if(a == AreaHilited || a == AreaHilitedPressed) {
+		if(hot.key == MouseLeft && !hot.pressed)
+			result = true;
+	}
+	if(result) {
+		command_mask[0] = 0;
+		if(mask)
+			zcpy(command_mask, mask);
+		execute(choose_avatar, (int)&ev);
+	}
+	y += rc.height();
+	y += close_group(x, y, rgo);
+	return y - y0;
+}
+
 void event_info::edit() {
 	char ti1[4096]; controls::textedit te1(ti1, sizeof(ti1), false); ti1[0] = 0;
 	int width = getwidth() - metrics::padding * 2;
+	int x, y;
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
-		auto x = metrics::padding;
-		auto y = page_header("Боевая сцена", 1, 2);
+		page_header(x, y, "Боевая сцена");
 		y += field(x, y, width, "Картинка", picture);
 		y += field(x, y, width, "Текст, который увидят игроки", te1);
-		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(buttonok));
-		x += button(x, y, "Отмена", cmd(buttoncancel));
+		page_footer(x, y, true);
 		domodal();
 	}
 }
@@ -647,7 +747,7 @@ struct page_view {
 				x += button(x, y, pc->name, cmd(pc->proc, (int)this), pc->key);
 			y = metrics::padding * 2;
 			x = metrics::padding * 2;
-			y = page_header(getheader(), 1, 2);
+			page_header(x, y, getheader());
 			redraw(x, y, getwidth() - x * 2);
 			domodal();
 		}
@@ -809,10 +909,7 @@ bool character::generate() {
 	character_view ev(this);
 	if(!ev.view())
 		return false;
-	avatar = 0;
-	auto index = choose_avatar("Как выглядит ваш герой?", "character*", 64, avatar);
-	if(index != -1)
-		avatar = index;
+	choose(avatar, "Как выглядит ваш герой?", "character*", 64);
 	return true;
 }
 
@@ -961,7 +1058,7 @@ void combat_info::move(character* player) {
 	}
 }
 
-int character::choose_avatar(const char* title, const char* mask, int size, int current) {
+bool character::choose(short unsigned& result, const char* title, const char* mask, int size) {
 	struct avatar_view : controls::control {
 		adat<short unsigned, 512>	elements;
 		point		size, origin;
@@ -1052,27 +1149,29 @@ int character::choose_avatar(const char* title, const char* mask, int size, int 
 	};
 	avatar_view s1(size);
 	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
-	s1.current = s1.elements.indexof(current);
+	s1.current = s1.elements.indexof(result);
 	s1.correct();
 	setfocus(0, true);
+	int x, y;
 	while(ismodal()) {
 		render_background();
-		auto x = metrics::padding;
-		auto y = page_header(title, 0, 0);
+		page_header(x, y, title);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
-		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(buttonok), KeyEnter);
-		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
+		page_footer(x, y, true);
 		domodal();
 	}
-	return s1.getcurrent();
+	if(getresult() != 0) {
+		result = s1.getcurrent();
+		return true;
+	}
+	return false;
 }
 
 int character::edit_abilities(int x, int y, int width) {
 	auto y0 = y;
 	auto rga = start_group(x, y, width, "Атрибуты");
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1))
-		y += field(x, y, width, getstr(i), abilities[i], 100, 2);
+		y += field(x, y, width, getstr(i), abilities[i], 100, 2, 0);
 	y += metrics::padding;
 	y += close_group(x, y, rga);
 	return y - y0;
@@ -1136,8 +1235,10 @@ int character::edit_basic(int x, int y, int width, draw_events* pev) {
 static void choose_attack() {
 	auto p = (special_info*)hot.param;
 	auto e = *p;
+	auto old_focus = getfocus();
 	if(e.edit())
 		*p = e;
+	setfocus(old_focus, true);
 }
 
 int	character::edit_attacks(int x, int y, int width) {
@@ -1145,18 +1246,25 @@ int	character::edit_attacks(int x, int y, int width) {
 	auto rga = start_group(x, y, width, "Специальные атаки");
 	for(auto& e : special_attacks)
 		y += button(x, y, width, choose_attack, &e, "Нет");
-	y += metrics::padding;
 	y += close_group(x, y, rga);
 	return y - y0;
+}
+
+static void choose_spells() {
+
+}
+
+static void choose_feats() {
+
 }
 
 bool character::edit() {
 	setfocus(0, true);
 	character_events events(*this);
+	int x, y;
 	while(ismodal()) {
 		render_background();
-		auto x = metrics::padding * 2;
-		auto y = page_header("Монстр/Персонаж", 1, 1);
+		page_header(x, y, "Монстр/Персонаж");
 		auto y0 = y;
 		auto c1 = 300;
 		auto c2 = 160;
@@ -1168,49 +1276,39 @@ bool character::edit() {
 		y = y0;
 		x += c2 + metrics::padding * 3;
 		auto c3 = getwidth() - x - metrics::padding * 2;
+		y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
 		y += edit_attacks(x, y, c3);
-		y = y_buttons;
-		x = metrics::padding;
-		x += button(x, y, "Выбрать", cmd(buttonok));
-		x += button(x, y, "Отмена", cmd(buttoncancel));
+		page_footer(x, y, true);
+		x += button(x, y, "Заклинания", cmd(choose_spells), Ctrl + Alpha + 'S');
+		x += button(x, y, "Особенности", cmd(choose_feats), Ctrl + Alpha + 'F');
 		domodal();
 	}
 	return getresult() != 0;
 }
 
-static int field(int x, int y, int width, const char* title, dice& ev) {
-	const int nw = 58;
-	const int tw = 12;
-	auto d = field(x, y, title_width + nw, title, ev.c, title_width, 2); x += title_width + nw;
-	field(x, y, tw + nw, ":d", ev.d, tw, 2); x += tw + nw;
-	field(x, y, tw + nw, ":+", ev.b, tw, 2); x += tw + nw;
-	return d;
+static int field(int x, int y, const char* title, dice& ev) {
+	return field(x, y, title, ev.c, 2, ":d", ev.d, ":+", ev.b);
 }
 
 static int group(int x, int y, int width, damage_info& ev) {
-	const int nw = 58;
-	const int tw = 12;
-	auto y0 = y, x0 = x;
-	y += field(x, y, title_width + nw, "Бонус", ev.thac0, title_width);
-	y += field(x, y, width, "Урон", ev.damage);
-	auto d = field(x, y, title_width + nw, "Критический", ev.critical, title_width, 1); x += title_width + nw;
-	field(x, y, tw + nw, ":x", ev.multiplier, tw, 1); x += tw + nw;
-	x = x0; y += d;
+	auto y0 = y;
+	y += field(x, y, width, "Тип", ev.type, dam_enum_info);
+	y += field(x, y, "Бонус", ev.thac0, 2);
+	y += field(x, y, "Урон", ev.damage);
+	y += field(x, y, "Критический", ev.critical, 2, ":x", ev.multiplier);
 	return y - y0;
 }
 
 bool special_info::edit() {
 	setfocus(0, true);
+	int x, y;
 	while(ismodal()) {
 		render_background();
-		auto x = metrics::padding * 2;
-		auto y = page_header("Специальная атака", 1, 1);
-		auto y0 = y;
-		auto c1 = 200;
+		page_header(x, y, "Специальная атака");
+		auto y0 = y, c1 = 300;
+		y += field(x, y, "К-во атак", attacks, 2);
 		y += group(x, y, c1, *static_cast<damage_info*>(this));
-		y = y_buttons;
-		x = metrics::padding;
-		x += button(x, y, "Готово", cmd(buttonok));
+		page_footer(x, y, true);
 		domodal();
 	}
 	return getresult() != 0;
