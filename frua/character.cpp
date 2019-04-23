@@ -58,6 +58,8 @@ void character::clear() {
 	memset(this, 0, sizeof(character));
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1))
 		abilities[i] = 10;
+	base_ac = 10;
+	apply_feats();
 }
 
 void character::roll_ability() {
@@ -79,10 +81,8 @@ void character::roll_ability() {
 	iswap(abilities[ability], abilities[ability_best]);
 }
 
-void character::apply_race() {
-	// Применим нужные особенности
-	feats |= race_data[race].feats.data;
-	// Приведем в порядок минимальные и максимаьные атрибуты
+void character::apply_ability_restriction() {
+	// Ограничения от расы и ее бонусы
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 		if(abilities[i] < race_data[race].minimum[i])
 			abilities[i] = race_data[race].minimum[i];
@@ -90,11 +90,6 @@ void character::apply_race() {
 			abilities[i] = race_data[race].maximum[i];
 		abilities[i] += race_data[race].adjustment[i];
 	}
-}
-
-void character::apply_class() {
-	// Применим нужные особенности
-	feats |= class_data[type].feats.data;
 	// Приведем в порядок минимальные и максимальные атрибуты
 	for(auto e : class_data[type].classes) {
 		for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -104,6 +99,13 @@ void character::apply_class() {
 				abilities[i] = class_data[e].minimum[i];
 		}
 	}
+}
+
+void character::apply_feats() {
+	feats = race_data[race].feats.data;
+	feats |= class_data[type].feats.data;
+	movement = race_data[race].movement;
+	size = race_data[race].size;
 }
 
 static int random_avatar(race_s race) {
@@ -120,8 +122,8 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	this->alignment = alignment;
 	this->reaction = reaction;
 	roll_ability();
-	apply_race();
-	apply_class();
+	apply_feats();
+	apply_ability_restriction();
 	if(!is(NoExeptionalStrenght))
 		strenght_percent = xrand(1, 100);
 	for(auto e : class_data[type].classes)
@@ -154,7 +156,7 @@ void character::raise(class_s v) {
 	}
 }
 
-bool character::isallow(alignment_s v) const {
+bool character::isallow(alignment_s v, class_s type) {
 	auto& ev = class_data[type];
 	for(unsigned i = 0; i < ev.classes.count; i++) {
 		auto e = ev.classes.data[i];
@@ -162,6 +164,11 @@ bool character::isallow(alignment_s v) const {
 			return false;
 	}
 	return true;
+}
+
+bool character::isallow(class_s v, race_s race) {
+	auto& e = class_data[v].races;
+	return !e || e.is(race);
 }
 
 int character::getstrex() const {
@@ -184,16 +191,16 @@ int character::getstrex() const {
 }
 
 int character::getac() const {
-	auto result = 10;
+	auto result = base_ac;
 	auto dex = get(Dexterity);
 	result -= maptbl(defence_adjustment, dex);
 	return result;
 }
 
-int	character::gethpmax() const {
+int	character::gethpmax(int v) const {
 	if(!class_data[type].classes.count)
 		return 0;
-	int result = hp_rolled / class_data[type].classes.count;
+	int result = v / class_data[type].classes.count;
 	int level = levels[0];
 	int con = get(Constitution);
 	if(is(BonusHits))
@@ -274,4 +281,28 @@ int character::select_avatar(const char* mask) {
 	if(!count)
 		return -1;
 	return source[rand() % count];
+}
+
+void character::correct() {
+	// Обнулим классы, которые не надо выводить
+	for(int i = class_data[type].classes.count; i < sizeof(levels) / sizeof(levels[0]); i++)
+		levels[i] = 0;
+	// Откорректируем класс
+	if(!isallow(type)) {
+		auto old = type;
+		do {
+			type = (class_s)(type + 1);
+			if(type > FighterMageTheif)
+				type = Cleric;
+		} while(type != old && !isallow(type));
+	}
+	// Откорректируем мировозрение
+	if(!isallow(alignment)) {
+		auto old = alignment;
+		do {
+			alignment = (alignment_s)(alignment + 1);
+			if(alignment > ChaoticEvil)
+				alignment = LawfulGood;
+		} while(alignment!=old && !isallow(alignment));
+	}
 }

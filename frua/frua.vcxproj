@@ -131,6 +131,7 @@
     <ClCompile Include="combat.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
+    <ClCompile Include="damage.cpp" />
     <ClCompile Include="dice.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
@@ -158,6 +159,7 @@
     <ClCompile Include="point.cpp" />
     <ClCompile Include="race.cpp" />
     <ClCompile Include="screenshoot.cpp" />
+    <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
@@ -181,6 +183,7 @@
     <ClInclude Include="dice.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="draw_control.h" />
+    <ClInclude Include="enum_info.h" />
     <ClInclude Include="initializer_list.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />

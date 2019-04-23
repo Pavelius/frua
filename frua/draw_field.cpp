@@ -10,6 +10,7 @@ enum field_type_s : unsigned char {
 };
 
 static anyval		edit_value;
+static draw_events*	edit_events;
 
 static const char* getvalue(const anyval& v, field_type_s t, char* result, const char* result_end) {
 	if(!v)
@@ -49,7 +50,7 @@ public:
 		return false;
 	}
 	bool isfocused() const override {
-		return getfocus() == (int)value.getptr();
+		return getfocus() == (int)value.ptr();
 	}
 	void load() {
 		auto p = getvalue(value, type, source, source + sizeof(source) / sizeof(source[0]) - 1);
@@ -59,6 +60,8 @@ public:
 	}
 	void save() {
 		setvalue(value, type, source);
+		if(edit_events)
+			edit_events->changed(value);
 	}
 	void update(const anyval& ev, field_type_s et, int digits = -1) {
 		if(value == ev)
@@ -100,14 +103,14 @@ static void execute(callback proc, const anyval& ev) {
 	draw::execute(proc);
 }
 
-int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits) {
+int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits, draw_events* pev) {
 	draw::state push;
 	setposition(x, y, width);
 	if(header_label && header_label[0])
 		titletext(x, y, width, 0, header_label, header_width);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignRight;
-	focusing((int)ev.getptr(), flags, rc);
+	focusing((int)ev.ptr(), flags, rc);
 	bool focused = isfocused(flags);
 	draw::rectb(rc, colors::border);
 	rect rco = rc;
@@ -120,6 +123,7 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	}
 	auto a = area(rc);
 	if(isfocused(flags)) {
+		edit_events = pev;
 		edit.align = flags & AlignMask;
 		edit.update(ev, FieldNumber, digits);
 		edit.view(rc);
@@ -131,8 +135,7 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	return rc.height() + metrics::padding * 2;
 }
 
-
-int draw::field(int x, int y, int width, const char* header_label, const char*& sev, int header_width) {
+int draw::field(int x, int y, int width, const char* header_label, const char*& sev, int header_width, draw_events* pev) {
 	draw::state push;
 	setposition(x, y, width);
 	if(header_label && header_label[0])
@@ -140,11 +143,12 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = 0;
 	anyval ev = sev;
-	focusing((int)ev.getptr(), flags, rc);
+	focusing((int)ev.ptr(), flags, rc);
 	bool focused = isfocused(flags);
 	draw::rectb(rc, colors::border);
 	auto a = area(rc);
 	if(isfocused(flags)) {
+		edit_events = pev;
 		edit.align = flags & AlignMask;
 		edit.update(ev, FieldText);
 		edit.view(rc);
@@ -154,4 +158,8 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 		draw::texte(rc + metrics::edit, p, flags, -1, -1);
 	}
 	return rc.height() + metrics::padding * 2;
+}
+
+void field_before() {
+	edit_events = 0;
 }

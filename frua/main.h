@@ -2,6 +2,7 @@
 #include "collection.h"
 #include "crt.h"
 #include "dice.h"
+#include "enum_info.h"
 #include "point.h"
 #include "stringcreator.h"
 
@@ -42,6 +43,7 @@ enum item_s : unsigned char {
 	LastItem = StarSapphire
 };
 enum class_s : unsigned char {
+	Monster,
 	Cleric, Fighter, Mage, Paladin, Ranger, Theif,
 	FighterCleric, FighterMage, FighterTheif,
 	ClericMage, MageTheif,
@@ -49,6 +51,7 @@ enum class_s : unsigned char {
 };
 enum race_s : unsigned char {
 	Human, Dwarf, Elf, Gnome, HalfElf, Halfling,
+	Humanoid, Animal, Insectoid, Demon, Dragon, Undead,
 };
 enum alignment_s : unsigned char {
 	LawfulGood, NeutralGood, ChaoticGood,
@@ -76,10 +79,6 @@ enum god_s : unsigned char {
 enum group_s : unsigned char {
 	GeneralGroup,
 	Warriors, Priests, Rogues, Wizards
-};
-enum monster_s : unsigned char {
-	Character,
-	Orc, Rogue,
 };
 enum landscape_s : unsigned  char {
 	Plain, Brush, Forest, Desert, Hills, Mountains, Swamp, Jungle, Ocean, Arctic,
@@ -119,7 +118,7 @@ enum feat_s : unsigned char {
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells, BonusHits,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
-	HolyGrace, ExeptionalStrenght, NoExeptionalStrenght,
+	HolyGrace, NoExeptionalStrenght,
 	UseLeatherArmor, UseMetalArmor, UseShield,
 };
 enum reaction_s : unsigned char {
@@ -196,6 +195,7 @@ const unsigned RMonth = 30 * RDay;
 const unsigned RYear = 12 * 30 * RDay;
 
 struct character;
+struct draw_events;
 struct item;
 struct sprite;
 
@@ -212,26 +212,6 @@ struct answers : adat<answer, 32> {
 	void					add(int id, const char* text);
 private:
 	char					text[4096];
-};
-struct name_info {
-	const char*				id;
-	const char*				name;
-};
-struct enum_info {
-	const void*				data;
-	int						i1, i2;
-	unsigned				size;
-	constexpr enum_info() : data(), i1(), i2(), size() {}
-	constexpr enum_info(const void* data, int i1, int i2, unsigned size) : data(data),
-		i1(i1), i2(i2), size(size) {}
-	constexpr bool operator==(const enum_info& e) const { return data == e.data && size==e.size; }
-	const char*				get(int index) const;
-	constexpr const name_info* begin() const { return (name_info*)data; }
-	constexpr const name_info* end() const { return (name_info*)((char*)data + size*(i2+1)); }
-};
-struct enum_events {
-	virtual bool			isallow(const enum_info& ei, int index) const { return true; };
-	virtual void			changed() {};
 };
 struct alignment_info {
 	const char*				id;
@@ -266,6 +246,7 @@ struct class_info {
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			feats;
 	char					minimum[Charisma + 1];
+	adat<race_s, 12>		races;
 	char					bonus_hd;
 };
 struct race_info {
@@ -276,6 +257,8 @@ struct race_info {
 	char					adjustment[Charisma + 1];
 	char					theive_skills[(ReadLanguages - PickPockets) + 1];
 	feata					feats;
+	size_s					size;
+	char					movement;
 	const char*				info;
 };
 struct event_info {
@@ -283,15 +266,22 @@ struct event_info {
 	void					edit();
 };
 struct damage_info {
-	damage_s				type;
 	dice					damage;
+	damage_s				type;
+	char					thac0;
+	char					critical, multiplier;
+	explicit constexpr operator bool() const { return damage.d != 0; }
 };
 struct attack_info : damage_info {
 	char					attacks; // per two rounds
-	char					thac0;
-	char					critical, multiplier;
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
+};
+struct special_info : damage_info {
+	char					attacks; // per two rounds
+	char					range; // in squars.
+	unsigned				feats;
+	bool					edit();
 };
 struct itemweight {
 	item_s					key;
@@ -333,10 +323,13 @@ struct treasure {
 struct character {
 	operator bool() const { return name != 0; }
 	void					addbattle();
+	void					apply_ability_restriction();
+	void					apply_feats();
 	void					clear();
 	static int				choose_avatar(const char* title, const char* mask, int size, int current);
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	static int				select_avatar(const char* mask);
+	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	bool					edit();
 	bool					generate();
@@ -351,7 +344,10 @@ struct character {
 	class_s					getclass() const { return type; }
 	gender_s				getgender() const { return gender; }
 	int						gethp() const { return hp; }
-	int						gethpmax() const;
+	int						gethpmax(int v) const;
+	int						gethpmax() const { return gethpmax(hp_rolled); }
+	int						getlevel() const { return levels[0]; }
+	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
 	race_s					getrace() const { return race; }
 	int						getstrex() const;
@@ -359,10 +355,13 @@ struct character {
 	short unsigned			getposition() const { return index; }
 	void					group_generate(int x, int y, int width);
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
-	bool					isalive() const { return hp>0; }
-	bool					isallow(alignment_s v) const;
+	bool					isalive() const { return hp > 0; }
+	static bool				isallow(alignment_s v, class_s type);
+	bool					isallow(alignment_s v) const { return isallow(v, type); }
+	bool					isallow(class_s v) const { return isallow(v, race); }
+	static bool				isallow(class_s v, race_s race);
 	bool					isenemy(const character* p) const;
-	bool					isplayable() const { return reaction==Player; }
+	bool					isplayable() const { return reaction == Player; }
 	bool					move(direction_s d);
 	static answer*			choose(const picture_info& image, aref<answer> source);
 	void					raise(class_s v);
@@ -376,25 +375,28 @@ private:
 	alignment_s				alignment;
 	class_s					type;
 	race_s					race;
-	monster_s				monster;
 	reaction_s				reaction;
 	direction_s				direction;
+	size_s					size;
 	char					abilities[Charisma + 1];
 	short					hp, hp_rolled;
 	char					initiative;
 	unsigned				feats;
 	char					strenght_percent;
+	char					movement;
 	short unsigned			index;
 	short unsigned			avatar;
 	char					levels[3];
+	char					base_ac;
 	item					wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
+	special_info			special_attacks[4];
 	friend struct character_view;
-	void					apply_class();
-	void					apply_race();
+	friend struct character_events;
 	int						edit_abilities(int x, int y, int width);
-	int						edit_basic(int x, int y, int width, enum_events* pev = 0);
+	int						edit_attacks(int x, int y, int width);
+	int						edit_basic(int x, int y, int width, draw_events* pev = 0);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
@@ -436,3 +438,4 @@ extern enum_info			gender_enum_info;
 extern adat<character*, 8>	party;
 extern race_info			race_data[];
 extern enum_info			race_enum_info;
+extern enum_info			size_enum_info;

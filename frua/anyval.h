@@ -12,5 +12,6 @@ public:
 	operator int() const;
 	void operator=(const int v) const;
 	void				clear() { data = 0; size = 0; }
-	constexpr const void* getptr() const { return data; }
+	template<class T> constexpr bool is(const T& v) const { return data==&v; }
+	constexpr const void* ptr() const { return data; }
 };

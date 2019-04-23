@@ -12,14 +12,13 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 const int combat_moverate = 3;
 
-struct enum_events;
 struct page_view;
 struct command;
 
 static anyval					command_value;
 static rect						command_rect;
 static enum_info				command_enum;
-static enum_events*				command_enum_events;
+static draw_events*				command_draw_events;
 static agrw<picture_info>		file_data;
 static agrw<picture_info>		file_monster_data;
 static const char*				file_exclude[] = {"fonts", "monsters", 0};
@@ -360,31 +359,39 @@ static void render_title(int x, int y, int width, const char* title) {
 	render_title(x, y, width, temp, zendof(temp), title);
 }
 
+static int button(int x, int y, int width, callback proc, void* param, const char* string, unsigned flags = AlignCenterCenter, unsigned key = 0) {
+	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+	focusing((int)param, flags, rc);
+	auto focused = isfocused(flags);
+	auto result = false;
+	if(draw::buttonh(rc, false, focused, false, true, string, key, false))
+		result = true;
+	if(focused) {
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		if(hot.key == KeyEnter || hot.key == F2)
+			result = true;
+	}
+	if(result)
+		execute(proc, (int)param);
+	return rc.height() + metrics::padding;
+}
+
+static void choose_picture() {
+	auto p = (picture_info*)hot.param;
+	auto pi = p->choose_image();
+	if(pi)
+		*p = *pi;
+}
+
 static int field(int x, int y, int width, const char* title, picture_info& v) {
+	char temp[260];
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
-	rect rc = {x, y, x + width, y + texth() + 4 * 2};
-	char temp[260];
 	if(v)
 		v.geturl(temp);
 	else
-		szprint(temp, zendof(temp), "Не изменяется");
-	unsigned flags = 0;
-	focusing((int)&v, flags, rc);
-	if(buttonh(rc,
-		ischecked(flags), isfocused(flags), isdisabled(flags), true, 0, 0, false, 0)
-		|| (isfocused(flags) && hot.key == KeyEnter)) {
-		execute([] {
-			auto p = (picture_info*)hot.param;
-			auto pi = p->choose_image();
-			if(pi)
-				*p = *pi;
-		}, (int)&v);
-	}
-	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, temp);
-	if(isfocused(flags))
-		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-	return rc.height() + metrics::padding * 2;
+		szprint(temp, zendof(temp), "Не меняется");
+	return button(x, y, width, choose_picture, &v, temp, AlignLeftCenter);
 }
 
 static int field(int x, int y, int width, const char* title, controls::textedit& v) {
@@ -404,9 +411,7 @@ static void choose_enum() {
 			}
 			return "";
 		}
-		int getmaximum() const override {
-			return count;
-		}
+		int getmaximum() const override { return count; }
 		int getcurrent() const {
 			if(!count)
 				return 0;
@@ -414,11 +419,12 @@ static void choose_enum() {
 		}
 		constexpr enum_view(const enum_info& source) : source(source) {}
 	};
+	auto events = command_draw_events;
 	enum_view ev(command_enum);
 	ev.hilite_odd_lines = false;
 	for(auto i = command_enum.i1; i <= command_enum.i2; i++) {
-		if(command_enum_events) {
-			if(!command_enum_events->isallow(command_enum, i))
+		if(events) {
+			if(!events->isallow(command_enum, i))
 				continue;
 		}
 		ev.add(i);
@@ -434,19 +440,19 @@ static void choose_enum() {
 	rectf(rc, colors::form);
 	if(draw::dropdown(rc, ev, true)) {
 		command_value = ev.getcurrent();
-		if(command_enum_events)
-			command_enum_events->changed();
+		if(events)
+			events->changed(command_value);
 	}
 }
 
-static int field(int x, int y, int width, const char* title, const anyval& ev, const enum_info& ei, enum_events* pev = 0) {
+static int field(int x, int y, int width, const char* title, const anyval& ev, const enum_info& ei, draw_events* pev = 0) {
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
 	unsigned flags = 0;
-	focusing((int)ev.getptr(), flags, rc);
+	focusing((int)ev.ptr(), flags, rc);
 	auto focused = isfocused(flags);
-	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key==KeyDown);
+	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key == KeyDown);
 	if(buttonh(rc, ischecked(flags), focused, isdisabled(flags), true, 0, 0, false, 0))
 		result = true;
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, ei.get(ev));
@@ -456,9 +462,18 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, c
 		command_value = ev;
 		command_rect = rc;
 		command_enum = ei;
-		command_enum_events = pev;
+		command_draw_events = pev;
 		execute(choose_enum);
 	}
+	return rc.height() + metrics::padding * 2;
+}
+
+static int field(int x, int y, int width, const char* title, const special_info& ev) {
+	setposition(x, y, width);
+	titletext(x, y, width, 0, title, title_width);
+	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+	unsigned flags = 0;
+	focusing((int)&ev, flags, rc);
 	return rc.height() + metrics::padding * 2;
 }
 
@@ -640,7 +655,7 @@ struct page_view {
 	}
 };
 
-static int group_combat_ability(int x, int y, int width, const character* player) {
+static int group_combat_ability(int x, int y, int width, const character* player, bool range_hits) {
 	char temp[260];
 	attack_info ai = {}; player->get(MeleeWeapon, ai);
 	auto y1 = y;
@@ -649,7 +664,16 @@ static int group_combat_ability(int x, int y, int width, const character* player
 	y += fieldv(x, y, width, "THAC0", ai.thac0);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", player->getac());
-	y += fieldv(x, y, width, "Хиты", player->gethp(), player->gethpmax());
+	if(range_hits) {
+		auto type = player->getclass();
+		auto rolled = 0;
+		for(unsigned i = 0; i < class_data[type].classes.count; i++)
+			rolled += class_data[class_data[type].classes[i]].hd * player->getlevel(i);
+		auto min = player->gethpmax(0);
+		auto max = player->gethpmax(rolled);
+		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
+	} else
+		y += fieldv(x, y, width, "Хиты", player->gethp(), player->gethpmax());
 	y += close_group(x, y, rga);
 	return y - y1;
 }
@@ -757,7 +781,7 @@ struct character_view : page_view {
 		y += group_basic(x, y, w1, w2) + metrics::padding;
 		auto y2 = y;
 		y += group_ability(x, y, w1, player) + metrics::padding;
-		y += group_combat_ability(x, y, w1, player) + metrics::padding;
+		y += group_combat_ability(x, y, w1, player, false) + metrics::padding;
 		y = y2;
 		x += w1 + metrics::padding * 4;
 		y += group_skills(x, y, w2) + metrics::padding;
@@ -1054,34 +1078,73 @@ int character::edit_abilities(int x, int y, int width) {
 	return y - y0;
 }
 
-struct character_events : enum_events {
-	friend struct character;
+struct character_events : draw_events {
 	character&		player;
 	bool isallow(const enum_info& ei, int index) const override {
 		if(ei == alignment_enum_info) {
 			if(!player.isallow((alignment_s)index))
 				return false;
+		} else if(ei == class_enum_info) {
+			if(!player.isallow((class_s)index))
+				return false;
 		}
 		return true;
+	}
+	void changed(const anyval& v) {
+		player.correct();
+		if(v.is(player.race) || v.is(player.type))
+			player.apply_feats();
 	}
 	constexpr character_events(character& player) : player(player) {}
 };
 
-int character::edit_basic(int x, int y, int width, enum_events* pev) {
+int character::edit_basic(int x, int y, int width, draw_events* pev) {
 	const int nw = 58;
 	const int tw = 12;
 	auto y0 = y;
 	auto x0 = x;
 	auto rga = start_group(x, y, width, "Базовые значения");
-	y += field(x, y, width, "Имя", name, title_width);
+	y += field(x, y, width, "Имя", name, title_width, pev);
 	y += field(x, y, width, "Мировозрение", alignment, alignment_enum_info, pev);
 	y += field(x, y, width, "Раса", race, race_enum_info, pev);
 	y += field(x, y, width, "Пол", gender, gender_enum_info, pev);
+	y += field(x, y, width, "Размер", size, size_enum_info, pev);
 	y += field(x, y, width, "Классы", type, class_enum_info, pev);
-	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width); x += title_width + nw;
-	field(x, y, tw + nw, ":/", levels[1], tw); x += tw + nw;
-	field(x, y, tw + nw, ":/", levels[2], tw);
+	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width, 2, pev); x += title_width + nw;
+	if(class_data[type].classes.count >= 2) {
+		field(x, y, tw + nw, ":/", levels[1], tw, 2, pev);
+		x += tw + nw;
+	}
+	if(class_data[type].classes.count >= 3) {
+		field(x, y, tw + nw, ":/", levels[2], tw, 2, pev);
+		x += tw + nw;
+	}
 	x = x0; y += d;
+	y += field(x, y, title_width + nw * 2, "Опыт", experience, title_width, 8);
+	d = field(x, y, title_width + nw, "Хиты", hp, title_width, 3); x += title_width + nw;
+	field(x, y, tw + nw, ":/", hp_rolled, tw, 3);
+	x = x0; y += d;
+	y += field(x, y, title_width + nw, "Класс брони", base_ac, title_width, 2, pev);
+	if(!is(NoExeptionalStrenght))
+		y += field(x, y, title_width + nw, "Сила (%)", strenght_percent, title_width, 3);
+	y += field(x, y, title_width + nw, "Движение", movement, title_width, 2);
+	y += metrics::padding;
+	y += close_group(x, y, rga);
+	return y - y0;
+}
+
+static void choose_attack() {
+	auto p = (special_info*)hot.param;
+	auto e = *p;
+	if(e.edit())
+		*p = e;
+}
+
+int	character::edit_attacks(int x, int y, int width) {
+	auto x0 = x, y0 = y;
+	auto rga = start_group(x, y, width, "Специальные атаки");
+	for(auto& e : special_attacks)
+		y += button(x, y, width, choose_attack, &e, "Нет");
 	y += metrics::padding;
 	y += close_group(x, y, rga);
 	return y - y0;
@@ -1101,11 +1164,53 @@ bool character::edit() {
 		y = y0;
 		x += c1 + metrics::padding * 3;
 		y += edit_abilities(x, y, c2);
-		y += group_combat_ability(x, y, c2, this);
+		y += group_combat_ability(x, y, c2, this, true);
+		y = y0;
+		x += c2 + metrics::padding * 3;
+		auto c3 = getwidth() - x - metrics::padding * 2;
+		y += edit_attacks(x, y, c3);
 		y = y_buttons;
 		x = metrics::padding;
 		x += button(x, y, "Выбрать", cmd(buttonok));
 		x += button(x, y, "Отмена", cmd(buttoncancel));
+		domodal();
+	}
+	return getresult() != 0;
+}
+
+static int field(int x, int y, int width, const char* title, dice& ev) {
+	const int nw = 58;
+	const int tw = 12;
+	auto d = field(x, y, title_width + nw, title, ev.c, title_width, 2); x += title_width + nw;
+	field(x, y, tw + nw, ":d", ev.d, tw, 2); x += tw + nw;
+	field(x, y, tw + nw, ":+", ev.b, tw, 2); x += tw + nw;
+	return d;
+}
+
+static int group(int x, int y, int width, damage_info& ev) {
+	const int nw = 58;
+	const int tw = 12;
+	auto y0 = y, x0 = x;
+	y += field(x, y, title_width + nw, "Бонус", ev.thac0, title_width);
+	y += field(x, y, width, "Урон", ev.damage);
+	auto d = field(x, y, title_width + nw, "Критический", ev.critical, title_width, 1); x += title_width + nw;
+	field(x, y, tw + nw, ":x", ev.multiplier, tw, 1); x += tw + nw;
+	x = x0; y += d;
+	return y - y0;
+}
+
+bool special_info::edit() {
+	setfocus(0, true);
+	while(ismodal()) {
+		render_background();
+		auto x = metrics::padding * 2;
+		auto y = page_header("Специальная атака", 1, 1);
+		auto y0 = y;
+		auto c1 = 200;
+		y += group(x, y, c1, *static_cast<damage_info*>(this));
+		y = y_buttons;
+		x = metrics::padding;
+		x += button(x, y, "Готово", cmd(buttonok));
 		domodal();
 	}
 	return getresult() != 0;
