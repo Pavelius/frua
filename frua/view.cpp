@@ -86,16 +86,33 @@ void view_initialize() {
 	}
 }
 
-int draw::button(int x, int y, const char* string, const runable& ev, unsigned key) {
+static void move_focus_prev() {
+	auto id = getnext(draw::getfocus(), Shift + KeyTab);
+	if(id)
+		setfocus(id, true);
+}
+
+static void move_focus_next() {
+	auto id = getnext(draw::getfocus(), KeyTab);
+	if(id)
+		setfocus(id, true);
+}
+
+static int button(int x, int y, const char* string, const runable& ev, unsigned key, bool checked = false) {
 	auto id = ev.getid();
 	auto dx = textw(string);
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
 	addelement(id, rc);
 	auto focused = getfocus() == ev.getid();
-	if(draw::buttonh(rc, false, focused, ev.isdisabled(), true, string, key, false))
+	if(draw::buttonh(rc, checked, focused, ev.isdisabled(), true, string, key, false))
 		ev.execute();
-	if(focused)
+	if(focused) {
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		switch(hot.key) {
+		case KeyLeft: execute(move_focus_prev); break;
+		case KeyRight: execute(move_focus_next); break;
+		}
+	}
 	return rc.width() + 2;
 }
 
@@ -360,18 +377,6 @@ static void render_title(int x, int y, int width, const char* title) {
 	render_title(x, y, width, temp, zendof(temp), title);
 }
 
-static void move_focus_prev() {
-	auto id = getnext(draw::getfocus(), Shift + KeyTab);
-	if(id)
-		setfocus(id, true);
-}
-
-static void move_focus_next() {
-	auto id = getnext(draw::getfocus(), KeyTab);
-	if(id)
-		setfocus(id, true);
-}
-
 static void button_handle(bool& result) {
 	switch(hot.key) {
 	case KeyEnter:
@@ -579,6 +584,56 @@ static void page_footer(int& x, int& y, bool allow_cancel = false) {
 		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 	} else
 		x += button(x, y, "Готово", cmd(buttonok), KeyEnter);
+}
+
+static void set_page() {
+	command_value = (const int)hot.param;
+	setfocus((int)command_value.ptr(), true);
+}
+
+static int page_tabs(int x, int y, const char** source, int& current_page) {
+	if(!source)
+		return 0;
+	auto focused = false;
+	auto id = (int)&current_page;
+	if(!getfocus())
+		setfocus(id, true);
+	if(getfocus() == id)
+		focused = true;
+	auto x0 = x;
+	for(unsigned i = 0; source[i]; i++) {
+		auto string = source[i];
+		auto dx = textw(string);
+		rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
+		auto checked = (current_page == i);
+		if(draw::buttonh(rc, checked, (focused && checked), false, true, string, Ctrl + (Alpha + '1' + i), false)) {
+			command_value = anyval(current_page);
+			execute(set_page, i);
+		}
+		if(focused && checked)
+			rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		if(focused) {
+			switch(hot.key) {
+			case KeyLeft:
+				if(current_page > 0) {
+					command_value = anyval(current_page);
+					execute(set_page, current_page - 1);
+				} else
+					execute(move_focus_prev);
+				break;
+			case KeyRight:
+				if(source[current_page+1]!=0) {
+					command_value = anyval(current_page);
+					execute(set_page, current_page + 1);
+				} else
+					execute(move_focus_next);
+				break;
+			}
+		}
+		x += rc.width() + 2;
+	}
+	addelement(id, {x0, y, x, y + texth() + metrics::padding * 2});
+	return x - x0;
 }
 
 static int small_header(int x, int y, int width, const char* title) {
@@ -1309,14 +1364,14 @@ bool character::edit() {
 	int x, y;
 	setfocus(0, true);
 	character_events events(*this);
-	int page = 1;
+	int page = 0;
+	static const char* page_strings[] = {"Базовый", "Особенности", "Заклинания", 0};
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, "Монстр/Персонаж");
 		if(page == 0) {
 			auto y0 = y;
-			auto c1 = 300;
-			auto c2 = 160;
+			auto c1 = 300, c2 = 160;
 			y += edit_basic(x, y, c1, &events);
 			y = y0;
 			x += c1 + metrics::padding * 3;
@@ -1332,8 +1387,7 @@ bool character::edit() {
 			y += edit_feats(x, y, c1);
 		}
 		page_footer(x, y, true);
-		x += button(x, y, "Заклинания", cmd(choose_spells), Ctrl + Alpha + 'S');
-		x += button(x, y, "Особенности", cmd(choose_feats), Ctrl + Alpha + 'F');
+		x += page_tabs(x, y, page_strings, page);
 		domodal();
 	}
 	return getresult() != 0;

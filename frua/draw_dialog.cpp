@@ -38,20 +38,6 @@ void draw::titletext(int& x, int y, int& width, unsigned flags, const char* labe
 	width -= title;
 }
 
-int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips, int key) {
-	setposition(x, y, width);
-	struct rect rc = {x, y, x + width, y + 4 * 2 + draw::texth()};
-	focusing(cmd.getid(), flags, rc);
-	if(buttonh({x, y, x + width, rc.y2},
-		ischecked(flags), isfocused(flags), isdisabled(flags), true, label, key, false, tips)
-		|| (isfocused(flags) && hot.key == KeyEnter)) {
-		cmd.execute();
-	}
-	if(label && label[0] && areb(rc))
-		tooltips(tips);
-	return rc.height() + metrics::padding * 2;
-}
-
 int draw::radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips) {
 	draw::state push;
 	setposition(x, y, width, 1);
