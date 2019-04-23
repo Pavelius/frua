@@ -408,7 +408,7 @@ private:
 	friend struct character_events;
 	int						edit_abilities(int x, int y, int width);
 	int						edit_attacks(int x, int y, int width);
-	int						edit_basic(int x, int y, int width, draw_events* pev = 0);
+	int						edit_basic(int x, int y, int width, draw_events* pev);
 	int						edit_feats(int x, int y, int width);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();

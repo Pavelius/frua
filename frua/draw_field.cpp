@@ -10,7 +10,6 @@ enum field_type_s : unsigned char {
 };
 
 static anyval		edit_value;
-static draw_events*	edit_events;
 
 static const char* getvalue(const anyval& v, field_type_s t, char* result, const char* result_end) {
 	if(!v)
@@ -60,8 +59,6 @@ public:
 	}
 	void save() {
 		setvalue(value, type, source);
-		if(edit_events)
-			edit_events->changed(value);
 	}
 	void update(const anyval& ev, field_type_s et, int digits = -1) {
 		if(value == ev)
@@ -103,7 +100,7 @@ static void execute(callback proc, const anyval& ev) {
 	draw::execute(proc);
 }
 
-int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits, draw_events* pev) {
+int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits) {
 	draw::state push;
 	setposition(x, y, width);
 	if(header_label && header_label[0])
@@ -123,7 +120,6 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	}
 	auto a = area(rc);
 	if(isfocused(flags)) {
-		edit_events = pev;
 		edit.align = flags & AlignMask;
 		edit.update(ev, FieldNumber, digits);
 		edit.view(rc);
@@ -135,7 +131,7 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	return rc.height() + metrics::padding * 2;
 }
 
-int draw::field(int x, int y, int width, const char* header_label, const char*& sev, int header_width, draw_events* pev) {
+int draw::field(int x, int y, int width, const char* header_label, const char*& sev, int header_width) {
 	draw::state push;
 	setposition(x, y, width);
 	if(header_label && header_label[0])
@@ -148,7 +144,6 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 	draw::rectb(rc, colors::border);
 	auto a = area(rc);
 	if(isfocused(flags)) {
-		edit_events = pev;
 		edit.align = flags & AlignMask;
 		edit.update(ev, FieldText);
 		edit.view(rc);
@@ -161,5 +156,4 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 }
 
 void field_before() {
-	edit_events = 0;
 }

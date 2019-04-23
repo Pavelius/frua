@@ -67,7 +67,6 @@ class					anyval;
 struct					enum_info;
 struct draw_events {
 	virtual bool		isallow(const enum_info& ei, int index) const { return true; };
-	virtual void		changed(const anyval& v) {};
 };
 struct pma {
 	char				name[4]; // Identifier of current block
