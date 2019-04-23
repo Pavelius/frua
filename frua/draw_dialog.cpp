@@ -98,19 +98,19 @@ int draw::checkbox(int x, int y, int width, unsigned flags, const runable& cmd, 
 	clipart(x + 2, y + imax((rc1.height() - 14) / 2, 0), 0, flags, ":check");
 	decortext(flags);
 	auto a = draw::area(rc);
-	auto need_value = false;
-	if((a == AreaHilited || a == AreaHilitedPressed) && !isdisabled(flags) && hot.key == MouseLeft) {
-		if(!hot.pressed)
-			need_value = true;
+	auto result = false;
+	if((a == AreaHilited || a == AreaHilitedPressed) && !isdisabled(flags)) {
+		if(hot.key == MouseLeft && !hot.pressed)
+			result = true;
 	}
 	if(isfocused(flags)) {
 		draw::rectx({rc1.x1 - 2, rc1.y1 - 1, rc1.x2 + 2, rc1.y2 + 1}, draw::fore);
 		if(hot.key == KeySpace)
-			need_value = true;
+			result = true;
 	}
-	if(need_value)
-		cmd.execute();
 	draw::text(rc1, label);
+	if(result)
+		cmd.execute();
 	if(tips && a == AreaHilited)
 		tooltips(tips);
 	return rc1.height() + 2;

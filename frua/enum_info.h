@@ -13,6 +13,7 @@ struct enum_info {
 		i1(i1), i2(i2) {}
 	constexpr bool operator==(const enum_info& e) const { return data == e.data && size == e.size; }
 	const char*				get(int index) const;
+	const name_info*		getni(int index) const;
 	constexpr const name_info* begin() const { return (name_info*)((char*)data + size * (i1 + 1)); }
 	constexpr const name_info* end() const { return (name_info*)((char*)data + size * (i2 + 1)); }
 };

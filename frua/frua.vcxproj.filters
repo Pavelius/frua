@@ -177,11 +177,14 @@
     <ClCompile Include="size.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="damage.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="bsreq.cpp">
       <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="feat.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="dam.cpp">
+      <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

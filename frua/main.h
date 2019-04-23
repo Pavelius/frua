@@ -184,6 +184,9 @@ enum gender_s : unsigned char {
 enum direction_s : unsigned char {
 	Up, Right, Down, Left,
 };
+enum item_state_s : unsigned char {
+	Mundane, Cursed, Magic, Artifact
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -226,6 +229,10 @@ struct gender_info {
 	const char*				name;
 };
 struct dam_info {
+	const char*				id;
+	const char*				name;
+};
+struct feat_info {
 	const char*				id;
 	const char*				name;
 };
@@ -296,12 +303,9 @@ struct itemweight {
 	static int				compare(const void* p1, const void* p2);
 };
 struct item {
-	enum state_s : unsigned char {
-		Mundane, Cursed, Magic, Artifact
-	};
 	item_s					type;
 	magic_power_s			power;
-	state_s					state : 2;
+	item_state_s			state : 2;
 	unsigned char			quality : 2;
 	unsigned char			identify : 1;
 	unsigned char			charges;
@@ -405,6 +409,7 @@ private:
 	int						edit_abilities(int x, int y, int width);
 	int						edit_attacks(int x, int y, int width);
 	int						edit_basic(int x, int y, int width, draw_events* pev = 0);
+	int						edit_feats(int x, int y, int width);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
@@ -438,6 +443,7 @@ short unsigned				to(short unsigned i, direction_s d);
 DECLENUM(alignment);
 DECLENUM(class);
 DECLENUM(dam);
+DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(race);
 extern aref<sprite_name_info> avatar_data;

@@ -132,7 +132,7 @@
     <ClCompile Include="combat.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
-    <ClCompile Include="damage.cpp" />
+    <ClCompile Include="dam.cpp" />
     <ClCompile Include="dice.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
@@ -150,6 +150,7 @@
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="draw_tooltips.cpp" />
     <ClCompile Include="enum.cpp" />
+    <ClCompile Include="feat.cpp" />
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="main.cpp" />

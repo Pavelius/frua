@@ -650,6 +650,49 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	return y - y1 + metrics::padding;
 }
 
+static void check_flags() {
+	unsigned v1 = command_value;
+	unsigned v2 = 1<<hot.param;
+	if(v1&v2)
+		v1 &= ~v2;
+	else
+		v1 |= v2;
+	command_value = (const int)v1;
+}
+
+static int checkboxes(int x, int y, int width, const char* title, const anyval& value, const enum_info& ei) {
+	struct cmd : runable {
+		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
+			: source(source), index(index), value(value) {}
+		virtual int	getid() const { return (int)source; }
+		virtual void execute() const {
+			command_value = value;
+			draw::execute(check_flags, index);
+		}
+		virtual bool isdisabled() const { return false; }
+		bool ischecked() const { return (((int)value) & (1<<index))!=0; }
+	private:
+		const name_info*	source;
+		unsigned			index;
+		const anyval		value;
+	};
+	auto y1 = y;
+	if(ei.i1 >= ei.i2)
+		return 0;
+	auto rc = start_group(x, y, width, title);
+	for(auto i = ei.i1; i <= ei.i2; i++) {
+		auto p = ei.getni(i);
+		cmd ev(value, p, i);
+		unsigned flags = 0;
+		if(ev.ischecked())
+			flags |= Checked;
+		y += checkbox(x, y, width, flags, ev, p->name, 0);
+	}
+	y += metrics::padding;
+	y += close_group(x, y, rc);
+	return y - y1 + metrics::padding;
+}
+
 static int field_picture(int x, int y, int width, int height, short unsigned& ev, const char* title, const char* mask) {
 	auto y0 = y;
 	unsigned flags = 0;
@@ -1250,34 +1293,44 @@ int	character::edit_attacks(int x, int y, int width) {
 	return y - y0;
 }
 
-static void choose_spells() {
+int	character::edit_feats(int x, int y, int width) {
+	auto x0 = x, y0 = y;
+	y += checkboxes(x, y, width, "Расовые или класса", feats, feat_enum_info);
+	return y - y0;
+}
 
+static void choose_spells() {
 }
 
 static void choose_feats() {
-
 }
 
 bool character::edit() {
+	int x, y;
 	setfocus(0, true);
 	character_events events(*this);
-	int x, y;
+	int page = 1;
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, "Монстр/Персонаж");
-		auto y0 = y;
-		auto c1 = 300;
-		auto c2 = 160;
-		y += edit_basic(x, y, c1, &events);
-		y = y0;
-		x += c1 + metrics::padding * 3;
-		y += edit_abilities(x, y, c2);
-		y += group_combat_ability(x, y, c2, this, true);
-		y = y0;
-		x += c2 + metrics::padding * 3;
-		auto c3 = getwidth() - x - metrics::padding * 2;
-		y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
-		y += edit_attacks(x, y, c3);
+		if(page == 0) {
+			auto y0 = y;
+			auto c1 = 300;
+			auto c2 = 160;
+			y += edit_basic(x, y, c1, &events);
+			y = y0;
+			x += c1 + metrics::padding * 3;
+			y += edit_abilities(x, y, c2);
+			y += group_combat_ability(x, y, c2, this, true);
+			y = y0;
+			x += c2 + metrics::padding * 3;
+			auto c3 = getwidth() - x - metrics::padding * 2;
+			y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
+			y += edit_attacks(x, y, c3);
+		} else if(page == 1) {
+			auto c1 = 300;
+			y += edit_feats(x, y, c1);
+		}
 		page_footer(x, y, true);
 		x += button(x, y, "Заклинания", cmd(choose_spells), Ctrl + Alpha + 'S');
 		x += button(x, y, "Особенности", cmd(choose_feats), Ctrl + Alpha + 'F');
