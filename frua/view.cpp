@@ -511,6 +511,23 @@ static int small_header(int x, int y, int width, const char* title) {
 	return texth() + metrics::padding;
 }
 
+static rect start_group_light(int x, int& y, int width, const char* title, unsigned flags = AlignLeft) {
+	auto old_font = font;
+	auto old_fore = fore;
+	font = metrics::h3;
+	fore = colors::h3;
+	rect rc = {x, y, x + width, y + texth() + 1};
+	text(rc, title, flags);
+	font = old_font;
+	fore = old_fore;
+	y = rc.y2 + metrics::padding * 2;
+	return rc;
+}
+
+static int close_group_light(int x, int y, const rect& rc) {
+	return metrics::padding;
+}
+
 static rect start_group(int x, int& y, int width, const char* title, unsigned flags = AlignCenterCenter) {
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 	gradv(rc, colors::border, colors::edit);
