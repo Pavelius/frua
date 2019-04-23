@@ -126,6 +126,8 @@ enum feat_s : unsigned char {
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
 	HolyGrace, NoExeptionalStrenght,
 	UseLeatherArmor, UseMetalArmor, UseShield,
+	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon,
+	UniqueCharacter,
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
@@ -186,6 +188,9 @@ enum direction_s : unsigned char {
 };
 enum item_state_s : unsigned char {
 	Mundane, Cursed, Magic, Artifact
+};
+enum attack_feat_s : unsigned char {
+	PreviousAttackHit,
 };
 
 const unsigned CP = 1; // One cooper coin
@@ -280,10 +285,13 @@ struct event_info {
 	void					edit();
 };
 struct damage_info {
-	dice					damage;
-	dam_s				type;
+	dam_s					type;
 	char					thac0;
 	char					critical, multiplier;
+	char					attacks; // per two rounds
+	char					range; // in squars.
+	dice					damage;
+	dice					damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 };
 struct attack_info : damage_info {
@@ -292,8 +300,7 @@ struct attack_info : damage_info {
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
 struct special_info : damage_info {
-	char					attacks; // per two rounds
-	char					range; // in squars.
+	char					used, use_per_day;
 	unsigned				feats;
 	bool					edit();
 };

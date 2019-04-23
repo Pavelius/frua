@@ -443,6 +443,15 @@ static int field(int x, int y, const char* t1, const anyval& v1, int digits, con
 	return d;
 }
 
+static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2) {
+	auto w = get_field_width(digits);
+	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
+	x += title_width + w - 4;
+	auto tw = textw(t2);
+	text(x + 2 + metrics::padding, y + metrics::padding + 4, t2);
+	return d;
+}
+
 static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2, const anyval& v2, const char* t3, const anyval& v3) {
 	int tw;
 	auto w = get_field_width(digits);
@@ -1157,8 +1166,9 @@ bool character::choose(short unsigned& result, const char* title, const char* ma
 	struct avatar_view : controls::control {
 		adat<short unsigned, 512>	elements;
 		point		size, origin;
-		int			current, current_hilite, scanline;
+		int			current, current_hilite, scanline, current_origin;
 		rect		view_rect;
+		int			lines_per_page;
 		static void choose_mouse() {
 			auto p = (avatar_view*)hot.param;
 			p->current = p->current_hilite;
@@ -1166,15 +1176,18 @@ bool character::choose(short unsigned& result, const char* title, const char* ma
 		void view(const rect& rc) override {
 			control::view(rc);
 			view_rect = rc;
+			lines_per_page = rc.height() / size.y;
 			auto x = rc.x1;
 			auto y = rc.y1;
 			auto c = 0;
 			current_hilite = -1;
-			for(unsigned i = 0; i < elements.count; i++) {
+			for(unsigned i = current_origin; i < elements.count; i++) {
 				if(c >= scanline) {
 					x = rc.x1;
 					y += size.y;
 					c = 0;
+					if(y + size.y > rc.y2)
+						break;
 				}
 				rect rc = {x, y, x + size.x, y + size.y};
 				rectb(rc, colors::border);
@@ -1216,23 +1229,38 @@ bool character::choose(short unsigned& result, const char* title, const char* ma
 			if(current < 0)
 				current = 0;
 		}
+		void ensurevisible() {
+			if(!lines_per_page)
+				return;
+			auto elements_per_page = scanline * lines_per_page;
+			if(current < current_origin)
+				current_origin -= scanline;
+			while(current > current_origin + elements_per_page)
+				current_origin += scanline;
+			if(current_origin < 0)
+				current_origin = 0;
+		}
 		bool keyinput(unsigned id) override {
 			switch(id) {
 			case KeyLeft:
 				current--;
 				correct();
+				ensurevisible();
 				break;
 			case KeyRight:
 				current++;
 				correct();
+				ensurevisible();
 				break;
 			case KeyUp:
 				current -= scanline;
 				correct();
+				ensurevisible();
 				break;
 			case KeyDown:
 				current += scanline;
 				correct();
+				ensurevisible();
 				break;
 			default:
 				return control::keyinput(id);
@@ -1240,7 +1268,8 @@ bool character::choose(short unsigned& result, const char* title, const char* ma
 			return false;
 		}
 		constexpr avatar_view(int size) : elements(), size{(short)size, (short)size}, origin{(short)size / 2, ((short)size / 4) * 3},
-			current(0), current_hilite(-1), scanline((short)(800 / size)), view_rect() {}
+			current(0), current_hilite(-1), scanline((short)(800 / size)), current_origin(0),
+			lines_per_page(0), view_rect() {}
 	};
 	avatar_view s1(size);
 	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
@@ -1395,10 +1424,16 @@ static int field(int x, int y, const char* title, dice& ev) {
 
 static int group(int x, int y, int width, damage_info& ev) {
 	auto y0 = y;
+	auto rgo = start_group(x, y, width, "Нанесение урона");
 	y += field(x, y, width, "Тип", ev.type, dam_enum_info);
-	y += field(x, y, "Бонус", ev.thac0, 2);
+	y += field(x, y, "К-во атак", ev.attacks, 2);
+	y += field(x, y, "Бонус THACO", ev.thac0, 2);
+	y += field(x, y, "Дистанция", ev.range, 2);
 	y += field(x, y, "Урон", ev.damage);
+	y += field(x, y, "Урон (большим)", ev.damage_large);
 	y += field(x, y, "Критический", ev.critical, 2, ":x", ev.multiplier);
+	y += metrics::padding;
+	y += close_group(x, y, rgo);
 	return y - y0;
 }
 
@@ -1409,8 +1444,8 @@ bool special_info::edit() {
 		render_background();
 		page_header(x, y, "Специальная атака");
 		auto y0 = y, c1 = 300;
-		y += field(x, y, "К-во атак", attacks, 2);
 		y += group(x, y, c1, *static_cast<damage_info*>(this));
+		y += field(x, y, "Использовать", use_per_day, 2, "раз в день");
 		page_footer(x, y, true);
 		domodal();
 	}

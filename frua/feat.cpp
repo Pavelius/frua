@@ -17,6 +17,10 @@ feat_info feat_data[] = {{"Darkvision", "Видит в темноте"},
 {"UseLeatherArmor", "Использует кожанные доспехи"},
 {"UseMetalArmor", "Использует металические доспехи"},
 {"UseShield", "Использует щит"},
+{"UseTheifWeapon", "Использует оружие воров"},
+{"UseMartialWeapon", "Использует ратное оружие"},
+{"UseLargeWeapon", "Использует большое оружие"},
+{"UniqueCharacter", "Уникальный персонаж"},
 };
-assert_enum(feat, UseShield);
+assert_enum(feat, UniqueCharacter);
 getstr_enum(feat);
