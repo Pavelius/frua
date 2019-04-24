@@ -752,7 +752,7 @@ static int checkboxes(int x, int y, int width, const char* title, const anyval& 
 	if(ei.count==0)
 		return 0;
 	auto rc = start_group(x, y, width, title);
-	for(unsigned i = 0; i <= ei.count; i++) {
+	for(unsigned i = 0; i < ei.count; i++) {
 		auto p = (name_info*)ei.get(i);
 		cmd ev(value, p, i);
 		unsigned flags = 0;
