@@ -95,8 +95,11 @@ struct list : control {
 	void					view(const rect& rc) override;
 };
 struct picker : list {
-	int						pixel_per_column;
-	constexpr picker() : pixel_per_column(0) {}
+	int						pixels_per_column, elements_per_line;
+	constexpr picker() : pixels_per_column(64), elements_per_line(0) {}
+	void					ensurevisible();
+	bool					keyinput(unsigned id);
+	void					mousewheel(unsigned id, point position, int step);
 	void					view(const rect& rc) override;
 };
 struct column {

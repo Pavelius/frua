@@ -1380,6 +1380,95 @@ static void choose_spells() {
 static void choose_feats() {
 }
 
+static void change_record() {
+
+}
+
+static int show_table(const char* title, bsdata& source, int width, bool choose_mode) {
+	struct bsmeta_view : controls::picker {
+		bsdata&		source;
+		int getmaximum() const override {
+			return source.count;
+		}
+		int getnumber(const char* id, int index) const {
+			auto pf = source.meta->find(id);
+			if(!pf)
+				return 0;
+			auto pv = (void*)source.get(index);
+			return pf->get(pf->ptr(pv));
+		}
+		const char* getname(char* result, const char* result_max, int line, int column) const {
+			const bsreq* pk;
+			const char* pn;
+			auto pv = (void*)source.get(line);
+			switch(column) {
+			case 0:
+				pk = source.meta->getkey();
+				if(!pk)
+					return "";
+				pn = (const char*)pk->get(pk->ptr(pv));
+				if(!pn)
+					return "Пусто";
+				return pn;
+			case 1:
+				szprint(result, result_max, "Str:%1i, Dex:%2i, Con:%3i\nHD:%6i, AC:%4i, Хиты:%5i", 13, 10, 16, 8, 10, 2);
+				return result;
+			default: return "";
+			}
+			return "";
+		}
+		void row(const rect& rcorigin, int index) override {
+			char temp[260]; temp[0] = 0;
+			rowhilite(rcorigin, index);
+			rect rc = rcorigin;
+			auto avatar = getnumber("avatar", index);
+			if(true) {
+				if(avatar == -1)
+					avatar = 10;
+				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
+				draw::state push;
+				setclip(rp);
+				image(rp.x1 + rp.width()/2, rp.y2 - rp.height()/4, spr_monsters, avatar * 2, 0);
+				rc.x1 += rc.height() + 2;
+			}
+			auto p = getname(temp, zendof(temp), index, 0);
+			rc.offset(4, 4);
+			if(p)
+				draw::textc(rc.x1, rc.y1, rc.width(), p);
+			rc.y1 += texth() + 2;
+			p = getname(temp, zendof(temp), index, 1);
+			if(p) {
+				auto old_fore = fore;
+				fore = colors::text.mix(colors::form, 128);
+				text(rc, p);
+				fore = old_fore;
+			}
+		}
+		int getcurrent() const {
+			if(!source.count)
+				return -1;
+			return current;
+		}
+		constexpr bsmeta_view(bsdata& source) : source(source) {}
+	} e1(source);
+	e1.pixels_per_line = 64 + 1 + 4*2;
+	e1.pixels_per_column = width;
+	e1.show_grid_lines = true;
+	setfocus(0, true);
+	int x, y;
+	while(ismodal()) {
+		render_background();
+		page_header(x, y, title);
+		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
+		page_footer(x, y, choose_mode);
+		x += button(x, y, "Редактировать", cmd(change_record), F2);
+		domodal();
+	}
+	if(getresult())
+		return e1.getcurrent();
+	return -1;
+}
+
 bool character::edit() {
 	struct character_events : draw_events {
 		character& player;

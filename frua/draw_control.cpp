@@ -1,6 +1,9 @@
 #include "draw_control.h"
 
-void draw::controls::control::mouseinput(unsigned id, point position) {
+using namespace draw;
+using namespace draw::controls;
+
+void control::mouseinput(unsigned id, point position) {
 	switch(id) {
 	case MouseLeft:
 		if(isfocusable())
