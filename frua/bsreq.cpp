@@ -2,24 +2,26 @@
 
 extern "C" int strcmp(const char* s1, const char* s2);
 
-bsreq number_type[2] = {{"number"}};
-bsreq text_type[2] = {{"text"}};
-const bsreq bsreq::metadata[] = {
-	BSREQ(bsreq, id),
-	BSREQ(bsreq, offset),
-	BSREQ(bsreq, size),
-	BSREQ(bsreq, lenght),
-	BSREQ(bsreq, count),
-	BSREQ(bsreq, reference),
-	BSREQ(bsreq, type),
+bsdata*	bsdata::first;
+bsdata*	bsdata::firstenum;
+const bsreq bsmeta<int>::meta[] = {{"number"}, {}};
+const bsreq bsmeta<const char*>::meta[] = {{"text"}, {}};
+const bsreq bsmeta<bsreq>::meta[] = {
+	BSREQ(id),
+	BSREQ(offset),
+	BSREQ(size),
+	BSREQ(lenght),
+	BSREQ(count),
+	BSREQ(reference),
+	BSREQ(type),
 {}};
 
 const bsreq* bsreq::getkey() const {
-	auto f = find("id", text_type);
+	auto f = find("id", bsmeta<const char*>::meta);
 	if(!f)
-		f = find("name", text_type);
+		f = find("name", bsmeta<const char*>::meta);
 	if(!f)
-		f = find("text", text_type);
+		f = find("text", bsmeta<const char*>::meta);
 	return f;
 }
 
@@ -82,11 +84,83 @@ void bsreq::set(const void* p, int value) const {
 
 bool bsreq::match(const void* p, const char* name) const {
 	auto value = (const char*)get(p);
-	if(!value || type != text_type)
+	if(!value || type != bsmeta<const char*>::meta)
 		return false;
 	for(int i = 0; name[i]; i++) {
 		if(value[i] != name[i])
 			return false;
 	}
 	return true;
+}
+
+bsdata::bsdata(const char* id, const bsreq* meta,
+	void* data, unsigned size, unsigned count, unsigned maximum,
+	bsreq::subtype_s subtype) :
+	id(id), meta(meta), next(0),
+	data(data), count(count), maximum(maximum), size(size),
+	subtype(subtype) {
+	auto pf = &first;
+	if(subtype == bsreq::Enum)
+		pf = &firstenum;
+	while(*pf)
+		pf = &((*pf)->next);
+	*pf = this;
+}
+
+void* bsdata::add() {
+	if(count < maximum)
+		return (char*)data + (count++)*size;
+	return data;
+}
+
+bsdata* bsdata::find(const char* v, bsdata* first) {
+	if(!v || !v[0])
+		return 0;
+	for(auto p = first; p; p = p->next) {
+		if(strcmp(p->id, v) == 0)
+			return p;
+	}
+	return 0;
+}
+
+bsdata* bsdata::find(const bsreq* v, bsdata* first) {
+	if(!v)
+		return 0;
+	for(auto p = first; p; p = p->next) {
+		if(p->meta == v)
+			return p;
+	}
+	return 0;
+}
+
+bsdata* bsdata::findbyptr(const void* object) {
+	if(!object)
+		return 0;
+	for(auto p = first; p; p = p->next)
+		if(p->has(object))
+			return p;
+	return 0;
+}
+
+int	bsdata::indexof(const void* object) const {
+	return -1;
+}
+
+const void* bsdata::find(const bsreq* id, const char* value) const {
+	if(!id || id->type != bsmeta<const char*>::meta)
+		return 0;
+	auto ps = (char*)id->ptr(data);
+	auto pe = ps + size*count;
+	for(; ps < pe; ps += size) {
+		auto ps_value = (const char*)id->get(ps);
+		if(!ps_value)
+			continue;
+		if(strcmp(ps_value, value) == 0) {
+			auto i = indexof(ps);
+			if(i == -1)
+				return 0;
+			return get(i);
+		}
+	}
+	return 0;
 }

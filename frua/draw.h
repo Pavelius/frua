@@ -64,10 +64,6 @@ enum image_flag_s {
 	AlignMask = 0xF000,
 };
 class					anyval;
-struct					enum_info;
-struct draw_events {
-	virtual bool		isallow(const enum_info& ei, int index) const { return true; };
-};
 struct pma {
 	char				name[4]; // Identifier of current block
 	int					size; // Size of all block

@@ -171,9 +171,6 @@
     <ClCompile Include="screenshoot.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
-    <ClCompile Include="enum.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="size.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -244,9 +241,6 @@
     </ClInclude>
     <ClInclude Include="screenshoot.h">
       <Filter>Графика</Filter>
-    </ClInclude>
-    <ClInclude Include="enum_info.h">
-      <Filter>Поддержка</Filter>
     </ClInclude>
     <ClInclude Include="bsreq.h">
       <Filter>Коллекция</Filter>

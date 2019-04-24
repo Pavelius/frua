@@ -16,8 +16,8 @@ struct page_view;
 struct command;
 
 static anyval					command_value;
+static bsdata*					command_data;
 static rect						command_rect;
-static enum_info				command_enum;
 static draw_events*				command_draw_events;
 static char						command_mask[260];
 static agrw<picture_info>		file_data;
@@ -68,6 +68,9 @@ struct main_picture_info : surface, picture_info {
 		return true;
 	}
 } picture;
+struct draw_events {
+	virtual bool		isallow(const bsdata& ei, int index) const { return true; };
+};
 
 static void sprite_write(const sprite* p, const char* url) {
 	io::file file(url, StreamWrite);
@@ -474,10 +477,10 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 
 static void choose_enum() {
 	struct enum_view : controls::list, adat<int, 256> {
-		const enum_info&	source;
+		const bsdata&	source;
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
 			switch(column) {
-			case 0: return source.get(data[line]);
+			case 0: return ((name_info*)source.get(data[line]))->name;
 			default: return "";
 			}
 			return "";
@@ -488,14 +491,14 @@ static void choose_enum() {
 				return 0;
 			return data[current];
 		}
-		constexpr enum_view(const enum_info& source) : source(source) {}
+		constexpr enum_view(const bsdata& source) : source(source) {}
 	};
 	auto events = command_draw_events;
-	enum_view ev(command_enum);
+	enum_view ev(*command_data);
 	ev.hilite_odd_lines = false;
-	for(auto i = command_enum.i1; i <= command_enum.i2; i++) {
+	for(unsigned i = 0; i <= command_data->count; i++) {
 		if(events) {
-			if(!events->isallow(command_enum, i))
+			if(!events->isallow(*command_data, i))
 				continue;
 		}
 		ev.add(i);
@@ -512,7 +515,7 @@ static void choose_enum() {
 		command_value = ev.getcurrent();
 }
 
-static int field(int x, int y, int width, const char* title, const anyval& ev, const enum_info& ei, draw_events* pev = 0) {
+static int field(int x, int y, int width, const char* title, const anyval& ev, bsdata& ei, draw_events* pev) {
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
@@ -522,17 +525,21 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, c
 	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key == KeyDown);
 	if(buttonh(rc, ischecked(flags), focused, isdisabled(flags), true, 0, 0, false, 0))
 		result = true;
-	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, ei.get(ev));
+	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, ((name_info*)ei.get(ev))->name);
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
 	if(result) {
 		command_value = ev;
 		command_rect = rc;
-		command_enum = ei;
+		command_data = &ei;
 		command_draw_events = pev;
 		execute(choose_enum);
 	}
 	return rc.height() + metrics::padding * 2;
+}
+
+template<class T> static int field(int x, int y, int width, const char* title, T& ev, draw_events* pev = 0) {
+	return field(x, y, width, title, ev, bsmeta<bsreq::btype<T>::value>::data, pev);
 }
 
 static void choose_avatar() {
@@ -682,7 +689,7 @@ static int close_group(int x, int y, const rect& rc) {
 	return metrics::padding * 2;
 }
 
-static int group(int x, int y, int width, const char* title, const void* source, unsigned i1, unsigned i2, unsigned size, const anyval& value) {
+static int group(int x, int y, int width, const char* title, bsdata& source, const anyval& value) {
 	struct cmd : runable {
 		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
 			: source(source), index(index), value(value) {}
@@ -696,11 +703,11 @@ static int group(int x, int y, int width, const char* title, const void* source,
 		const anyval		value;
 	};
 	auto y1 = y;
-	if(i1 >= i2)
+	if(!source.count)
 		return 0;
 	auto rc = start_group(x, y, width, title);
-	for(auto i = i1; i <= i2; i++) {
-		auto p = (name_info*)((char*)source + i * size);
+	for(unsigned i = 0; i <= source.count; i++) {
+		auto p = (name_info*)source.get(i);
 		cmd ev(value, p, i);
 		unsigned flags = 0;
 		if(ev.ischecked())
@@ -709,6 +716,10 @@ static int group(int x, int y, int width, const char* title, const void* source,
 	}
 	y += close_group(x, y, rc);
 	return y - y1 + metrics::padding;
+}
+
+template<class T> static int group(int x, int y, int width, const char* title, T& value) {
+	return group(x, y, width, title, bsmeta<bsreq::btype<T>::value>::data, value);
 }
 
 static void check_flags() {
@@ -721,7 +732,7 @@ static void check_flags() {
 	command_value = (const int)v1;
 }
 
-static int checkboxes(int x, int y, int width, const char* title, const anyval& value, const enum_info& ei) {
+static int checkboxes(int x, int y, int width, const char* title, const anyval& value, const bsdata& ei) {
 	struct cmd : runable {
 		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
 			: source(source), index(index), value(value) {}
@@ -738,11 +749,11 @@ static int checkboxes(int x, int y, int width, const char* title, const anyval& 
 		const anyval		value;
 	};
 	auto y1 = y;
-	if(ei.i1 >= ei.i2)
+	if(ei.count==0)
 		return 0;
 	auto rc = start_group(x, y, width, title);
-	for(auto i = ei.i1; i <= ei.i2; i++) {
-		auto p = ei.getni(i);
+	for(unsigned i = 0; i <= ei.count; i++) {
+		auto p = (name_info*)ei.get(i);
 		cmd ev(value, p, i);
 		unsigned flags = 0;
 		if(ev.ischecked())
@@ -861,6 +872,7 @@ struct page_view {
 
 static int group_combat_ability(int x, int y, int width, const character* player, bool range_hits) {
 	char temp[260];
+	auto& col = bsmeta<class_info>::data;
 	attack_info ai = {}; player->get(MeleeWeapon, ai);
 	auto y1 = y;
 	auto rga = start_group(x, y, width, "Боевые параметры");
@@ -871,8 +883,8 @@ static int group_combat_ability(int x, int y, int width, const character* player
 	if(range_hits) {
 		auto type = player->getclass();
 		auto rolled = 0;
-		for(unsigned i = 0; i < class_data[type].classes.count; i++)
-			rolled += class_data[class_data[type].classes[i]].hd * player->getlevel(i);
+		for(unsigned i = 0; i < col[type].classes.count; i++)
+			rolled += col[col[type].classes[i]].hd * player->getlevel(i);
 		auto min = player->gethpmax(0);
 		auto max = player->gethpmax(rolled);
 		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
@@ -900,14 +912,14 @@ static int group_ability(int x, int y, int width, const character* player) {
 void character::group_generate(int x, int y, int width) {
 	const int w1 = 200;
 	auto y1 = y;
-	y += group(x, y, w1, "Пол", gender_data, Male, Female, sizeof(gender_info), gender);
-	y += group(x, y, w1, "Раса", race_data, Human, Halfling, sizeof(race_info), race);
+	y += group(x, y, w1, "Пол", gender);
+	y += group(x, y, w1, "Раса", race);
 	x += w1 + metrics::padding * 3;
 	y = y1;
-	y += group(x, y, w1, "Класс", class_data, Cleric, FighterMageTheif, sizeof(class_info), type);
+	y += group(x, y, w1, "Класс", type);
 	x += w1 + metrics::padding * 3;
 	y = y1;
-	y += group(x, y, w1, "Мировозрение", alignment_data, LawfulGood, ChaoticEvil, sizeof(alignment_info), alignment);
+	y += group(x, y, w1, "Мировозрение", alignment);
 }
 
 struct character_view : page_view {
@@ -951,11 +963,12 @@ struct character_view : page_view {
 		text(x, y, getstr(player->alignment)); y += texth();
 		y = y2;
 		auto x1 = x + w1 + metrics::padding * 4;
-		auto class_count = class_data[player->type].classes.count;
+		auto& col = bsmeta<class_info>::data;
+		auto class_count = col[player->type].classes.count;
 		if(!class_count)
 			class_count = 1;
-		for(unsigned i = 0; i < class_data[player->type].classes.count; i++) {
-			auto e = class_data[player->type].classes.data[i];
+		for(unsigned i = 0; i < col[player->type].classes.count; i++) {
+			auto e = col[player->type].classes.data[i];
 			text(x1, y, getstr(e));
 			auto exp = player->experience / class_count;
 			zprint(temp, "%1i уровень (опыт %2i)", player->levels[i], exp);
@@ -1306,19 +1319,20 @@ int character::edit_basic(int x, int y, int width, draw_events* pev) {
 	const int tw = 12;
 	auto y0 = y;
 	auto x0 = x;
+	auto& col = bsmeta<class_info>::data;
 	auto rga = start_group(x, y, width, "Базовые значения");
 	y += field(x, y, width, "Имя", name, title_width);
-	y += field(x, y, width, "Мировозрение", alignment, alignment_enum_info, pev);
-	y += field(x, y, width, "Раса", race, race_enum_info, pev);
-	y += field(x, y, width, "Пол", gender, gender_enum_info);
-	y += field(x, y, width, "Размер", size, size_enum_info);
-	y += field(x, y, width, "Классы", type, class_enum_info, pev);
+	y += field(x, y, width, "Мировозрение", alignment, pev);
+	y += field(x, y, width, "Раса", race, pev);
+	y += field(x, y, width, "Пол", gender);
+	y += field(x, y, width, "Размер", size);
+	y += field(x, y, width, "Классы", type, pev);
 	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width, 2); x += title_width + nw;
-	if(class_data[type].classes.count >= 2) {
+	if(col[type].classes.count >= 2) {
 		field(x, y, tw + nw, ":/", levels[1], tw, 2);
 		x += tw + nw;
 	}
-	if(class_data[type].classes.count >= 3) {
+	if(col[type].classes.count >= 3) {
 		field(x, y, tw + nw, ":/", levels[2], tw, 2);
 		x += tw + nw;
 	}
@@ -1356,7 +1370,7 @@ int	character::edit_attacks(int x, int y, int width) {
 
 int	character::edit_feats(int x, int y, int width) {
 	auto x0 = x, y0 = y;
-	y += checkboxes(x, y, width, "Расовые или класса", feats, feat_enum_info);
+	y += checkboxes(x, y, width, "Расовые или класса", feats, bsmeta<feat_s>::data);
 	return y - y0;
 }
 
@@ -1369,11 +1383,11 @@ static void choose_feats() {
 bool character::edit() {
 	struct character_events : draw_events {
 		character& player;
-		bool isallow(const enum_info& ei, int index) const override {
-			if(ei == alignment_enum_info) {
+		bool isallow(const bsdata& ei, int index) const override {
+			if(&ei == &bsmeta<alignment_s>::data) {
 				if(!player.isallow((alignment_s)index))
 					return false;
-			} else if(ei == class_enum_info) {
+			} else if(&ei == &bsmeta<class_info>::data) {
 				if(!player.isallow((class_s)index))
 					return false;
 			}
@@ -1425,7 +1439,7 @@ static int field(int x, int y, const char* title, dice& ev) {
 static int group(int x, int y, int width, damage_info& ev) {
 	auto y0 = y;
 	auto rgo = start_group(x, y, width, "Нанесение урона");
-	y += field(x, y, width, "Тип", ev.type, dam_enum_info);
+	y += field(x, y, width, "Тип", ev.type);
 	y += field(x, y, "К-во атак", ev.attacks, 2);
 	y += field(x, y, "Бонус THACO", ev.thac0, 2);
 	y += field(x, y, "Дистанция", ev.range, 2);

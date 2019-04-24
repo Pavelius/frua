@@ -3,7 +3,6 @@
 #include "collection.h"
 #include "crt.h"
 #include "dice.h"
-#include "enum_info.h"
 #include "point.h"
 #include "stringcreator.h"
 
@@ -16,12 +15,9 @@ const int combat_map_x = 16;
 const int combat_map_y = 16;
 
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
-enum_info e##_enum_info(e##_data, 0, last, sizeof(e##_data[0]));\
-const bsreq e##_type[] = {BSREQ(e##_info, id), BSREQ(e##_info, name), {}}
-#define DECLENUM(e) extern const bsreq e##_type[];\
-extern e##_info e##_data[];\
-extern enum_info e##_enum_info;\
-template<> constexpr const bsreq* bsreq::getmeta<e##_s>() { return e##_type; }
+const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
+bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, bsreq::Enum);
+#define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
 
 enum item_s : unsigned char {
 	NoItem,
@@ -224,6 +220,14 @@ struct answers : adat<answer, 32> {
 private:
 	char					text[4096];
 };
+struct name_info {
+	const char*				id;
+	const char*				name;
+};
+struct ability_info {
+	const char*				id;
+	const char*				name;
+};
 struct alignment_info {
 	const char*				id;
 	const char*				name;
@@ -238,6 +242,10 @@ struct dam_info {
 	const char*				name;
 };
 struct feat_info {
+	const char*				id;
+	const char*				name;
+};
+struct size_info {
 	const char*				id;
 	const char*				name;
 };
@@ -413,6 +421,7 @@ private:
 	special_info			special_attacks[4];
 	friend struct character_view;
 	friend struct character_events;
+	friend struct bsmeta<character>;
 	int						edit_abilities(int x, int y, int width);
 	int						edit_attacks(int x, int y, int width);
 	int						edit_basic(int x, int y, int width, draw_events* pev);
@@ -453,7 +462,6 @@ DECLENUM(dam);
 DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(race);
+DECLENUM(size);
 extern aref<sprite_name_info> avatar_data;
-extern adat<character, 128> character_data;
 extern adat<character*, 8>	party;
-extern enum_info			size_enum_info;

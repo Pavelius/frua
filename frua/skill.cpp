@@ -127,11 +127,11 @@ static int get_save_group(class_s value) {
 static int get_save_thrown(skill_s id, class_s type, const char* levels) {
 	auto index = save_index[id];
 	auto result = 20;
-	for(unsigned i = 0; i < class_data[type].classes.count; i++) {
+	for(unsigned i = 0; i < bsmeta<class_info>::data[type].classes.count; i++) {
 		auto n = levels[i];
 		if(n < 1)
 			continue;
-		auto e = class_data[type].classes.data[i];
+		auto e = bsmeta<class_info>::data[type].classes.data[i];
 		auto g = get_save_group(e);
 		if(n >= sizeof(savevs_data[0][0]) / sizeof(savevs_data[0][0][0]))
 			n = sizeof(savevs_data[0][0]) / sizeof(savevs_data[0][0][0]) - 1;
@@ -144,11 +144,11 @@ static int get_save_thrown(skill_s id, class_s type, const char* levels) {
 
 static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 	auto result = 0;
-	for(unsigned i = 0; i < class_data[type].classes.count; i++) {
+	for(unsigned i = 0; i < bsmeta<class_info>::data[type].classes.count; i++) {
 		auto n = levels[i];
 		if(n < 1)
 			continue;
-		auto e = class_data[type].classes.data[i];
+		auto e = bsmeta<class_info>::data[type].classes.data[i];
 		if(skill_data[id].allow && !skill_data[id].allow.is(e))
 			continue;
 		if(n > 17)
@@ -162,7 +162,7 @@ static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 static bool allow_skill(skill_s id, class_s type) {
 	if(!skill_data[id].allow)
 		return true;
-	for(auto e : class_data[type].classes) {
+	for(auto e : bsmeta<class_info>::data[type].classes) {
 		if(skill_data[id].allow.is(e))
 			return true;
 	}
@@ -197,7 +197,7 @@ int	character::get(skill_s id) const {
 		result = get_theiv_skill(id, type, levels);
 		if(!result)
 			return 0;
-		result += race_data[race].theive_skills[id - PickPockets];
+		result += bsmeta<race_s>::data[race].theive_skills[id - PickPockets];
 		result += maptbl(theive_skills_by_dex[id], dex);
 	} else {
 		if(!allow_skill(id, type))

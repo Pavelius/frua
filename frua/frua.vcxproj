@@ -149,7 +149,6 @@
     <ClCompile Include="draw_textedit.cpp" />
     <ClCompile Include="draw_textf.cpp" />
     <ClCompile Include="draw_tooltips.cpp" />
-    <ClCompile Include="enum.cpp" />
     <ClCompile Include="feat.cpp" />
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
@@ -186,7 +185,6 @@
     <ClInclude Include="dice.h" />
     <ClInclude Include="draw.h" />
     <ClInclude Include="draw_control.h" />
-    <ClInclude Include="enum_info.h" />
     <ClInclude Include="initializer_list.h" />
     <ClInclude Include="io.h" />
     <ClInclude Include="main.h" />

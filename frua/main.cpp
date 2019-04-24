@@ -7,6 +7,7 @@ static void add_position(aref<character*> source) {
 }
 
 int	main(int argc, char *argv[]) {
+	auto p = bsmeta<bsreq::btype<const alignment_s*>::value>::meta;
 	draw::initialize();
 	character ev;
 	ev.clear();
@@ -16,10 +17,10 @@ int	main(int argc, char *argv[]) {
 	//picture_info::pick_monster();
 	//character::choose_avatar("character*", 10);
 	//character_data.add()->generate();
-	character_data.add()->create(Human, Male, Paladin, LawfulGood, Player);
-	character_data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
-	party.add(character_data.data + 0);
-	party.add(character_data.data + 1);
+	bsmeta<character>::data.add()->create(Human, Male, Paladin, LawfulGood, Player);
+	bsmeta<character>::data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
+	party.add(&bsmeta<character>::data[0]);
+	party.add(&bsmeta<character>::data[1]);
 	add_position(party);
 	combat_info ci;
 	ci.add(Elf, Female, FighterTheif);
