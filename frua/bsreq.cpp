@@ -16,6 +16,14 @@ const bsreq bsmeta<bsreq>::meta[] = {
 	BSREQ(type),
 {}};
 
+bool bsreq::istext() const {
+	return type == bsmeta<const char*>::meta;
+}
+
+bool bsreq::isnum() const {
+	return type == bsmeta<int>::meta;
+}
+
 const bsreq* bsreq::getkey() const {
 	auto f = find("id", bsmeta<const char*>::meta);
 	if(!f)
@@ -143,7 +151,9 @@ bsdata* bsdata::findbyptr(const void* object) {
 }
 
 int	bsdata::indexof(const void* object) const {
-	return -1;
+	if(!has(object))
+		return -1;
+	return ((char*)object - (char*)data) / size;
 }
 
 const void* bsdata::find(const bsreq* id, const char* value) const {

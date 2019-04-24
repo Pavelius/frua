@@ -394,6 +394,7 @@ struct character {
 	void					raise(class_s v);
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
+	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
 	static void				update_battle();
 private:

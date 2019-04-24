@@ -6,8 +6,31 @@ static void add_position(aref<character*> source) {
 		p->setposition(map::random());
 }
 
+static bool test_write() {
+	auto p1 = bsmeta<character>::data.add();
+	p1->create(Elf, Female, Mage, LawfulEvil, Player);
+	p1->setname("Мирандина");
+	auto p2 = bsmeta<character>::data.add();
+	p2->create(Human, Male, Paladin, LawfulGood, Player);
+	p2->setname("Вольган");
+	auto p3 = bsmeta<character>::data.add();
+	p3->create(Dwarf, Male, Fighter, LawfulGood, Player);
+	p3->setname("Йорген");
+	return bsdata::write("character.dat")==3;
+}
+
+static bool test_read() {
+	character c1 = {};
+	if(!bsdata::read("character.dat", &c1, bsmeta<bsreq::btype<decltype(c1)>::value>::meta))
+		return false;
+	return true;
+}
+
 int	main(int argc, char *argv[]) {
-	auto p = bsmeta<bsreq::btype<const alignment_s*>::value>::meta;
+	if(!test_write())
+		return -1;
+	if(!test_read())
+		return -1;
 	draw::initialize();
 	character ev;
 	ev.clear();

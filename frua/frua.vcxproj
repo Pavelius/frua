@@ -124,6 +124,7 @@
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="attack.cpp" />
     <ClCompile Include="bsreq.cpp" />
+    <ClCompile Include="bsreq_bin.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
     <ClCompile Include="class.cpp" />

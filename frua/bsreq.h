@@ -28,11 +28,12 @@ struct bsreq {
 	template<class T, unsigned N> struct icount<adat<T, N>> : static_int<N> {};
 	// Get base type
 	template<class T> struct btype { typedef T value; };
-	template<class T> struct btype<T*> { typedef T value; };
-	template<class T, unsigned N> struct btype<T[N]> { typedef T value; };
-	template<class T> struct btype<T[]> { typedef T value; };
-	template<class T> struct btype<const T> { typedef T value; };
-	template<class T> struct btype<const T*> { typedef T value; };
+	template<> struct btype<const char*> { typedef const char* value; };
+	template<class T> struct btype<T*> : btype<T> {};
+	template<class T, unsigned N> struct btype<T[N]> : btype<T> {};
+	template<class T> struct btype<T[]> : btype<T> {};
+	template<class T> struct btype<const T> : btype<T> {};
+	template<class T> struct btype<const T*> : btype<T> {};
 	// Get subtype
 	template<class T> struct isubtype : static_value<bstype_s, __is_enum(T) ? KindEnum : KindScalar> {};
 	template<class T> struct isubtype<T*> : static_value<bstype_s, isubtype<T>::value> {};
@@ -58,7 +59,9 @@ struct bsreq {
 	static const bsreq	metadata[];
 	int					get(const void* p) const;
 	const bsreq*		getkey() const;
-	bool				issimple() const { return type == 0; }
+	bool				isnum() const;
+	bool				isref() const { return reference > 0; }
+	bool				istext() const;
 	bool				match(const void* p, const char* name) const;
 	constexpr const char* ptr(const void* data) const { return (const char*)data + offset; }
 	constexpr const char* ptr(const void* data, int index) const { return (const char*)data + offset + index * size; }
@@ -88,6 +91,10 @@ struct bsdata {
 	const void*			get(int index) const { return (char*)data + size * index; }
 	bool				has(const void* object) const { return object >= data && object < ((char*)data + maximum * size); }
 	int					indexof(const void* object) const;
+	static bool			read(const char* url, void* object, const bsreq* type);
+	static bool			write(const char* url, const void* object, const bsreq* type);
+	static int			read(const char* url);
+	static int			write(const char* url);
 };
 template<typename T> struct bsdatat : bsdata {
 	template<unsigned N> constexpr bsdatat(const char* id, T(&source)[N], bstype_s subtype) :

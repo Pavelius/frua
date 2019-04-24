@@ -1,14 +1,21 @@
 #include "main.h"
 
 const bsreq bsmeta<character>::meta[] = {
-	BSREQ(gender),
-	BSREQ(race),
-	BSREQ(type),
 	BSREQ(name),
+	BSREQ(gender),
+	BSREQ(alignment),
+	BSREQ(type),
+	BSREQ(race),
+	BSREQ(size),
 	BSREQ(abilities),
 	BSREQ(feats),
+	BSREQ(hp), BSREQ(hp_rolled),
+	BSREQ(strenght_percent),
+	BSREQ(avatar),
+	BSREQ(levels),
+	BSREQ(base_ac),
 {}};
-BSDATA(character, 256);
+BSDATA(character, 512);
 
 static char hit_probability[] = {
 	-5, -5, -3, -3, -2, -2, -1, -1, 0, 0,

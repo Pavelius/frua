@@ -183,6 +183,9 @@
     <ClCompile Include="dam.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="bsreq_bin.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
