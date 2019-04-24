@@ -16,7 +16,7 @@ const int combat_map_y = 16;
 
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
-bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, bsreq::Enum);
+bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
 #define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
 
 enum item_s : unsigned char {

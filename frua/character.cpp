@@ -78,7 +78,7 @@ void character::roll_ability() {
 		abilities[i] = imax(v1, v2);
 	}
 	// Лучшая способность всегда самая высокая
-	auto ability = bsmeta<class_info>::data[type].ability;
+	auto ability = bsmeta<class_s>::data[type].ability;
 	auto ability_best = Strenght;
 	auto ability_value = 0;
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -93,7 +93,7 @@ void character::roll_ability() {
 void character::apply_ability_restriction() {
 	// Ограничения от расы и ее бонусы
 	auto& rcl = bsmeta<race_s>::data;
-	auto& ccl = bsmeta<class_info>::data;
+	auto& ccl = bsmeta<class_s>::data;
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
 		if(abilities[i] < rcl[race].minimum[i])
 			abilities[i] = rcl[race].minimum[i];
@@ -114,7 +114,7 @@ void character::apply_ability_restriction() {
 
 void character::apply_feats() {
 	feats = bsmeta<race_s>::data[race].feats.data;
-	feats |= bsmeta<class_info>::data[type].feats.data;
+	feats |= bsmeta<class_s>::data[type].feats.data;
 	movement = bsmeta<race_s>::data[race].movement;
 	size = bsmeta<race_s>::data[race].size;
 }
@@ -137,14 +137,14 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	apply_ability_restriction();
 	if(!is(NoExeptionalStrenght))
 		strenght_percent = xrand(1, 100);
-	for(auto e : bsmeta<class_info>::data[type].classes)
+	for(auto e : bsmeta<class_s>::data[type].classes)
 		raise(e);
 	hp = gethpmax();
 	avatar = random_avatar(race);
 }
 
 int character::getindex(class_s type, class_s v) {
-	return bsmeta<class_info>::data[type].classes.indexof(v);
+	return bsmeta<class_s>::data[type].classes.indexof(v);
 }
 
 void character::raise(class_s v) {
@@ -153,22 +153,22 @@ void character::raise(class_s v) {
 		return;
 	levels[index]++;
 	// Случайным образом определим хиты
-	if(bsmeta<class_info>::data[v].hd) {
+	if(bsmeta<class_s>::data[v].hd) {
 		int r = 0;
 		if(levels[index] == 1) {
-			auto r1 = xrand(1, bsmeta<class_info>::data[v].hd);
-			auto r2 = xrand(1, bsmeta<class_info>::data[v].hd);
+			auto r1 = xrand(1, bsmeta<class_s>::data[v].hd);
+			auto r2 = xrand(1, bsmeta<class_s>::data[v].hd);
 			r = imax(r1, r2);
-			if(bsmeta<class_info>::data[v].bonus_hd)
-				r += xrand(1, bsmeta<class_info>::data[v].hd);
+			if(bsmeta<class_s>::data[v].bonus_hd)
+				r += xrand(1, bsmeta<class_s>::data[v].hd);
 		} else
-			r = xrand(1, bsmeta<class_info>::data[v].hd);
+			r = xrand(1, bsmeta<class_s>::data[v].hd);
 		hp_rolled += r;
 	}
 }
 
 bool character::isallow(alignment_s v, class_s type) {
-	auto& ev = bsmeta<class_info>::data[type];
+	auto& ev = bsmeta<class_s>::data[type];
 	for(unsigned i = 0; i < ev.classes.count; i++) {
 		auto e = ev.classes.data[i];
 		if(bsmeta<alignment_s>::data[v].restricted.indexof(e) != -1)
@@ -178,7 +178,7 @@ bool character::isallow(alignment_s v, class_s type) {
 }
 
 bool character::isallow(class_s v, race_s race) {
-	auto& e = bsmeta<class_info>::data[v].races;
+	auto& e = bsmeta<class_s>::data[v].races;
 	return !e || e.is(race);
 }
 
@@ -209,9 +209,9 @@ int character::getac() const {
 }
 
 int	character::gethpmax(int v) const {
-	if(!bsmeta<class_info>::data[type].classes.count)
+	if(!bsmeta<class_s>::data[type].classes.count)
 		return 0;
-	int result = v / bsmeta<class_info>::data[type].classes.count;
+	int result = v / bsmeta<class_s>::data[type].classes.count;
 	int level = levels[0];
 	int con = get(Constitution);
 	if(is(BonusHits))
@@ -296,7 +296,7 @@ int character::select_avatar(const char* mask) {
 
 void character::correct() {
 	// Обнулим классы, которые не надо выводить
-	for(int i = bsmeta<class_info>::data[type].classes.count; i < sizeof(levels) / sizeof(levels[0]); i++)
+	for(int i = bsmeta<class_s>::data[type].classes.count; i < sizeof(levels) / sizeof(levels[0]); i++)
 		levels[i] = 0;
 	// Откорректируем класс
 	if(!isallow(type)) {

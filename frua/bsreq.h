@@ -10,11 +10,12 @@ bsmeta<bsreq::btype<decltype(type::fn)>::value>::meta,\
 bsreq::iref<decltype(type::fn)>::value,\
 bsreq::isubtype<decltype(type::fn)>::value}
 #define BSDATA(c, i) static c c##_data_array[i];\
-bsdatat<c> bsmeta<c>::data(#c, c##_data_array, bsreq::Scalar);
+bsdatat<c> bsmeta<c>::data(#c, c##_data_array, KindScalar);
+
+enum bstype_s : unsigned char { KindScalar, KindEnum, KindADat, KindARef, KindARem, KindCFlags };
 
 // Metadata field descriptor
 struct bsreq {
-	enum subtype_s : unsigned char { Scalar, Enum, ADat, ARef, ARem, CFlags };
 	// Get count of reference
 	template<class T> struct iref : static_int<0> {};
 	template<class T> struct iref<T*> : static_int<1 + iref<T>::value> {};
@@ -33,12 +34,12 @@ struct bsreq {
 	template<class T> struct btype<const T> { typedef T value; };
 	template<class T> struct btype<const T*> { typedef T value; };
 	// Get subtype
-	template<class T> struct isubtype : static_value<subtype_s, __is_enum(T) ? Enum : Scalar> {};
-	template<class T> struct isubtype<T*> : static_value<subtype_s, isubtype<T>::value> {};
-	template<class T, unsigned N> struct isubtype<T[N]> : static_value<subtype_s, isubtype<T>::value> {};
-	template<class T, unsigned N> struct isubtype<adat<T, N>> : static_value<subtype_s, ADat> {};
-	template<class T> struct isubtype<aref<T>> : static_value<subtype_s, ARef> {};
-	template<class T, class DT> struct isubtype<cflags<T, DT>> : static_value<subtype_s, CFlags> {};
+	template<class T> struct isubtype : static_value<bstype_s, __is_enum(T) ? KindEnum : KindScalar> {};
+	template<class T> struct isubtype<T*> : static_value<bstype_s, isubtype<T>::value> {};
+	template<class T, unsigned N> struct isubtype<T[N]> : static_value<bstype_s, isubtype<T>::value> {};
+	template<class T, unsigned N> struct isubtype<adat<T, N>> : static_value<bstype_s, KindADat> {};
+	template<class T> struct isubtype<aref<T>> : static_value<bstype_s, KindARef> {};
+	template<class T, class DT> struct isubtype<cflags<T, DT>> : static_value<bstype_s, KindCFlags> {};
 	//
 	const char*			id; // field identifier
 	unsigned			offset; // offset from begin of class or object
@@ -47,7 +48,7 @@ struct bsreq {
 	unsigned			count; // count of elements
 	const bsreq*		type; // metadata of element
 	unsigned char		reference; // 1+ if reference
-	bsreq::subtype_s	subtype;
+	bstype_s			subtype;
 	//
 	operator bool() const { return id != 0; }
 	//
@@ -62,8 +63,6 @@ struct bsreq {
 	constexpr const char* ptr(const void* data) const { return (const char*)data + offset; }
 	constexpr const char* ptr(const void* data, int index) const { return (const char*)data + offset + index * size; }
 	void				set(const void* p, int value) const;
-	template<class T> constexpr static const bsreq* getmeta() { return T::metadata; }
-	template<class T> constexpr static const bsreq* getmetareq() { return getmeta<btype<T>::value>(); }
 };
 struct bsdata {
 	const char*			id;
@@ -73,13 +72,13 @@ struct bsdata {
 	unsigned			maximum;
 	unsigned			size;
 	void*				data;
-	bsreq::subtype_s	subtype;
+	bstype_s			subtype;
 	static bsdata*		first;
 	static bsdata*		firstenum;
 	//
 	bsdata(const char* id, const bsreq* meta,
 		void* data, unsigned size, unsigned count, unsigned maximum,
-		bsreq::subtype_s subtype);
+		bstype_s subtype);
 	//
 	void*				add();
 	static bsdata*		find(const char* id, bsdata* first);
@@ -91,7 +90,8 @@ struct bsdata {
 	int					indexof(const void* object) const;
 };
 template<typename T> struct bsdatat : bsdata {
-	template<unsigned N> constexpr bsdatat(const char* id, T(&source)[N], bsreq::subtype_s subtype) : bsdata(id, bsmeta<T>::meta, source, sizeof(T), 0, N, subtype) {}
+	template<unsigned N> constexpr bsdatat(const char* id, T(&source)[N], bstype_s subtype) :
+		bsdata(id, bsmeta<T>::meta, source, sizeof(T), (subtype == KindEnum) ? N : 0, N, subtype) {}
 	T& operator[](int index) { return ((T*)data)[index]; }
 	T*					add() { return (T*)bsdata::add(); }
 	constexpr const T*	begin() const { return (T*)data; }

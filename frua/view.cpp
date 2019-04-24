@@ -496,7 +496,7 @@ static void choose_enum() {
 	auto events = command_draw_events;
 	enum_view ev(*command_data);
 	ev.hilite_odd_lines = false;
-	for(unsigned i = 0; i <= command_data->count; i++) {
+	for(unsigned i = 0; i < command_data->count; i++) {
 		if(events) {
 			if(!events->isallow(*command_data, i))
 				continue;
@@ -872,7 +872,7 @@ struct page_view {
 
 static int group_combat_ability(int x, int y, int width, const character* player, bool range_hits) {
 	char temp[260];
-	auto& col = bsmeta<class_info>::data;
+	auto& col = bsmeta<class_s>::data;
 	attack_info ai = {}; player->get(MeleeWeapon, ai);
 	auto y1 = y;
 	auto rga = start_group(x, y, width, "Боевые параметры");
@@ -963,7 +963,7 @@ struct character_view : page_view {
 		text(x, y, getstr(player->alignment)); y += texth();
 		y = y2;
 		auto x1 = x + w1 + metrics::padding * 4;
-		auto& col = bsmeta<class_info>::data;
+		auto& col = bsmeta<class_s>::data;
 		auto class_count = col[player->type].classes.count;
 		if(!class_count)
 			class_count = 1;
@@ -1319,7 +1319,7 @@ int character::edit_basic(int x, int y, int width, draw_events* pev) {
 	const int tw = 12;
 	auto y0 = y;
 	auto x0 = x;
-	auto& col = bsmeta<class_info>::data;
+	auto& col = bsmeta<class_s>::data;
 	auto rga = start_group(x, y, width, "Базовые значения");
 	y += field(x, y, width, "Имя", name, title_width);
 	y += field(x, y, width, "Мировозрение", alignment, pev);
@@ -1387,7 +1387,7 @@ bool character::edit() {
 			if(&ei == &bsmeta<alignment_s>::data) {
 				if(!player.isallow((alignment_s)index))
 					return false;
-			} else if(&ei == &bsmeta<class_info>::data) {
+			} else if(&ei == &bsmeta<class_s>::data) {
 				if(!player.isallow((class_s)index))
 					return false;
 			}

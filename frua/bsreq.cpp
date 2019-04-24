@@ -95,12 +95,12 @@ bool bsreq::match(const void* p, const char* name) const {
 
 bsdata::bsdata(const char* id, const bsreq* meta,
 	void* data, unsigned size, unsigned count, unsigned maximum,
-	bsreq::subtype_s subtype) :
+	bstype_s subtype) :
 	id(id), meta(meta), next(0),
 	data(data), count(count), maximum(maximum), size(size),
 	subtype(subtype) {
 	auto pf = &first;
-	if(subtype == bsreq::Enum)
+	if(subtype == KindEnum)
 		pf = &firstenum;
 	while(*pf)
 		pf = &((*pf)->next);
