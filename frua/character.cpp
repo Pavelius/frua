@@ -249,22 +249,6 @@ void character::setactive() {
 	active_player = this;
 }
 
-bool character::move(direction_s d) {
-	auto i1 = map::to(getposition(), d);
-	if(i1 == Blocked)
-		return false;
-	if(map::getcost(i1) == Blocked)
-		return false;
-	setposition(i1);
-	switch(d) {
-	case Left:
-	case Right:
-		direction = d;
-		break;
-	}
-	return true;
-}
-
 int character::getmovement() const {
 	return 12;
 }

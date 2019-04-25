@@ -3,7 +3,7 @@
 
 static void add_position(aref<character*> source) {
 	for(auto p : source)
-		p->setposition(map::random());
+		p->setposition(combat_info::random());
 }
 
 static bool test_write() {
@@ -20,28 +20,22 @@ static bool test_write() {
 }
 
 static bool test_read() {
-	character c1 = {};
-	if(!bsdata::read("character.dat", &c1, bsmeta<bsreq::btype<decltype(c1)>::value>::meta))
+	if(bsdata::read("character.dat")<=0)
 		return false;
 	return true;
 }
 
 int	main(int argc, char *argv[]) {
-	if(!test_write())
-		return -1;
-	if(!test_read())
-		return -1;
+	//if(!test_write())
+	//	return -1;
 	draw::initialize();
-	character ev;
-	ev.clear();
-	ev.edit();
 	//event_info ei;
 	//ei.edit();
 	//picture_info::pick_monster();
 	//character::choose_avatar("character*", 10);
 	//character_data.add()->generate();
-	bsmeta<character>::data.add()->create(Human, Male, Paladin, LawfulGood, Player);
-	bsmeta<character>::data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
+	//bsmeta<character>::data.add()->create(Human, Male, Paladin, LawfulGood, Player);
+	//bsmeta<character>::data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
 	party.add(&bsmeta<character>::data[0]);
 	party.add(&bsmeta<character>::data[1]);
 	add_position(party);

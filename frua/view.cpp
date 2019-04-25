@@ -144,20 +144,6 @@ static void render_background() {
 	rectf(rc, colors::window);
 }
 
-answer* character::choose(const picture_info& image, aref<answer> source) {
-	while(ismodal()) {
-		render_background();
-		render_picture(8, 8);
-		auto x = 6, y = 572;
-		//for(auto& e : source)
-		//	x += button(x, y, e.name);
-		domodal();
-	}
-	if(!getresult())
-		return 0;
-	return 0;
-}
-
 static bool need_exclude(const char* text, const char** exclude) {
 	for(auto pe = exclude; *pe; pe++) {
 		if(strcmp(text, *pe) == 0)
@@ -578,7 +564,7 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 	return fieldv(x, y, width, title, temp);
 }
 
-static void page_header(int& x, int& y, const char* title) {
+static void page_header(int& x, int& y, const char* title, bool padding = true) {
 	x = metrics::padding;
 	y = metrics::padding;
 	draw::state push;
@@ -586,7 +572,8 @@ static void page_header(int& x, int& y, const char* title) {
 	fore = colors::yellow;
 	text(x, y, title);
 	y += texth() + metrics::padding;
-	x += metrics::padding;
+	if(padding)
+		x += metrics::padding;
 }
 
 static void page_footer(int& x, int& y, bool allow_cancel = false) {
@@ -1057,7 +1044,7 @@ static void draw_active_player(int x0, int y0) {
 	if(!player)
 		return;
 	auto i = player->getposition();
-	if(i == Blocked)
+	if(i == mapcore::Blocked)
 		return;
 	auto x = i % combat_map_x;
 	auto y = i / combat_map_x;
@@ -1071,13 +1058,13 @@ static void draw_cost(int x0, int y0) {
 	fore = colors::form;
 	for(auto y = 0; y < combat_map_y; y++) {
 		for(auto x = 0; x < combat_map_x; x++) {
-			auto i = map::m2i(x, y);
-			auto c = map::getcost(i);
+			auto i = combat_info::m2i(x, y);
+			auto c = combat_info::getcost(i);
 			if(!c)
 				continue;
 			auto x1 = x0 + x * combat_grid + combat_grid / 2;
 			auto y1 = y0 + y * combat_grid + combat_grid / 2;
-			if(c == Blocked) {
+			if(c == mapcore::Blocked) {
 				line(x1 - combat_grid / 2, y1 - combat_grid / 2, x1 + combat_grid / 2, y1 + combat_grid / 2);
 				line(x1 - combat_grid / 2, y1 + combat_grid / 2, x1 + combat_grid / 2, y1 - combat_grid / 2);
 			} else {
@@ -1093,7 +1080,7 @@ void character::addbattle() {
 	if(!isalive())
 		return;
 	auto index = getposition();
-	if(index == Blocked)
+	if(index == mapcore::Blocked)
 		return;
 	auto x = (index%combat_map_x)*combat_grid + combat_grid / 2;
 	auto y = (index / combat_map_y)*combat_grid + combat_grid / 2;
@@ -1121,7 +1108,7 @@ static void move_direction() {
 	auto p = character::getactive();
 	if(!p)
 		return;
-	p->move(d);
+	//p->move(d);
 	current_combat->movement -= combat_moverate;
 }
 
@@ -1384,12 +1371,10 @@ static void change_record() {
 
 }
 
-static int show_table(const char* title, bsdata& source, int width, bool choose_mode) {
+static bool table_choose(const char* title, bsdata& source, const anyval& result, int width, bool choose_mode, callback edit_proc) {
 	struct bsmeta_view : controls::picker {
 		bsdata&		source;
-		int getmaximum() const override {
-			return source.count;
-		}
+		int getmaximum() const override { return source.count; }
 		int getnumber(const char* id, int index) const {
 			auto pf = source.meta->find(id);
 			if(!pf)
@@ -1411,7 +1396,9 @@ static int show_table(const char* title, bsdata& source, int width, bool choose_
 					return "Пусто";
 				return pn;
 			case 1:
-				szprint(result, result_max, "Str:%1i, Dex:%2i, Con:%3i\nHD:%6i, AC:%4i, Хиты:%5i", 13, 10, 16, 8, 10, 2);
+				szprint(result, result_max,
+					"Str:%1i, Dex:%2i, Con:%3i\nHD:%6i, AC:%4i, Хиты:%5i",
+					13, 10, 16, 8, 10, 2);
 				return result;
 			default: return "";
 			}
@@ -1458,15 +1445,21 @@ static int show_table(const char* title, bsdata& source, int width, bool choose_
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title);
+		page_header(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
 		page_footer(x, y, choose_mode);
+		if(source.count < source.maximum) {
+			x += button(x, y, "Добавить", cmd(change_record), F3);
+			x += button(x, y, "Скопировать", cmd(change_record), F4);
+		}
 		x += button(x, y, "Редактировать", cmd(change_record), F2);
 		domodal();
 	}
-	if(getresult())
-		return e1.getcurrent();
-	return -1;
+	if(getresult()) {
+		result = e1.getcurrent();
+		return true;
+	}
+	return false;
 }
 
 bool character::edit() {

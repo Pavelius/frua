@@ -143,24 +143,6 @@ struct bsdata_bin {
 	constexpr bsdata_bin(io::stream& file, bool writemode) : file(file), writemode(writemode) {}
 };
 
-bool bsdata::write(const char* url, const void* object, const bsreq* type) {
-	io::file file(url, StreamWrite);
-	if(!file)
-		return false;
-	bsdata_bin e(file, true);
-	e.serial(object, type, 0);
-	return true;
-}
-
-bool bsdata::read(const char* url, void* object, const bsreq* type) {
-	io::file file(url, StreamRead);
-	if(!file)
-		return false;
-	bsdata_bin e(file, false);
-	e.serial(object, type, 0);
-	return true;
-}
-
 int bsdata::read(const char* url) {
 	io::file file(url, StreamRead);
 	if(!file)

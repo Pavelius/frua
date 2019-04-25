@@ -3,7 +3,7 @@
 character* combat_info::add(race_s race, gender_s gender, class_s type, int level, reaction_s reaction) {
 	auto p = enemies.add();
 	p->create(race, gender, type, ChaoticEvil, reaction);
-	p->setposition(map::random());
+	p->setposition(random());
 	p->setavatar(2);
 	return p;
 }
@@ -55,7 +55,29 @@ bool combat_info::isenemy() const {
 }
 
 void combat_info::makewave(short unsigned index) {
-	map::setblock();
-	setblock();
-	map::makewave(index);
+	mapcore::setblock();
+	for(auto p : parcipants) {
+		if(!p->isalive())
+			continue;
+		mapcore::setblock(p->getposition(), Blocked);
+	}
+	mapcore::makewave(index, xmax, ymax);
+}
+
+bool combat_info::move(character* player, direction_s d) {
+	if(!player)
+		return false;
+	auto i1 = to(player->getposition(), d);
+	if(i1 == Blocked)
+		return false;
+	if(getcost(i1) == Blocked)
+		return false;
+	player->setposition(i1);
+	switch(d) {
+	case Left:
+	case Right:
+		player->set(d);
+		break;
+	}
+	return true;
 }

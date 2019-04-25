@@ -1,44 +1,35 @@
 #include "main.h"
 
-short unsigned map::m2i(int x, int y) {
-	return y * combat_map_x + x;
-}
+static short unsigned map_block[64 * 64];
 
-short unsigned map::random() {
-	auto i = m2i(xrand(1, combat_map_x - 2), xrand(1, combat_map_y - 2));
-	return i;
-}
-
-short unsigned map::to(short unsigned i, direction_s d) {
+short unsigned mapcore::to(short unsigned i, direction_s d, short xm, short ym) {
 	if(i == Blocked)
 		return i;
-	auto x = i % combat_map_x;
-	auto y = i / combat_map_x;
+	auto x = i % xm;
+	auto y = i / xm;
 	switch(d) {
 	case Left:
 		if(x <= 0)
 			return Blocked;
-		return m2i(x - 1, y);
+		return y * xm + (x - 1);
 	case Right:
-		if(x >= combat_map_x - 1)
+		if(x >= xm - 1)
 			return Blocked;
-		return m2i(x + 1, y);
+		return y * xm + (x + 1);
 	case Up:
 		if(y <= 0)
 			return Blocked;
-		return m2i(x, y - 1);
+		return (y - 1) * xm + x;
 	case Down:
-		if(y >= combat_map_y - 1)
+		if(y >= ym - 1)
 			return Blocked;
-		return m2i(x, y + 1);
+		return (y + 1) * xm + x;
 	default:
 		return Blocked;
 	}
 }
 
-static short unsigned map_block[combat_map_x*combat_map_x];
-
-void map::makewave(short unsigned start_index) {
+void mapcore::makewave(short unsigned start_index, short xm, short ym) {
 	static direction_s directions[] = {Left, Right, Up, Down};
 	short unsigned stack[256 * 64];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
@@ -52,7 +43,7 @@ void map::makewave(short unsigned start_index) {
 			pop_counter = stack;
 		auto cost = map_block[index] + 1;
 		for(auto d : directions) {
-			auto i1 = map::to(index, d);
+			auto i1 = to(index, d, xm, ym);
 			if(i1 == Blocked || map_block[i1] == Blocked)
 				continue;
 			if(map_block[i1] <= cost)
@@ -65,23 +56,18 @@ void map::makewave(short unsigned start_index) {
 	}
 }
 
-void map::setblock() {
+void mapcore::setblock() {
 	for(auto& e : map_block)
 		e = DefaultCost;
 }
 
-void combat_info::setblock() {
-	for(auto p : parcipants) {
-		if(!p->isalive())
-			continue;
-		auto index = p->getposition();
-		if(index == Blocked)
-			continue;
-		map_block[index] = Blocked;
-	}
+void mapcore::setblock(short unsigned index, short unsigned v) {
+	if(index == Blocked)
+		return;
+	map_block[index] = v;
 }
 
-short unsigned map::getcost(short unsigned index) {
+short unsigned mapcore::getcost(short unsigned index) {
 	if(index == Blocked)
 		return 0;
 	return map_block[index];

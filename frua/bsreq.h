@@ -11,6 +11,7 @@ bsreq::iref<decltype(type::fn)>::value,\
 bsreq::isubtype<decltype(type::fn)>::value}
 #define BSDATA(c, i) static c c##_data_array[i];\
 bsdatat<c> bsmeta<c>::data(#c, c##_data_array, KindScalar);
+#define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
 
 enum bstype_s : unsigned char { KindScalar, KindEnum, KindADat, KindARef, KindARem, KindCFlags };
 
@@ -91,8 +92,6 @@ struct bsdata {
 	const void*			get(int index) const { return (char*)data + size * index; }
 	bool				has(const void* object) const { return object >= data && object < ((char*)data + maximum * size); }
 	int					indexof(const void* object) const;
-	static bool			read(const char* url, void* object, const bsreq* type);
-	static bool			write(const char* url, const void* object, const bsreq* type);
 	static int			read(const char* url);
 	static int			write(const char* url);
 };

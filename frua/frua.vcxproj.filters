@@ -153,9 +153,6 @@
     <ClCompile Include="main_util.cpp">
       <Filter>Утилиты</Filter>
     </ClCompile>
-    <ClCompile Include="map.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="combat.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -185,6 +182,9 @@
     </ClCompile>
     <ClCompile Include="bsreq_bin.cpp">
       <Filter>Коллекция</Filter>
+    </ClCompile>
+    <ClCompile Include="mapcore.cpp">
+      <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

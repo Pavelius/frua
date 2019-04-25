@@ -8,8 +8,6 @@
 
 #pragma once
 
-const short unsigned Blocked = 0xFFFF;
-const short unsigned DefaultCost = 0xFFFE;
 const int combat_grid = 32;
 const int combat_map_x = 16;
 const int combat_map_y = 16;
@@ -17,7 +15,6 @@ const int combat_map_y = 16;
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
 bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
-#define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
 
 enum item_s : unsigned char {
 	NoItem,
@@ -211,15 +208,6 @@ typedef race_s				racea[8];
 typedef cflags<feat_s>		feata;
 typedef class_s				classa[3];
 
-struct answer {
-	int						value;
-	const char*				name;
-};
-struct answers : adat<answer, 32> {
-	void					add(int id, const char* text);
-private:
-	char					text[4096];
-};
 struct name_info {
 	const char*				id;
 	const char*				name;
@@ -353,6 +341,7 @@ struct character {
 	void					apply_feats();
 	void					clear();
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
+	static bool				choose(const char* title, bsdata& source, const anyval& result, int width, bool choose_mode, void(*edit_proc)());
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	static int				select_avatar(const char* mask);
 	void					correct();
@@ -388,10 +377,9 @@ struct character {
 	static bool				isallow(class_s v, race_s race);
 	bool					isenemy(const character* p) const;
 	bool					isplayable() const { return reaction == Player; }
-	bool					move(direction_s d);
 	static const bsreq		metadata[];
-	static answer*			choose(const picture_info& image, aref<answer> source);
 	void					raise(class_s v);
+	void					set(direction_s v) { direction = v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
@@ -430,7 +418,25 @@ private:
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
-struct combat_info {
+struct mapcore {
+	static const short unsigned Blocked = 0xFFFF;
+	static const short unsigned DefaultCost = 0xFFFE;
+	static short unsigned	getcost(short unsigned index);
+	static void				makewave(short unsigned start_index, short xm, short ym);
+	static void				setblock();
+	static void				setblock(short unsigned index, short unsigned v);
+	static short unsigned	to(short unsigned i, direction_s d, short xm, short ym);
+};
+template<short XM, short YM> struct map_info : mapcore {
+	static const short		xmax = XM, ymax = YM;
+	unsigned char			data[XM*YM];
+	static point			i2m(short unsigned i) { return {i % XM, i / XM}; }
+	static short unsigned	m2i(short x, short y) { return y * XM + x; };
+	static short unsigned	m2i(const point pt) { return pt.y * XM + pt.x; };
+	static short unsigned	to(short unsigned i, direction_s d) { return mapcore::to(i, d, XM, YM); }
+	static short unsigned	random() { return m2i(xrand(0, XM - 1), xrand(0, YM - 1)); }
+};
+struct combat_info : map_info<combat_map_x, combat_map_y> {
 	int						round;
 	int						movement;
 	adat<character, 32>		enemies;
@@ -443,20 +449,12 @@ struct combat_info {
 	bool					isenemy() const;
 	void					makewave(short unsigned index);
 	void					move(character* player);
+	bool					move(character* player, direction_s d);
 	void					play();
 	void					playround();
-	void					setblock();
 	void					update();
 	void					visualize();
 };
-namespace map {
-short unsigned				getcost(short unsigned index);
-void						makewave(short unsigned start_index);
-short unsigned				m2i(int x, int y);
-short unsigned				random();
-void						setblock();
-short unsigned				to(short unsigned i, direction_s d);
-}
 DECLENUM(alignment);
 DECLENUM(class);
 DECLENUM(dam);
