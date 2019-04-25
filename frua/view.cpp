@@ -602,6 +602,7 @@ static void set_page() {
 static int page_tabs(int x, int y, const char** source, int& current_page) {
 	if(!source)
 		return 0;
+	x += 2;
 	auto focused = false;
 	auto id = (int)&current_page;
 	if(!getfocus())
@@ -638,7 +639,7 @@ static int page_tabs(int x, int y, const char** source, int& current_page) {
 				break;
 			}
 		}
-		x += rc.width() + 2;
+		x += rc.width();
 	}
 	addelement(id, {x0, y, x, y + texth() + metrics::padding * 2});
 	return x - x0;
@@ -1284,14 +1285,7 @@ static void choose_spells() {
 static void choose_feats() {
 }
 
-//color::create(97, 189, 79);
-//color::create(242, 214, 0);
-//color::create(255, 159, 26);
-//color::create(235, 90, 70);
-//color::create(195, 119, 224);
-//color::create(0, 121, 191);
-
-bool design_info::choose(const char* title, const anyval& result, int width, bool choose_mode) {
+bool design_info::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {
 	struct table : controls::picker {
 		design_info& source;
 		int getmaximum() const override { return source.source.count; }
@@ -1321,9 +1315,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, boo
 			rect rc = rcorigin;
 			rowhilite(rc, index);
 			auto avatar = source.getavatar(pv);
-			if(true) {
-				if(avatar == -1)
-					avatar = 10;
+			if(avatar != -1) {
 				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
 				draw::state push;
 				setclip(rp);
@@ -1365,7 +1357,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, boo
 		constexpr table(design_info& source) : source(source) {}
 	} e1(*this);
 	e1.show_border = false;
-	e1.pixels_per_line = 64 + 1 + 4*2;
+	e1.pixels_per_line = height;
 	e1.pixels_per_column = width;
 	e1.show_grid_lines = true;
 	setfocus(0, true);
@@ -1394,6 +1386,12 @@ bool design_info::choose(const char* title, const anyval& result, int width, boo
 		return true;
 	}
 	return false;
+}
+
+static void character_reroll() {
+	auto p = (character*)hot.param;
+	p->reroll();
+	p->set(UniqueCharacter);
 }
 
 bool character::edit() {
@@ -1436,6 +1434,7 @@ bool character::edit() {
 			y += edit_feats(x, y, c1);
 		}
 		page_footer(x, y, true);
+		x += button(x, y, "Перебросить", cmd(character_reroll, (int)this), Ctrl + Alpha + 'R');
 		x += page_tabs(x, y, page_strings, page);
 		character previous = *this;
 		domodal();

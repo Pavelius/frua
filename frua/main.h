@@ -16,31 +16,6 @@ const int combat_map_y = 16;
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
 bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
 
-enum item_s : unsigned char {
-	NoItem,
-	Axe, BattleAxe, Mace, MorningStar, Hammer,
-	Spear, Staff, Halberd,
-	Dagger, ShortSword, LongSword, BastardSword, TwoHandedSword, Scimitar,
-	ShortBow, LongBow, Crossbow, Sling,
-	FirstWeapon = Axe, LastWeapon = Sling,
-	//
-	LeatherArmor, StuddedLeatherArmor, ChainMail, ScaleMail, Brigandine, PlateMail, RingMail, SplintMail, BandedMail, FieldPlate, FullPlate,
-	Shield,
-	FirstArmor = LeatherArmor, LastArmor = Shield,
-	//
-	Stone, Arrow, Bolt,
-	Potion, Scroll, Ring, Rod, Wand, Book, Tome, Necklage, Cloack, Robe, Boot, Glove, Gridle,
-	Helm, Bag, Bottle, Dust,
-	Flute, Guitar,
-	Raspberry, Grain,
-	// Gems
-	Azurite, BandedAgate, BlueQuartz, EyeAgate, Hematite, LapisLazuli, Malachite, MossAgate, Obsidian, Rhodochrosite, TigerEyeAgate, Turquoise,
-	Bloodstone, Chalcedony, Chrysoprase, Citrine, Jasper, Moonstone, Onyx, RockCrystal, Sardonyx, SmokyQuartz, StarRoseQuartz, Zircon,
-	Amber, Alexandrite, Amethyst, Aquamarine, Chrysoberyl, Coral, Garnet, Jade, Jet, Pearl, Peridot, Spinel, Topaz, Tourmaline,
-	BlackOpal, BlackSapphire, Diamond, Emerald, FireOpal, Jacinth, Opal, OrientalAmethyst, OrientalEmerald, OrientalTopaz, Ruby, Sapphire, StarRuby, StarSapphire,
-	FirstGem = Azurite, LastGem = StarSapphire,
-	LastItem = StarSapphire
-};
 enum class_s : unsigned char {
 	Monster,
 	Cleric, Fighter, Mage, Paladin, Ranger, Theif,
@@ -83,6 +58,7 @@ enum landscape_s : unsigned  char {
 	Plain, Brush, Forest, Desert, Hills, Mountains, Swamp, Jungle, Ocean, Arctic,
 };
 enum wear_s : unsigned char {
+	Backpack, LastBackpack = Backpack + 15,
 	Head, Neck, Armor, MeleeWeapon, OffhandWeapon, RangedWeapon, GridleWear, Legs,
 	FirstWear = Head, LastWear = Legs
 };
@@ -303,39 +279,19 @@ struct special_info : damage_info {
 	unsigned				feats;
 	bool					edit();
 };
-struct itemweight {
-	item_s					key;
-	short					weight;
-	static int				compare(const void* p1, const void* p2);
-};
 struct item {
-	item_s					type;
+	unsigned char			type;
 	magic_power_s			power;
 	item_state_s			state : 2;
 	unsigned char			quality : 2;
 	unsigned char			identify : 1;
 	unsigned char			charges;
-	item() = default;
-	constexpr item(item_s type) : type(type), quality(0), state(Mundane), identify(1), power(NoMagicPower), charges(0) {}
-	constexpr operator bool() const { return type != NoItem; }
+	constexpr operator bool() const { return type != 0; }
 };
-struct treasure {
-	int						cp, sp, gp, pp, gems, art, magic;
-	item					items[64];
-	treasure();
-	void					add(item value);
-	void					add(magic_item_s type);
-	void					addarts(int count);
-	void					addgems(int count);
-	void					addmagic(int count);
-	static item				anyart();
-	static item_s			anygem();
-	static magic_item_s		anymagic();
-	static item				anymagic(magic_item_s type, char level = 0);
-	void					clear();
-	void					generate(char symbol);
-	void					generate(const char* type);
-	static item				gemquality(item_s type);
+struct item_info {
+	const char*				name;
+	wear_s					wear[2];
+	cflags<feat_s>			restriction;
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -381,7 +337,9 @@ struct character {
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
 	void					raise(class_s v);
+	void					reroll();
 	void					set(direction_s v) { direction = v; }
+	void					set(feat_s v) { feats |= 1 << v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
@@ -461,7 +419,7 @@ struct design_info {
 	enum grade_s : unsigned char { Fair, Good, Excellent };
 	bsdata&					source;
 	virtual bool			change(void* obect) { return false; }
-	bool					choose(const char* title, const anyval& result, int width, bool choose_mode);
+	bool					choose(const char* title, const anyval& result, int width, int height, bool choose_mode);
 	virtual void			creating(void* object) const {}
 	bool					edit(void* object, void* copy_object, bool run);
 	virtual int				getavatar(const void* object) const { return -1; }

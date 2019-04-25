@@ -126,6 +126,16 @@ void character::apply_feats() {
 	size = bsmeta<race_s>::data[race].size;
 }
 
+void character::reroll() {
+	roll_ability();
+	apply_feats();
+	apply_ability_restriction();
+	if(!is(NoExeptionalStrenght))
+		strenght_percent = xrand(1, 100);
+	else
+		strenght_percent = 0;
+}
+
 void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
 	static const char* source[] = {"character9", "character49", "character10",
 		"character40", "character2", "character24"};
@@ -342,7 +352,7 @@ character* character::choose() {
 		}
 	} e;
 	int result = 0;
-	if(e.choose("¬ыбирайте геро€, персонажа или монстра", result, 256, false))
+	if(e.choose("¬ыбирайте геро€, персонажа или монстра", result, 256, 60, false))
 		return (character*)bsmeta<character>::data.get(result);
 	return 0;
 }
