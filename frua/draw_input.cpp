@@ -194,6 +194,13 @@ int draw::getfocus() {
 	return current_focus;
 }
 
+void draw::openform() {
+	setfocus(0, true);
+}
+
+void draw::closeform() {
+}
+
 void draw::execute(callback proc, int param) {
 	domodal = proc;
 	hot.key = 0;

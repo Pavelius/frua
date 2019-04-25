@@ -212,6 +212,7 @@ void					circle(int x, int y, int radius);
 void					circle(int x, int y, int radius, const color c1);
 void					circlef(int x, int y, int radius, const color c1, unsigned char alpha = 0xFF);
 int						clipart(int x, int y, int width, unsigned flags, const char* string);
+void					closeform();
 void					create(int x, int y, int width, int height, unsigned flags, int bpp);
 void					decortext(unsigned flags);
 extern callback			domodal;
@@ -253,6 +254,7 @@ extern color*			palt;
 void					pixel(int x, int y);
 void					pixel(int x, int y, unsigned char alpha);
 unsigned char*			ptr(int x, int y);
+void					openform();
 int						rawinput();
 void					rectb(rect rc); // Draw rectangle border
 void					rectb(rect rc, color c1);

@@ -28,6 +28,7 @@ static bool test_read() {
 bool test_array();
 
 int	main(int argc, char *argv[]) {
+	//auto p = bsmeta<test_type>::meta;
 	if(!test_array())
 		return -1;
 	draw::initialize();

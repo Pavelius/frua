@@ -58,8 +58,7 @@ enum landscape_s : unsigned  char {
 	Plain, Brush, Forest, Desert, Hills, Mountains, Swamp, Jungle, Ocean, Arctic,
 };
 enum wear_s : unsigned char {
-	Backpack, LastBackpack = Backpack + 15,
-	Head, Neck, Armor, MeleeWeapon, OffhandWeapon, RangedWeapon, GridleWear, Legs,
+	Head, Neck, Armor, MeleeWeapon, OffhandWeapon, RangedWeapon, GridleWear, LeftRing, RightRing, Legs,
 	FirstWear = Head, LastWear = Legs
 };
 enum school_s : unsigned char {
@@ -208,8 +207,13 @@ struct dam_info {
 struct feat_info {
 	const char*				id;
 	const char*				name;
+	char					use_item;
 };
 struct size_info {
+	const char*				id;
+	const char*				name;
+};
+struct wear_info {
 	const char*				id;
 	const char*				name;
 };
@@ -226,7 +230,7 @@ struct picture_info {
 	bool operator==(const picture_info& e) const;
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
 	static const picture_info* choose_image();
-	static const picture_info* edit_monsters();
+	static void				edit_monsters();
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
 	static int				random(const char* mask);
@@ -289,9 +293,11 @@ struct item {
 	constexpr operator bool() const { return type != 0; }
 };
 struct item_info {
+	wear_s					type;
 	const char*				name;
-	wear_s					wear[2];
-	cflags<feat_s>			restriction;
+	cflags<feat_s>			restrictions;
+	damage_info				damage;
+	bool					edit();
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -364,7 +370,7 @@ private:
 	short unsigned			avatar;
 	char					levels[3];
 	char					base_ac;
-	item					wears[Legs + 1];
+	item_info				wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
 	special_info			special_attacks[4];
@@ -434,5 +440,6 @@ DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(race);
 DECLENUM(size);
+DECLENUM(wear);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;

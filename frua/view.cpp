@@ -19,6 +19,7 @@ static anyval					command_value;
 static bsdata*					command_data;
 static rect						command_rect;
 static draw_events*				command_draw_events;
+static int						command_range[2];
 static char						command_mask[260];
 static agrw<picture_info>		file_data;
 static const char*				file_exclude[] = {"fonts", "monsters", 0};
@@ -310,12 +311,10 @@ static int show_information(int x, int y, int width, const sprite* ps, const spr
 	return textf(x, y, width, temp) + metrics::padding;
 }
 
-const picture_info* picture_info::edit_monsters() {
+void picture_info::edit_monsters() {
 	struct string_view : controls::list {
 		aref<sprite_name_info> source;
-		int getmaximum() const override {
-			return source.count;
-		}
+		int getmaximum() const override { return source.count; }
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
 			if(source.data) {
 				if(column == 0)
@@ -326,7 +325,7 @@ const picture_info* picture_info::edit_monsters() {
 		constexpr string_view(const aref<sprite_name_info>& source) : source(source) {}
 	};
 	if(!spr_monsters)
-		return 0;
+		return;
 	unsigned index_maximum = spr_monsters->count / 2;
 	string_view s1(aref<sprite_name_info>((sprite_name_info*)spr_monsters->edata(), index_maximum));
 	setfocus(0, true);
@@ -352,16 +351,16 @@ const picture_info* picture_info::edit_monsters() {
 		y += show_information(x + metrics::padding, y, picture_width - metrics::padding, spr_monsters, current_frame);
 		s1.view({x + picture_width + metrics::padding, metrics::padding, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		y = y_buttons;
-		x += button(x, y, "Выбрать", cmd(save_monsters, (int)spr_monsters), KeyEscape);
+		x += button(x, y, "Готово", cmd(save_monsters, (int)spr_monsters), KeyEnter);
 		x += button(x, y, "Сменить", cmd(change_monster_part), KeySpace);
 		x += button(x, y, "Вверх", cmd(change_up, (int)current_frame), Ctrl + KeyUp);
 		x += button(x, y, "Вниз", cmd(change_down, (int)current_frame), Ctrl + KeyDown);
 		x += button(x, y, "Вправо", cmd(change_right, (int)current_frame), Ctrl + KeyRight);
 		x += button(x, y, "Влево", cmd(change_left, (int)current_frame), Ctrl + KeyLeft);
-		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
+		if(hot.key == KeyEscape)
+			execute(save_monsters, (int)spr_monsters);
 		domodal();
 	}
-	return 0;
 }
 
 static void render_title(int x, int y, int width, char* temp, const char* temp_end, const char* title) {
@@ -490,7 +489,13 @@ static void choose_enum() {
 	auto events = command_draw_events;
 	enum_view ev(*command_data);
 	ev.hilite_odd_lines = false;
-	for(unsigned i = 0; i < command_data->count; i++) {
+	auto i1 = 0;
+	auto i2 = command_data->count - 1;
+	if(command_range[1]) {
+		i1 = command_range[0];
+		i2 = command_range[1];
+	}
+	for(unsigned i = i1; i < i2; i++) {
 		if(events) {
 			if(!events->isallow(*command_data, i))
 				continue;
@@ -509,7 +514,7 @@ static void choose_enum() {
 		command_value = ev.getcurrent();
 }
 
-static int field(int x, int y, int width, const char* title, const anyval& ev, bsdata& ei, draw_events* pev) {
+static int field(int x, int y, int width, const char* title, const anyval& ev, bsdata& ei, draw_events* pev, int i1, int i2) {
 	setposition(x, y, width);
 	titletext(x, y, width, 0, title, title_width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
@@ -527,13 +532,15 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, b
 		command_rect = rc;
 		command_data = &ei;
 		command_draw_events = pev;
+		command_range[0] = i1;
+		command_range[1] = i2;
 		execute(choose_enum);
 	}
 	return rc.height() + metrics::padding * 2;
 }
 
 template<class T> static int field(int x, int y, int width, const char* title, T& ev, draw_events* pev = 0) {
-	return field(x, y, width, title, ev, bsmeta<bsreq::btype<T>::value>::data, pev);
+	return field(x, y, width, title, ev, bsmeta<bsreq::btype<T>::value>::data, pev, 0, 0);
 }
 
 static void choose_avatar() {
@@ -631,7 +638,7 @@ static int page_tabs(int x, int y, const char** source, int& current_page) {
 					execute(move_focus_prev);
 				break;
 			case KeyRight:
-				if(source[current_page+1]!=0) {
+				if(source[current_page + 1] != 0) {
 					command_value = anyval(current_page);
 					execute(set_page, current_page + 1);
 				} else
@@ -720,7 +727,7 @@ template<class T> static int group(int x, int y, int width, const char* title, T
 
 static void check_flags() {
 	unsigned v1 = command_value;
-	unsigned v2 = 1<<hot.param;
+	unsigned v2 = 1 << hot.param;
 	if(v1&v2)
 		v1 &= ~v2;
 	else
@@ -728,7 +735,7 @@ static void check_flags() {
 	command_value = (const int)v1;
 }
 
-static int checkboxes(int x, int y, int width, const char* title, const anyval& value, const bsdata& ei) {
+static int checkboxes(int x, int y, int width, const char* title, const anyval& value, const bsdata& ei, draw_events* pev = 0) {
 	struct cmd : runable {
 		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
 			: source(source), index(index), value(value) {}
@@ -738,17 +745,21 @@ static int checkboxes(int x, int y, int width, const char* title, const anyval& 
 			draw::execute(check_flags, index);
 		}
 		virtual bool isdisabled() const { return false; }
-		bool ischecked() const { return (((int)value) & (1<<index))!=0; }
+		bool ischecked() const { return (((int)value) & (1 << index)) != 0; }
 	private:
 		const name_info*	source;
 		unsigned			index;
 		const anyval		value;
 	};
 	auto y1 = y;
-	if(ei.count==0)
+	if(ei.count == 0)
 		return 0;
 	auto rc = start_group(x, y, width, title);
 	for(unsigned i = 0; i < ei.count; i++) {
+		if(pev) {
+			if(!pev->isallow(ei, i))
+				continue;
+		}
 		auto p = (name_info*)ei.get(i);
 		cmd ev(value, p, i);
 		unsigned flags = 0;
@@ -758,7 +769,7 @@ static int checkboxes(int x, int y, int width, const char* title, const anyval& 
 	}
 	y += metrics::padding;
 	y += close_group(x, y, rc);
-	return y - y1 + metrics::padding;
+	return y - y1 /*+ metrics::padding*/;
 }
 
 static int field_picture(int x, int y, int width, int height, short unsigned& ev, const char* title, const char* mask) {
@@ -1200,6 +1211,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 		page_header(x, y, title, false);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		page_footer(x, y, true);
+		x += button(x, y, "Редактировать", cmd(picture_info::edit_monsters), Ctrl + Alpha + 'E');
 		domodal();
 	}
 	if(getresult() != 0) {
@@ -1264,6 +1276,15 @@ static void choose_attack() {
 	setfocus(old_focus, true);
 }
 
+static void choose_item() {
+	auto p = (item_info*)hot.param;
+	auto e = *p;
+	auto old_focus = getfocus();
+	if(e.edit())
+		*p = e;
+	setfocus(old_focus, true);
+}
+
 int	character::edit_attacks(int x, int y, int width) {
 	auto x0 = x, y0 = y;
 	auto rga = start_group(x, y, width, "Специальные атаки");
@@ -1279,11 +1300,9 @@ int	character::edit_feats(int x, int y, int width) {
 	return y - y0;
 }
 
-static void choose_spells() {
-}
+static void choose_spells() {}
 
-static void choose_feats() {
-}
+static void choose_feats() {}
 
 bool design_info::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {
 	struct table : controls::picker {
@@ -1298,7 +1317,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, int
 			auto p = source.source.get(index);
 			auto g = source.getgrade(p);
 			auto f = grade_colors[g];
-			if(g!=Fair)
+			if(g != Fair)
 				rectf(rc, grade_colors[g]);
 			if(show_selection) {
 				area({rc.x1, rc.y1, rc.x2 - 1, rc.y2 - 1});
@@ -1365,7 +1384,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, int
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, title, false);
-		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
+		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
 		if(source.count < source.maximum && edit(0, 0, false)) {
 			x += button(x, y, "Добавить", cmd(table::command_add, (int)&e1), F3);
@@ -1375,7 +1394,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, int
 			auto p = source.get(e1.current);
 			x += button(x, y, "Редактировать", cmd(table::command_change, (int)&e1), KeyEnter);
 		}
-		if(hot.key==F2)
+		if(hot.key == F2)
 			execute(table::command_change, (int)&e1);
 		domodal();
 	}
@@ -1423,12 +1442,16 @@ bool character::edit() {
 			y = y0;
 			x += c1 + metrics::padding * 3;
 			y += edit_abilities(x, y, c2);
-			y += group_combat_ability(x, y, c2, this, hp_rolled==0);
+			y += group_combat_ability(x, y, c2, this, hp_rolled == 0);
 			y = y0;
 			x += c2 + metrics::padding * 3;
 			auto c3 = getwidth() - x - metrics::padding * 2;
 			y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
-			y += edit_attacks(x, y, c3);
+			//y += edit_attacks(x, y, c3);
+			auto rgo = start_group(x, y, c3, "Предметы");
+			for(auto i = Head; i <= Legs; i = (wear_s)(i+1))
+				y += button(x, y, c3, choose_item, &wears[i], getstr(i));
+			close_group(x, y, rgo);
 		} else if(page == 1) {
 			auto c1 = 300;
 			y += edit_feats(x, y, c1);
@@ -1463,8 +1486,8 @@ static int group(int x, int y, int width, damage_info& ev) {
 }
 
 bool special_info::edit() {
-	setfocus(0, true);
 	int x, y;
+	openform();
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, "Специальная атака");
@@ -1474,5 +1497,38 @@ bool special_info::edit() {
 		page_footer(x, y, true);
 		domodal();
 	}
+	closeform();
+	return getresult() != 0;
+}
+
+bool item_info::edit() {
+	struct item_event : draw_events {
+		item_info& source;
+		bool isallow(const bsdata& e, int i) const override {
+			if(&e == &bsmeta<feat_s>::data) {
+				return bsmeta<feat_s>::data[i].use_item != 0;
+			}
+			return false;
+		}
+		constexpr item_event(item_info& v) : source(v) {}
+	} pev(*this);
+	int x, y;
+	openform();
+	while(ismodal()) {
+		render_background();
+		page_header(x, y, "Предмет");
+		auto y0 = y, c1 = 300;
+		auto rgo = start_group(x, y, c1, "Базовые значения");
+		y += field(x, y, c1, "Наименование", name, title_width);
+		y += field(x, y, c1, "Тип", type);
+		y += close_group(x, y, rgo);
+		y += checkboxes(x, y, c1, "Ограничение", restrictions, bsmeta<feat_s>::data, &pev);
+		//x += c1 + metrics::padding * 3;
+		//y = y0;
+		y += group(x, y, c1, damage);
+		page_footer(x, y, true);
+		domodal();
+	}
+	closeform();
 	return getresult() != 0;
 }
