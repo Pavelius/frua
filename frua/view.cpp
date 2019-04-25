@@ -1176,7 +1176,6 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 		void row(const rect& rc, int index) override {
 			rowhilite(rc, index);
 			auto avatar = elements[index];
-			//draw::state push; setclip(rc);
 			image(rc.x1 + rc.width() / 2, rc.y2 - rc.height() / 4, spr_monsters, avatar * 2, 0);
 		}
 		int getcurrent() const {
@@ -1190,14 +1189,14 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	s1.pixels_per_column = 2 * 2 + 64;
 	s1.show_grid_lines = true;
 	s1.show_border = true;
-	s1.elements.count = character::select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
+	s1.elements.count = select(s1.elements.data, s1.elements.getmaximum(), mask);
 	s1.current = s1.elements.indexof(result);
 	s1.ensurevisible();
 	setfocus(0, true);
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title);
+		page_header(x, y, title, false);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		page_footer(x, y, true);
 		domodal();
@@ -1285,63 +1284,86 @@ static void choose_spells() {
 static void choose_feats() {
 }
 
-struct bsmeta_view : controls::picker {
-	table_design& source;
-	int getmaximum() const override { return source.source.count; }
-	void row(const rect& rcorigin, int index) override {
-		char temp[260]; temp[0] = 0;
-		stringcreator sc(temp);
-		auto pv = source.source.get(index);
-		rect rc = rcorigin;
-		rowhilite(rc, index);
-		auto avatar = source.getavatar(pv);
-		if(true) {
-			if(avatar == -1)
-				avatar = 10;
-			rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
-			draw::state push;
-			setclip(rp);
-			image(rp.x1 + rp.width() / 2, rp.y2 - rp.height() / 4, spr_monsters, avatar * 2, 0);
-			rc.x1 += rc.height() + 2;
-		}
-		auto p = source.getname(pv, sc, 0);
-		rc.offset(4, 4);
-		if(p) {
-			draw::textc(rc.x1, rc.y1, rc.width(), p);
-			rc.y1 += texth() + 2;
-		}
-		sc.clear();
-		p = source.getname(pv, sc, 1);
-		if(p) {
-			auto old_fore = fore;
-			fore = colors::text.mix(colors::form, 128);
-			text(rc, p);
-			fore = old_fore;
-		}
-	}
-	int getcurrent() const {
-		if(!source.source.count)
-			return -1;
-		return current;
-	}
-	void add() {
-		source.editing(0, 0, true);
-	}
-	void copy() {
-		source.editing(0, (void*)source.source.get(getcurrent()), true);
-	}
-	void change() {
-		source.editing((void*)source.source.get(getcurrent()), 0, true);
-	}
-	constexpr bsmeta_view(table_design& source) : source(source) {}
-};
+//color::create(97, 189, 79);
+//color::create(242, 214, 0);
+//color::create(255, 159, 26);
+//color::create(235, 90, 70);
+//color::create(195, 119, 224);
+//color::create(0, 121, 191);
 
-static void add_record() { ((bsmeta_view*)hot.param)->add(); }
-static void copy_record() { ((bsmeta_view*)hot.param)->copy(); }
-static void change_record() { ((bsmeta_view*)hot.param)->change(); }
-
-bool table_design::choose(const char* title, const anyval& result, int width, bool choose_mode) {
-	bsmeta_view e1(*this);
+bool design_info::choose(const char* title, const anyval& result, int width, bool choose_mode) {
+	struct table : controls::picker {
+		design_info& source;
+		int getmaximum() const override { return source.source.count; }
+		void rowhilite(const rect& rc, int index) const override {
+			static color grade_colors[] = {colors::window,
+				colors::window.mix(color::create(0, 121, 191), 192),
+				colors::window.mix(color::create(97, 189, 79), 224),
+				colors::window.mix(color::create(242, 214, 0), 192),
+			};
+			auto p = source.source.get(index);
+			auto g = source.getgrade(p);
+			auto f = grade_colors[g];
+			if(g!=Fair)
+				rectf(rc, grade_colors[g]);
+			if(show_selection) {
+				area({rc.x1, rc.y1, rc.x2 - 1, rc.y2 - 1});
+				if(index == current)
+					hilight(rc);
+				else if(index == current_hilite)
+					rectf(rc, colors::edit.mix(f, 96));
+			}
+		}
+		void row(const rect& rcorigin, int index) override {
+			char temp[260]; temp[0] = 0;
+			stringcreator sc(temp);
+			auto pv = source.source.get(index);
+			rect rc = rcorigin;
+			rowhilite(rc, index);
+			auto avatar = source.getavatar(pv);
+			if(true) {
+				if(avatar == -1)
+					avatar = 10;
+				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
+				draw::state push;
+				setclip(rp);
+				image(rp.x1 + rp.width() / 2, rp.y2 - rp.height() / 4, spr_monsters, avatar * 2, 0);
+				rc.x1 += rc.height() + 2;
+			}
+			auto p = source.getname(pv, sc, 0);
+			rc.offset(4, 4);
+			if(p) {
+				draw::textc(rc.x1, rc.y1, rc.width(), p);
+				rc.y1 += texth() + 2;
+			}
+			sc.clear();
+			p = source.getname(pv, sc, 1);
+			if(p) {
+				auto old_fore = fore;
+				fore = colors::text.mix(colors::form, 128);
+				text(rc, p);
+				fore = old_fore;
+			}
+		}
+		int getcurrent() const {
+			if(!source.source.count)
+				return -1;
+			return current;
+		}
+		void add() {
+			source.edit(0, 0, true);
+		}
+		static void command_add() { ((table*)hot.param)->add(); }
+		void copy() {
+			source.edit(0, (void*)source.source.get(getcurrent()), true);
+		}
+		static void command_copy() { ((table*)hot.param)->copy(); }
+		void change() {
+			source.edit((void*)source.source.get(getcurrent()), 0, true);
+		}
+		static void command_change() { ((table*)hot.param)->change(); }
+		constexpr table(design_info& source) : source(source) {}
+	} e1(*this);
 	e1.show_border = false;
 	e1.pixels_per_line = 64 + 1 + 4*2;
 	e1.pixels_per_column = width;
@@ -1353,15 +1375,16 @@ bool table_design::choose(const char* title, const anyval& result, int width, bo
 		page_header(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
 		page_footer(x, y, choose_mode);
-		if(source.count < source.maximum && editing(0, 0, false)) {
-			x += button(x, y, "Добавить", cmd(add_record, (int)&e1), F3);
-			x += button(x, y, "Скопировать", cmd(copy_record, (int)&e1), F4);
+		if(source.count < source.maximum && edit(0, 0, false)) {
+			x += button(x, y, "Добавить", cmd(table::command_add, (int)&e1), F3);
+			x += button(x, y, "Скопировать", cmd(table::command_copy, (int)&e1), F4);
 		}
 		if(source.count > 0) {
 			auto p = source.get(e1.current);
-			if(editing((void*)p, 0, false))
-				x += button(x, y, "Редактировать", cmd(change_record, (int)&e1), KeyEnter);
+			x += button(x, y, "Редактировать", cmd(table::command_change, (int)&e1), KeyEnter);
 		}
+		if(hot.key==F2)
+			execute(table::command_change, (int)&e1);
 		domodal();
 	}
 	if(getresult()) {

@@ -6,6 +6,8 @@ struct bsdata_bin {
 	io::stream&	file;
 	bool		writemode;
 	void* findobject(bsdata* pb, const bsreq* pk, const char* key) {
+		if(!key)
+			return 0;
 		auto pv = (void*)pb->find(pk, key);
 		// Если ключ не найден попытаемся его создать
 		if(!pv && pb->count < pb->maximum) {

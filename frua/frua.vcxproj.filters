@@ -189,6 +189,9 @@
     <ClCompile Include="collection_test.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
+    <ClCompile Include="design.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

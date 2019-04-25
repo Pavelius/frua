@@ -49,11 +49,11 @@ struct adat {
 	bool					is(const T t) const { return indexof(t) != -1; }
 	void					remove(int index, int remove_count = 1) { if(index < 0) return; if(index<int(count - 1)) memcpy(data + index, data + index + 1, sizeof(data[0])*(count - index - 1)); count--; }
 };
-template<class T>
+template<class T, unsigned N=64>
 class agrw : public arraydata {
-	T						data[32]; // Размер data[] увеличивается динамически
+	T						data[N]; // Размер data[] увеличивается динамически
 public:
-	constexpr agrw() : arraydata(sizeof(data)/sizeof(data[0])), data() {}
+	constexpr agrw() : arraydata(N), data() {}
 	~agrw() { release(); }
 	T& operator[](int index) { return *((T*)arraydata::get(index, sizeof(T))); }
 	const T& operator[](int index) const { return *((const T*)arraydata::get(index, sizeof(T))); }

@@ -126,13 +126,9 @@ void character::apply_feats() {
 	size = bsmeta<race_s>::data[race].size;
 }
 
-static int get_random_avatar(race_s race) {
+void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
 	static const char* source[] = {"character9", "character49", "character10",
 		"character40", "character2", "character24"};
-	return character::random_avatar(maptbl(source, race));
-}
-
-void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
 	clear();
 	this->race = race;
 	this->gender = gender;
@@ -147,7 +143,7 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	for(auto e : bsmeta<class_s>::data[type].classes)
 		raise(e);
 	hp = gethpmax();
-	avatar = get_random_avatar(race);
+	avatar = picture_info::random(maptbl(source, race));
 }
 
 int character::getindex(class_s type, class_s v) {
@@ -263,7 +259,7 @@ bool character::isenemy(const character* p) const {
 	return false;
 }
 
-int	character::select_avatar(short unsigned* result, unsigned count, const char* mask) {
+int	picture_info::select(short unsigned* result, unsigned count, const char* mask) {
 	auto pb = result;
 	auto pe = result + count;
 	auto ps = avatar_data.data;
@@ -277,9 +273,9 @@ int	character::select_avatar(short unsigned* result, unsigned count, const char*
 	return pb - result;
 }
 
-int character::random_avatar(const char* mask) {
+int picture_info::random(const char* mask) {
 	short unsigned source[256];
-	auto count = select_avatar(source, sizeof(source) / sizeof(source[0]), mask);
+	auto count = select(source, sizeof(source) / sizeof(source[0]), mask);
 	if(!count)
 		return -1;
 	return source[rand() % count];
@@ -320,27 +316,19 @@ void character::correct() {
 }
 
 character* character::choose() {
-	struct character_driver : table_design {
-		constexpr character_driver() : table_design(bsmeta<character>::data) {}
+	struct design : design_info {
+		constexpr design() : design_info(bsmeta<character>::data) {}
 		int	getavatar(const void* object) const override { return ((character*)object)->getavatar(); }
-		bool editing(void* object, void* copy_object, bool run) override {
-			if(run) {
-				character copy;
-				if(object)
-					memcpy(&copy, object, sizeof(character));
-				else if(copy_object)
-					memcpy(&copy, copy_object, sizeof(character));
-				else
-					copy.clear();
-				if(!copy.edit())
-					return false;
-				if(!object)
-					object = source.add();
-				if(object)
-					memcpy(object, &copy, sizeof(character));
-			}
-			return true;
+		void creating(void* object) const override {
+			((character*)object)->clear();
 		}
+		grade_s getgrade(const void* object) const override {
+			auto player = (character*)object;
+			if(player->is(UniqueCharacter))
+				return Excellent;
+			return Fair;
+		}
+		bool change(void* object) override { return ((character*)object)->edit(); }
 		const char* getname(const void* object, stringcreator& sc, int column) const override {
 			auto p = ((character*)object);
 			switch(column) {

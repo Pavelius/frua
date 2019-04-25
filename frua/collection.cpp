@@ -5,7 +5,7 @@ void* arraydata::add(unsigned size) {
 	auto p = this;
 	while(p->count >= p->maximum) {
 		if(!p->next) {
-			auto m = maximum * 2;
+			auto m = p->maximum * 2;
 			auto s = sizeof(*this) + size * m;
 			p->next = (arraydata*)new char[s];
 			p->next->count = 0;

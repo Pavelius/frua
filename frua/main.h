@@ -253,6 +253,8 @@ struct picture_info {
 	static const picture_info* edit_monsters();
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
+	static int				random(const char* mask);
+	static int				select(short unsigned* result, unsigned count, const char* mask);
 };
 struct class_info {
 	const char*				id;
@@ -379,8 +381,6 @@ struct character {
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
 	void					raise(class_s v);
-	static int				random_avatar(const char* mask);
-	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	void					set(direction_s v) { direction = v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
@@ -457,13 +457,17 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update();
 	void					visualize();
 };
-struct table_design {
+struct design_info {
+	enum grade_s : unsigned char { Fair, Good, Excellent };
 	bsdata&					source;
+	virtual bool			change(void* obect) { return false; }
 	bool					choose(const char* title, const anyval& result, int width, bool choose_mode);
-	virtual bool			editing(void* object, void* copy_object, bool run) { return false; }
+	virtual void			creating(void* object) const {}
+	bool					edit(void* object, void* copy_object, bool run);
 	virtual int				getavatar(const void* object) const { return -1; }
+	virtual grade_s			getgrade(const void* object) const { return Fair; }
 	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
-	constexpr table_design(bsdata& source) : source(source) {}
+	constexpr design_info(bsdata& source) : source(source) {}
 };
 DECLENUM(alignment);
 DECLENUM(class);
