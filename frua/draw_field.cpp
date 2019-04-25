@@ -9,7 +9,7 @@ enum field_type_s : unsigned char {
 	FieldNumber, FieldText,
 };
 
-static anyval		edit_value;
+static anyval edit_value;
 
 static const char* getvalue(const anyval& v, field_type_s t, char* result, const char* result_end) {
 	if(!v)
@@ -79,8 +79,10 @@ public:
 } edit;
 
 void save_focus() {
-	if(edit.isfocused())
+	if(edit.isfocused()) {
 		edit.save();
+		edit.clear();
+	}
 }
 
 static void field_up() {
@@ -153,7 +155,4 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 		draw::texte(rc + metrics::edit, p, flags, -1, -1);
 	}
 	return rc.height() + metrics::padding * 2;
-}
-
-void field_before() {
 }

@@ -308,3 +308,43 @@ void character::correct() {
 		} while(alignment!=old && !isallow(alignment));
 	}
 }
+
+character* character::chooselist() {
+	struct character_driver : table_driver {
+		constexpr character_driver() : table_driver(bsmeta<character>::data) {}
+		int	getavatar(const void* object) const override { return ((character*)object)->getavatar(); }
+		bool editing(void* object, void* copy_object, bool run) override {
+			if(run) {
+				character copy;
+				if(object)
+					memcpy(&copy, object, sizeof(character));
+				else if(copy_object)
+					memcpy(&copy, copy_object, sizeof(character));
+				else
+					copy.clear();
+				if(!copy.edit())
+					return false;
+				if(!object)
+					object = source.add();
+				if(object)
+					memcpy(object, &copy, sizeof(character));
+			}
+			return true;
+		}
+		const char* getname(const void* object, stringcreator& sc, int column) const override {
+			auto p = ((character*)object);
+			switch(column) {
+			case 0: return p->getname();
+			case 1:
+				sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
+				sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->getac(), p->gethpmax());
+				return sc;
+			}
+			return "";
+		}
+	} e;
+	int result = 0;
+	if(e.choose("¬ыбирайте геро€, персонажа или монстра", result, 256, false))
+		return (character*)bsmeta<character>::data.get(result);
+	return 0;
+}

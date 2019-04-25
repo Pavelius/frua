@@ -5,6 +5,22 @@
 unsigned					rmoptimal(unsigned need_count);
 void*						rmreserve(void* data, unsigned new_size);
 
+// Basic autogrow array
+class arraydata {
+	unsigned				count;
+	arraydata*				next;
+protected:
+	unsigned				maximum;
+	void*					get(int index, unsigned size) const;
+	int						indexof(const void* e, unsigned size) const;
+	void					release();
+public:
+	constexpr arraydata(unsigned N) : count(0), maximum(N), next(0) {}
+	explicit constexpr operator bool() const { return count != 0; }
+	void*					add(unsigned size);
+	void					clear();
+	unsigned				getcount() const;
+};
 // Untility structures
 template<typename T, T v> struct static_value { static constexpr T value = v; };
 template<int v> struct static_int : static_value<int, v> {};
@@ -33,27 +49,11 @@ struct adat {
 	bool					is(const T t) const { return indexof(t) != -1; }
 	void					remove(int index, int remove_count = 1) { if(index < 0) return; if(index<int(count - 1)) memcpy(data + index, data + index + 1, sizeof(data[0])*(count - index - 1)); count--; }
 };
-class arraydata {
-	unsigned				count;
-	arraydata*				next;
-	char*					ptr(int index, unsigned size) const { return (char*)this + sizeof(*this) + index * size; }
-protected:
-	unsigned				maximum;
-	void*					get(int index, unsigned size) const;
-	int						indexof(const void* e, unsigned size) const;
-	void					release();
-public:
-	constexpr arraydata(unsigned N) : count(0), maximum(N), next(0) {}
-	explicit constexpr operator bool() const { return count != 0; }
-	void*					add(unsigned size);
-	void					clear();
-	unsigned				getcount() const;
-};
-template<class T, unsigned N = 128>
+template<class T>
 class agrw : public arraydata {
-	T						data[N]; // Размер data[] увеличивается динамически
+	T						data[32]; // Размер data[] увеличивается динамически
 public:
-	constexpr agrw() : arraydata(N), data() {}
+	constexpr agrw() : arraydata(sizeof(data)/sizeof(data[0])), data() {}
 	~agrw() { release(); }
 	T& operator[](int index) { return *((T*)arraydata::get(index, sizeof(T))); }
 	const T& operator[](int index) const { return *((const T*)arraydata::get(index, sizeof(T))); }

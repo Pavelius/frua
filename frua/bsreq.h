@@ -64,8 +64,8 @@ struct bsreq {
 	bool				isref() const { return reference > 0; }
 	bool				istext() const;
 	bool				match(const void* p, const char* name) const;
-	constexpr const char* ptr(const void* data) const { return (const char*)data + offset; }
-	constexpr const char* ptr(const void* data, int index) const { return (const char*)data + offset + index * size; }
+	constexpr char*		ptr(const void* data) const { return (char*)data + offset; }
+	constexpr char*		ptr(const void* data, int index) const { return (char*)data + offset + index * size; }
 	void				set(const void* p, int value) const;
 };
 struct bsdata {

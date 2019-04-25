@@ -341,7 +341,7 @@ struct character {
 	void					apply_feats();
 	void					clear();
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
-	static bool				choose(const char* title, bsdata& source, const anyval& result, int width, bool choose_mode, void(*edit_proc)());
+	static character*		chooselist();
 	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	static int				select_avatar(const char* mask);
 	void					correct();
@@ -459,7 +459,7 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 struct table_driver {
 	bsdata&					source;
 	bool					choose(const char* title, const anyval& result, int width, bool choose_mode);
-	virtual bool			editing(void* object, bool run) { return false; }
+	virtual bool			editing(void* object, void* copy_object, bool run) { return false; }
 	virtual int				getavatar(const void* object) const { return -1; }
 	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
 	constexpr table_driver(bsdata& source) : source(source) {}

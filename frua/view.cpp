@@ -1376,14 +1376,14 @@ static void choose_feats() {
 }
 
 struct bsmeta_view : controls::picker {
-	table_driver&	source;
+	table_driver& source;
 	int getmaximum() const override { return source.source.count; }
 	void row(const rect& rcorigin, int index) override {
 		char temp[260]; temp[0] = 0;
 		stringcreator sc(temp);
 		auto pv = source.source.get(index);
-		rowhilite(rcorigin, index);
 		rect rc = rcorigin;
+		rowhilite(rc, index);
 		auto avatar = source.getavatar(pv);
 		if(true) {
 			if(avatar == -1)
@@ -1415,33 +1415,24 @@ struct bsmeta_view : controls::picker {
 		return current;
 	}
 	void add() {
-		source.editing(0, true);
+		source.editing(0, 0, true);
 	}
 	void copy() {
+		source.editing(0, (void*)source.source.get(getcurrent()), true);
 	}
 	void change() {
-		source.editing((void*)source.source.get(getcurrent()), true);
+		source.editing((void*)source.source.get(getcurrent()), 0, true);
 	}
 	constexpr bsmeta_view(table_driver& source) : source(source) {}
 };
 
-static void add_record() {
-	auto p = (bsmeta_view*)hot.param;
-	p->add();
-}
-
-static void copy_record() {
-	auto p = (bsmeta_view*)hot.param;
-	p->copy();
-}
-
-static void change_record() {
-	auto p = (bsmeta_view*)hot.param;
-	p->change();
-}
+static void add_record() { ((bsmeta_view*)hot.param)->add(); }
+static void copy_record() { ((bsmeta_view*)hot.param)->copy(); }
+static void change_record() { ((bsmeta_view*)hot.param)->change(); }
 
 bool table_driver::choose(const char* title, const anyval& result, int width, bool choose_mode) {
 	bsmeta_view e1(*this);
+	e1.show_border = false;
 	e1.pixels_per_line = 64 + 1 + 4*2;
 	e1.pixels_per_column = width;
 	e1.show_grid_lines = true;
@@ -1452,14 +1443,14 @@ bool table_driver::choose(const char* title, const anyval& result, int width, bo
 		page_header(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
 		page_footer(x, y, choose_mode);
-		if(source.count < source.maximum && editing(0, false)) {
+		if(source.count < source.maximum && editing(0, 0, false)) {
 			x += button(x, y, "Добавить", cmd(add_record, (int)&e1), F3);
-			x += button(x, y, "Скопировать", cmd(copy_record), F4);
+			x += button(x, y, "Скопировать", cmd(copy_record, (int)&e1), F4);
 		}
 		if(source.count > 0) {
 			auto p = source.get(e1.current);
-			if(editing((void*)p, false))
-				x += button(x, y, "Редактировать", cmd(change_record, (int)&e1), F2);
+			if(editing((void*)p, 0, false))
+				x += button(x, y, "Редактировать", cmd(change_record, (int)&e1), KeyEnter);
 		}
 		domodal();
 	}

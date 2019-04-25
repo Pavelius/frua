@@ -10,7 +10,6 @@ void* arraydata::add(unsigned size) {
 			p->next = (arraydata*)new char[s];
 			p->next->count = 0;
 			p->next->next = 0;
-			//memset(p->next, 0, s);
 			p->next->maximum = m;
 		}
 		p = p->next;
@@ -39,7 +38,7 @@ unsigned arraydata::getcount() const {
 void* arraydata::get(int index, unsigned size) const {
 	for(auto p = this; p; p = p->next) {
 		if((unsigned)index < p->count)
-			return p->ptr(index, size);
+			return (char*)p + sizeof(*this) + index * size;
 		index -= p->count;
 	}
 	return 0;

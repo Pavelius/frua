@@ -58,7 +58,10 @@ struct bsdata_bin {
 				if(p->isref()) // Пропускаем ссылки на числа. Их нельзя соранять.
 					continue;
 				// Записываем весь массив сразу
-				file.write(p->ptr(object), p->lenght);
+				if(writemode)
+					file.write(p->ptr(object), p->lenght);
+				else
+					file.read(p->ptr(object), p->lenght);
 			} else if(p->istext()) {
 				// Текст записываем поэлементно
 				for(unsigned i = 0; i < p->count; i++) {
