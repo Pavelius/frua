@@ -170,5 +170,7 @@ int bsdata::write(const char* url) {
 			result++;
 		}
 	}
+	// Запишем признак конца файла - нулевя строка имя объекта
+	file.stream::write((int)0);
 	return result;
 }

@@ -21,7 +21,6 @@ static rect						command_rect;
 static draw_events*				command_draw_events;
 static char						command_mask[260];
 static agrw<picture_info>		file_data;
-static agrw<picture_info>		file_monster_data;
 static const char*				file_exclude[] = {"fonts", "monsters", 0};
 static const char*				file_ext_exclude[] = {"pma", 0};
 static const char*				file_monster_exclude[] = {0};
@@ -81,12 +80,26 @@ static void sprite_write(const sprite* p, const char* url) {
 	file.write(&trail, sizeof(trail));
 }
 
+static void save_monsters() {
+	sprite_write(spr_monsters, "art/monsters.pma");
+	buttonok();
+}
+
+static void save_campaign() {
+	bsdata::write("campaigns/autosave.dat");
+}
+
+static void load_campaign() {
+	bsdata::read("campaigns/autosave.dat");
+}
+
 void view_initialize() {
 	spr_monsters = (sprite*)loadb("art/monsters.pma");
 	if(spr_monsters) {
 		avatar_data.data = (sprite_name_info*)spr_monsters->edata();
 		avatar_data.count = spr_monsters->count / 2;
 	}
+	load_campaign();
 }
 
 static void move_focus_prev() {
@@ -192,15 +205,15 @@ static void header(int x, int y, int width, const char* title, const char* text)
 
 const picture_info* picture_info::choose_image() {
 	struct string_view : controls::list {
-		aref<picture_info> source;
+		agrw<picture_info> source;
 		int getmaximum() const override {
-			return source.count;
+			return source.getcount();
 		}
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
-			if(source.data) {
+			if(source) {
 				switch(column) {
-				case 0: return source.data[line].id;
-				case 1: return source.data[line].folder;
+				case 0: return source[line].id;
+				case 1: return source[line].folder;
 				default: return "";
 				}
 			}
@@ -209,13 +222,13 @@ const picture_info* picture_info::choose_image() {
 		picture_info* getcurrent() const {
 			if(!source)
 				return 0;
-			return source.data + current;
+			return source.get(current);
 		}
-		constexpr string_view(const aref<picture_info>& source) : source(source) {}
+		constexpr string_view(const agrw<picture_info>& source) : source(source) {}
 	};
 	if(!file_data)
 		make_cash(file_data, "", file_exclude, file_ext_exclude);
-	string_view s1(aref<picture_info>(file_data.data, file_data.count));
+	string_view s1(file_data);
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
@@ -295,11 +308,6 @@ static int show_information(int x, int y, int width, const sprite* ps, const spr
 	sc.addn("Ширина [%1i], высота [%2i]", pf->sx, pf->sy);
 	sc.addn("Сдвиг влево [%1i], вправо [%2i]", pf->ox, pf->oy);
 	return textf(x, y, width, temp) + metrics::padding;
-}
-
-static void save_monsters() {
-	sprite_write(spr_monsters, "art/monsters.pma");
-	buttonok();
 }
 
 const picture_info* picture_info::edit_monsters() {
@@ -583,7 +591,7 @@ static void page_footer(int& x, int& y, bool allow_cancel = false) {
 		x += button(x, y, "OK", cmd(buttonok), KeyEnter);
 		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 	} else
-		x += button(x, y, "Готово", cmd(buttonok), KeyEnter);
+		x += button(x, y, "Готово", cmd(buttonok), KeyEscape);
 }
 
 static void set_page() {
@@ -1367,77 +1375,73 @@ static void choose_spells() {
 static void choose_feats() {
 }
 
-static void change_record() {
+struct bsmeta_view : controls::picker {
+	table_driver&	source;
+	int getmaximum() const override { return source.source.count; }
+	void row(const rect& rcorigin, int index) override {
+		char temp[260]; temp[0] = 0;
+		stringcreator sc(temp);
+		auto pv = source.source.get(index);
+		rowhilite(rcorigin, index);
+		rect rc = rcorigin;
+		auto avatar = source.getavatar(pv);
+		if(true) {
+			if(avatar == -1)
+				avatar = 10;
+			rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
+			draw::state push;
+			setclip(rp);
+			image(rp.x1 + rp.width() / 2, rp.y2 - rp.height() / 4, spr_monsters, avatar * 2, 0);
+			rc.x1 += rc.height() + 2;
+		}
+		auto p = source.getname(pv, sc, 0);
+		rc.offset(4, 4);
+		if(p) {
+			draw::textc(rc.x1, rc.y1, rc.width(), p);
+			rc.y1 += texth() + 2;
+		}
+		sc.clear();
+		p = source.getname(pv, sc, 1);
+		if(p) {
+			auto old_fore = fore;
+			fore = colors::text.mix(colors::form, 128);
+			text(rc, p);
+			fore = old_fore;
+		}
+	}
+	int getcurrent() const {
+		if(!source.source.count)
+			return -1;
+		return current;
+	}
+	void add() {
+		source.editing(0, true);
+	}
+	void copy() {
+	}
+	void change() {
+		source.editing((void*)source.source.get(getcurrent()), true);
+	}
+	constexpr bsmeta_view(table_driver& source) : source(source) {}
+};
 
+static void add_record() {
+	auto p = (bsmeta_view*)hot.param;
+	p->add();
 }
 
-static bool table_choose(const char* title, bsdata& source, const anyval& result, int width, bool choose_mode, callback edit_proc) {
-	struct bsmeta_view : controls::picker {
-		bsdata&		source;
-		int getmaximum() const override { return source.count; }
-		int getnumber(const char* id, int index) const {
-			auto pf = source.meta->find(id);
-			if(!pf)
-				return 0;
-			auto pv = (void*)source.get(index);
-			return pf->get(pf->ptr(pv));
-		}
-		const char* getname(char* result, const char* result_max, int line, int column) const {
-			const bsreq* pk;
-			const char* pn;
-			auto pv = (void*)source.get(line);
-			switch(column) {
-			case 0:
-				pk = source.meta->getkey();
-				if(!pk)
-					return "";
-				pn = (const char*)pk->get(pk->ptr(pv));
-				if(!pn)
-					return "Пусто";
-				return pn;
-			case 1:
-				szprint(result, result_max,
-					"Str:%1i, Dex:%2i, Con:%3i\nHD:%6i, AC:%4i, Хиты:%5i",
-					13, 10, 16, 8, 10, 2);
-				return result;
-			default: return "";
-			}
-			return "";
-		}
-		void row(const rect& rcorigin, int index) override {
-			char temp[260]; temp[0] = 0;
-			rowhilite(rcorigin, index);
-			rect rc = rcorigin;
-			auto avatar = getnumber("avatar", index);
-			if(true) {
-				if(avatar == -1)
-					avatar = 10;
-				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
-				draw::state push;
-				setclip(rp);
-				image(rp.x1 + rp.width()/2, rp.y2 - rp.height()/4, spr_monsters, avatar * 2, 0);
-				rc.x1 += rc.height() + 2;
-			}
-			auto p = getname(temp, zendof(temp), index, 0);
-			rc.offset(4, 4);
-			if(p)
-				draw::textc(rc.x1, rc.y1, rc.width(), p);
-			rc.y1 += texth() + 2;
-			p = getname(temp, zendof(temp), index, 1);
-			if(p) {
-				auto old_fore = fore;
-				fore = colors::text.mix(colors::form, 128);
-				text(rc, p);
-				fore = old_fore;
-			}
-		}
-		int getcurrent() const {
-			if(!source.count)
-				return -1;
-			return current;
-		}
-		constexpr bsmeta_view(bsdata& source) : source(source) {}
-	} e1(source);
+static void copy_record() {
+	auto p = (bsmeta_view*)hot.param;
+	p->copy();
+}
+
+static void change_record() {
+	auto p = (bsmeta_view*)hot.param;
+	p->change();
+}
+
+bool table_driver::choose(const char* title, const anyval& result, int width, bool choose_mode) {
+	bsmeta_view e1(*this);
 	e1.pixels_per_line = 64 + 1 + 4*2;
 	e1.pixels_per_column = width;
 	e1.show_grid_lines = true;
@@ -1448,15 +1452,21 @@ static bool table_choose(const char* title, bsdata& source, const anyval& result
 		page_header(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding*2});
 		page_footer(x, y, choose_mode);
-		if(source.count < source.maximum) {
-			x += button(x, y, "Добавить", cmd(change_record), F3);
-			x += button(x, y, "Скопировать", cmd(change_record), F4);
+		if(source.count < source.maximum && editing(0, false)) {
+			x += button(x, y, "Добавить", cmd(add_record, (int)&e1), F3);
+			x += button(x, y, "Скопировать", cmd(copy_record), F4);
 		}
-		x += button(x, y, "Редактировать", cmd(change_record), F2);
+		if(source.count > 0) {
+			auto p = source.get(e1.current);
+			if(editing((void*)p, false))
+				x += button(x, y, "Редактировать", cmd(change_record, (int)&e1), F2);
+		}
 		domodal();
 	}
 	if(getresult()) {
 		result = e1.getcurrent();
+		if(!choose_mode)
+			save_campaign();
 		return true;
 	}
 	return false;

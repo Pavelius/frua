@@ -25,26 +25,53 @@ static bool test_read() {
 	return true;
 }
 
+static void test_table() {
+	struct character_driver : table_driver {
+		constexpr character_driver() : table_driver(bsmeta<character>::data) {}
+		bool editing(void* object, bool run) override {
+			if(run) {
+				character copy;
+				if(object)
+					memcpy(&copy, object, sizeof(character));
+				else
+					copy.clear();
+				if(!copy.edit())
+					return false;
+				if(!object)
+					object = source.add();
+				if(object)
+					memcpy(object, &copy, sizeof(character));
+			}
+			return true;
+		}
+		const char* getname(const void* object, stringcreator& sc, int column) const override {
+			auto p = ((character*)object);
+			switch(column) {
+			case 0: return p->getname();
+			case 1:
+				sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
+				sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->getac(), p->gethpmax());
+				return sc;
+			}
+			return "";
+		}
+	} e;
+	int result = 0;
+	e.choose("¬ыбирайте геро€, персонажа или монстра", result, 256, false);
+}
+
+bool test_array();
+
 int	main(int argc, char *argv[]) {
-	//if(!test_write())
-	//	return -1;
+	if(!test_array())
+		return -1;
 	draw::initialize();
+	test_table();
 	//event_info ei;
 	//ei.edit();
 	//picture_info::pick_monster();
 	//character::choose_avatar("character*", 10);
 	//character_data.add()->generate();
-	//bsmeta<character>::data.add()->create(Human, Male, Paladin, LawfulGood, Player);
-	//bsmeta<character>::data.add()->create(Dwarf, Male, Fighter, LawfulGood, Player);
-	party.add(&bsmeta<character>::data[0]);
-	party.add(&bsmeta<character>::data[1]);
-	add_position(party);
-	combat_info ci;
-	ci.add(Elf, Female, FighterTheif);
-	ci.add(Elf, Male, Fighter);
-	ci.addenemies();
-	ci.addparty();
-	//ci.play();
 	return 0;
 }
 

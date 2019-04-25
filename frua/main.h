@@ -364,6 +364,7 @@ struct character {
 	int						getlevel() const { return levels[0]; }
 	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
+	const char*				getname() const { return name; }
 	race_s					getrace() const { return race; }
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
@@ -454,6 +455,14 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					playround();
 	void					update();
 	void					visualize();
+};
+struct table_driver {
+	bsdata&					source;
+	bool					choose(const char* title, const anyval& result, int width, bool choose_mode);
+	virtual bool			editing(void* object, bool run) { return false; }
+	virtual int				getavatar(const void* object) const { return -1; }
+	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
+	constexpr table_driver(bsdata& source) : source(source) {}
 };
 DECLENUM(alignment);
 DECLENUM(class);

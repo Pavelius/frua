@@ -129,6 +129,7 @@
     <ClCompile Include="character.cpp" />
     <ClCompile Include="class.cpp" />
     <ClCompile Include="collection.cpp" />
+    <ClCompile Include="collection_test.cpp" />
     <ClCompile Include="color.cpp" />
     <ClCompile Include="combat.cpp" />
     <ClCompile Include="converter.cpp" />

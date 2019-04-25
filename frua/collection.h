@@ -33,20 +33,33 @@ struct adat {
 	bool					is(const T t) const { return indexof(t) != -1; }
 	void					remove(int index, int remove_count = 1) { if(index < 0) return; if(index<int(count - 1)) memcpy(data + index, data + index + 1, sizeof(data[0])*(count - index - 1)); count--; }
 };
-template<class T, unsigned N = 128>
-struct agrw {
-	T						data[N];
+class arraydata {
 	unsigned				count;
-	agrw*					next;
-	constexpr agrw() : data(), count(0), next(0) {}
-	~agrw() { delete next; next = 0; }
+	arraydata*				next;
+	char*					ptr(int index, unsigned size) const { return (char*)this + sizeof(*this) + index * size; }
+protected:
+	unsigned				maximum;
+	void*					get(int index, unsigned size) const;
+	int						indexof(const void* e, unsigned size) const;
+	void					release();
+public:
+	constexpr arraydata(unsigned N) : count(0), maximum(N), next(0) {}
 	explicit constexpr operator bool() const { return count != 0; }
-	T*						add() { auto p = this; while(p->count >= N) { if(!p->next) p->next = new agrw; p = p->next; } return p->data + (p->count++); }
-	T*						begin() { return data; }
-	const T*				begin() const { return data; }
-	void					clear() { auto p = this; while(p) { p->count = 0; p = p->next; } }
-	int						indexof(const T* e) const { if(e >= data && e < data + count) return e - data; return -1; }
-	const T*				end() const { return data + count; }
+	void*					add(unsigned size);
+	void					clear();
+	unsigned				getcount() const;
+};
+template<class T, unsigned N = 128>
+class agrw : public arraydata {
+	T						data[N]; // Размер data[] увеличивается динамически
+public:
+	constexpr agrw() : arraydata(N), data() {}
+	~agrw() { release(); }
+	T& operator[](int index) { return *((T*)arraydata::get(index, sizeof(T))); }
+	const T& operator[](int index) const { return *((const T*)arraydata::get(index, sizeof(T))); }
+	T*						add() { auto p = (T*)arraydata::add(sizeof(T)); *p = T(); return p; }
+	T*						get(int index) const { return (T*)arraydata::get(index, sizeof(T)); }
+	int						indexof(const T* e) const { return arraydata::indexof(e, sizeof(T)); }
 };
 // Reference to array with dymanic size
 template<class T>
@@ -118,47 +131,6 @@ public:
 	constexpr T* operator*() const { return (T*)current; }
 	constexpr bool operator!=(const iterator& e) const { return e.current != current; }
 	constexpr void operator++() { current += size; }
-};
-// Abstract array vector
-struct array {
-	void*					data;
-	unsigned				size;
-	unsigned&				count;
-	unsigned				count_value;
-	unsigned				count_maximum;
-	bool					can_grow;
-	constexpr array() : data(0), size(0), count_maximum(0), count(count_value), count_value(0), can_grow(false) {}
-	constexpr array(unsigned size) : data(0), size(size), count_maximum(0), count(count_value), count_value(0), can_grow(true) {}
-	constexpr array(void* data, unsigned size, unsigned count_maximum) : data(data), size(size), count_maximum(count_maximum), count(count_value), count_value(count_maximum), can_grow(false) {}
-	constexpr array(void* data, unsigned size, unsigned count_maximum, unsigned& count) : data(data), size(size), count_maximum(count_maximum), count(count), count_value(0), can_grow(false) {}
-	template<typename T, unsigned N> constexpr array(adat<T, N>& e) : array(e.data, sizeof(T), N, e.count) {}
-	template<typename T> constexpr array(const aref<T>& e) : array(e.data, sizeof(T), e.count) {}
-	template<typename T, unsigned N> constexpr array(T(&e)[N]) : array(e, sizeof(T), N) {}
-	template<typename T> constexpr array(T(&e)[]) : array(e, sizeof(T), 1) {}
-	~array();
-	void*					add();
-	void*					add(const void* element);
-	char*					begin() { return (char*)data; }
-	const char*				begin() const { return (char*)data; }
-	void					clear();
-	char*					end() { return (char*)data + size * count; }
-	const char*				end() const { return (char*)data + size * count; }
-	int						find(const char* value, unsigned offset) const;
-	void*					get(int index) const { return (char*)data + size * index; }
-	unsigned				getmaxcount() const { return count_maximum; }
-	unsigned				getcount() const { return count; }
-	unsigned				getsize() const { return size; }
-	int						indexof(const void* element) const;
-	void*					insert(int index, const void* element);
-	bool					isgrowable() const { return can_grow; }
-	bool					isconst() const { return count_value == count_maximum && !can_grow; }
-	void					remove(int index, int elements_count);
-	void					setcount(unsigned value) { count = value; }
-	void					setup(unsigned size);
-	void					shift(int i1, int i2, unsigned c1, unsigned c2);
-	void					sort(int i1, int i2, int(*compare)(const void* p1, const void* p2, void* param), void* param);
-	void					swap(int i1, int i2);
-	void					reserve(unsigned count);
 };
 struct arrayref {
 	char**					data;

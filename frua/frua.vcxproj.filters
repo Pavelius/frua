@@ -186,6 +186,9 @@
     <ClCompile Include="mapcore.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="collection_test.cpp">
+      <Filter>Коллекция</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
