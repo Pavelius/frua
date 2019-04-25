@@ -31,7 +31,7 @@ int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	draw::initialize();
-	character::chooselist();
+	character::choose();
 	//event_info ei;
 	//ei.edit();
 	//picture_info::pick_monster();

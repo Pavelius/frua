@@ -248,6 +248,7 @@ struct picture_info {
 	constexpr picture_info() : folder(0), id(0), position(), size() {}
 	explicit constexpr operator bool() const { return id != 0; }
 	bool operator==(const picture_info& e) const;
+	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
 	static const picture_info* choose_image();
 	static const picture_info* edit_monsters();
 	const char*				geturl(char* temp) const;
@@ -340,10 +341,8 @@ struct character {
 	void					apply_ability_restriction();
 	void					apply_feats();
 	void					clear();
-	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
-	static character*		chooselist();
-	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
-	static int				select_avatar(const char* mask);
+	bool					changing(character& e);
+	static character*		choose();
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	bool					edit();
@@ -380,6 +379,8 @@ struct character {
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
 	void					raise(class_s v);
+	static int				random_avatar(const char* mask);
+	static int				select_avatar(short unsigned* result, unsigned count, const char* mask);
 	void					set(direction_s v) { direction = v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
@@ -456,13 +457,13 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update();
 	void					visualize();
 };
-struct table_driver {
+struct table_design {
 	bsdata&					source;
 	bool					choose(const char* title, const anyval& result, int width, bool choose_mode);
 	virtual bool			editing(void* object, void* copy_object, bool run) { return false; }
 	virtual int				getavatar(const void* object) const { return -1; }
 	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
-	constexpr table_driver(bsdata& source) : source(source) {}
+	constexpr table_design(bsdata& source) : source(source) {}
 };
 DECLENUM(alignment);
 DECLENUM(class);

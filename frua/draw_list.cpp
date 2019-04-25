@@ -314,8 +314,7 @@ void picker::view(const rect& rcorigin) {
 		return;
 	auto enable_scrollv = maximum_height > lines_per_page;
 	if(true) {
-		draw::state push;
-		setclip(rc);
+		draw::state push; setclip(rc);
 		auto c = 0;
 		auto x = rc.x1;
 		auto y = rc.y1;
@@ -324,7 +323,7 @@ void picker::view(const rect& rcorigin) {
 				x = rc.x1;
 				y += pixels_per_line;
 				c = 0;
-				if(y + pixels_per_line > rc.y2)
+				if(y > rc.y2)
 					break;
 			}
 			rect rc = {x, y, x + pixels_per_column, y + pixels_per_line};

@@ -126,10 +126,10 @@ void character::apply_feats() {
 	size = bsmeta<race_s>::data[race].size;
 }
 
-static int random_avatar(race_s race) {
+static int get_random_avatar(race_s race) {
 	static const char* source[] = {"character9", "character49", "character10",
 		"character40", "character2", "character24"};
-	return character::select_avatar(maptbl(source, race));
+	return character::random_avatar(maptbl(source, race));
 }
 
 void character::create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction) {
@@ -147,7 +147,7 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	for(auto e : bsmeta<class_s>::data[type].classes)
 		raise(e);
 	hp = gethpmax();
-	avatar = random_avatar(race);
+	avatar = get_random_avatar(race);
 }
 
 int character::getindex(class_s type, class_s v) {
@@ -277,12 +277,22 @@ int	character::select_avatar(short unsigned* result, unsigned count, const char*
 	return pb - result;
 }
 
-int character::select_avatar(const char* mask) {
+int character::random_avatar(const char* mask) {
 	short unsigned source[256];
 	auto count = select_avatar(source, sizeof(source) / sizeof(source[0]), mask);
 	if(!count)
 		return -1;
 	return source[rand() % count];
+}
+
+bool character::changing(character& previous) {
+	auto result = (memcmp(this, &previous, sizeof(character)) != 0);
+	if(race != previous.race || type != previous.type) {
+		correct();
+		apply_feats();
+		apply_ability_restriction();
+	}
+	return result;
 }
 
 void character::correct() {
@@ -309,9 +319,9 @@ void character::correct() {
 	}
 }
 
-character* character::chooselist() {
-	struct character_driver : table_driver {
-		constexpr character_driver() : table_driver(bsmeta<character>::data) {}
+character* character::choose() {
+	struct character_driver : table_design {
+		constexpr character_driver() : table_design(bsmeta<character>::data) {}
 		int	getavatar(const void* object) const override { return ((character*)object)->getavatar(); }
 		bool editing(void* object, void* copy_object, bool run) override {
 			if(run) {

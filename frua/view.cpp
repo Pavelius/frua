@@ -541,7 +541,7 @@ static void choose_avatar() {
 	if(!p)
 		return;
 	auto old_focus = getfocus();
-	character::choose(*p, "Какую картинку использовать?", command_mask, 64);
+	picture_info::choose(*p, "Какую картинку использовать?", command_mask, 64);
 	setfocus(old_focus, true);
 }
 
@@ -1021,8 +1021,7 @@ bool character::generate() {
 	character_view ev(this);
 	if(!ev.view())
 		return false;
-	choose(avatar, "Как выглядит ваш герой?", "character*", 64);
-	return true;
+	return picture_info::choose(avatar, "Как выглядит ваш герой?", "character*", 64);
 }
 
 struct image_info : point {
@@ -1170,119 +1169,30 @@ void combat_info::move(character* player) {
 	}
 }
 
-bool character::choose(short unsigned& result, const char* title, const char* mask, int size) {
-	struct avatar_view : controls::control {
-		adat<short unsigned, 512>	elements;
-		point		size, origin;
-		int			current, current_hilite, scanline, current_origin;
-		rect		view_rect;
-		int			lines_per_page;
-		static void choose_mouse() {
-			auto p = (avatar_view*)hot.param;
-			p->current = p->current_hilite;
-		}
-		void view(const rect& rc) override {
-			control::view(rc);
-			view_rect = rc;
-			lines_per_page = rc.height() / size.y;
-			auto x = rc.x1;
-			auto y = rc.y1;
-			auto c = 0;
-			current_hilite = -1;
-			for(unsigned i = current_origin; i < elements.count; i++) {
-				if(c >= scanline) {
-					x = rc.x1;
-					y += size.y;
-					c = 0;
-					if(y + size.y > rc.y2)
-						break;
-				}
-				rect rc = {x, y, x + size.x, y + size.y};
-				rectb(rc, colors::border);
-				auto index = elements.data[i];
-				if(current == i) {
-					rect rx = rc;
-					rx.offset(2, 2);
-					rectf({rx.x1, rx.y1, rx.x2 + 1, rx.y2 + 1}, colors::edit);
-					if(isfocused())
-						rectx(rx, colors::border);
-				}
-				image(x + origin.x, y + origin.y, spr_monsters, index * 2, 0);
-				auto a = area(rc);
-				if((a == AreaHilited || a == AreaHilitedPressed)) {
-					current_hilite = i;
-					if(hot.key == MouseLeft && hot.pressed)
-						execute(choose_mouse, (int)this);
-				}
-				c++;
-				x += size.x;
-			}
-		}
-		unsigned getmaximum() const {
-			return elements.count;
-		}
-		int gethorizcount() const {
-			if(!size.x || !view_rect)
-				return 0;
-			return view_rect.width() / size.x;
+bool picture_info::choose(short unsigned& result, const char* title, const char* mask, int size) {
+	struct avatar_view : controls::picker {
+		adat<short unsigned, 512> elements;
+		int getmaximum() const override { return elements.count; }
+		void row(const rect& rc, int index) override {
+			rowhilite(rc, index);
+			auto avatar = elements[index];
+			//draw::state push; setclip(rc);
+			image(rc.x1 + rc.width() / 2, rc.y2 - rc.height() / 4, spr_monsters, avatar * 2, 0);
 		}
 		int getcurrent() const {
 			if(!elements.count)
 				return -1;
 			return elements.data[current];
 		}
-		void correct() {
-			if(current > (int)elements.count - 1)
-				current = elements.count - 1;
-			if(current < 0)
-				current = 0;
-		}
-		void ensurevisible() {
-			if(!lines_per_page)
-				return;
-			auto elements_per_page = scanline * lines_per_page;
-			if(current < current_origin)
-				current_origin -= scanline;
-			while(current > current_origin + elements_per_page)
-				current_origin += scanline;
-			if(current_origin < 0)
-				current_origin = 0;
-		}
-		bool keyinput(unsigned id) override {
-			switch(id) {
-			case KeyLeft:
-				current--;
-				correct();
-				ensurevisible();
-				break;
-			case KeyRight:
-				current++;
-				correct();
-				ensurevisible();
-				break;
-			case KeyUp:
-				current -= scanline;
-				correct();
-				ensurevisible();
-				break;
-			case KeyDown:
-				current += scanline;
-				correct();
-				ensurevisible();
-				break;
-			default:
-				return control::keyinput(id);
-			}
-			return false;
-		}
-		constexpr avatar_view(int size) : elements(), size{(short)size, (short)size}, origin{(short)size / 2, ((short)size / 4) * 3},
-			current(0), current_hilite(-1), scanline((short)(800 / size)), current_origin(0),
-			lines_per_page(0), view_rect() {}
 	};
-	avatar_view s1(size);
-	s1.elements.count = select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
+	avatar_view s1;
+	s1.pixels_per_line = 2 * 2 + 64;
+	s1.pixels_per_column = 2 * 2 + 64;
+	s1.show_grid_lines = true;
+	s1.show_border = true;
+	s1.elements.count = character::select_avatar(s1.elements.data, s1.elements.getmaximum(), mask);
 	s1.current = s1.elements.indexof(result);
-	s1.correct();
+	s1.ensurevisible();
 	setfocus(0, true);
 	int x, y;
 	while(ismodal()) {
@@ -1376,7 +1286,7 @@ static void choose_feats() {
 }
 
 struct bsmeta_view : controls::picker {
-	table_driver& source;
+	table_design& source;
 	int getmaximum() const override { return source.source.count; }
 	void row(const rect& rcorigin, int index) override {
 		char temp[260]; temp[0] = 0;
@@ -1423,14 +1333,14 @@ struct bsmeta_view : controls::picker {
 	void change() {
 		source.editing((void*)source.source.get(getcurrent()), 0, true);
 	}
-	constexpr bsmeta_view(table_driver& source) : source(source) {}
+	constexpr bsmeta_view(table_design& source) : source(source) {}
 };
 
 static void add_record() { ((bsmeta_view*)hot.param)->add(); }
 static void copy_record() { ((bsmeta_view*)hot.param)->copy(); }
 static void change_record() { ((bsmeta_view*)hot.param)->change(); }
 
-bool table_driver::choose(const char* title, const anyval& result, int width, bool choose_mode) {
+bool table_design::choose(const char* title, const anyval& result, int width, bool choose_mode) {
 	bsmeta_view e1(*this);
 	e1.show_border = false;
 	e1.pixels_per_line = 64 + 1 + 4*2;
@@ -1492,7 +1402,7 @@ bool character::edit() {
 			y = y0;
 			x += c1 + metrics::padding * 3;
 			y += edit_abilities(x, y, c2);
-			y += group_combat_ability(x, y, c2, this, true);
+			y += group_combat_ability(x, y, c2, this, hp_rolled==0);
 			y = y0;
 			x += c2 + metrics::padding * 3;
 			auto c3 = getwidth() - x - metrics::padding * 2;
@@ -1504,13 +1414,9 @@ bool character::edit() {
 		}
 		page_footer(x, y, true);
 		x += page_tabs(x, y, page_strings, page);
-		character previous_value = *this;
+		character previous = *this;
 		domodal();
-		if(race != previous_value.race
-			|| type != previous_value.type) {
-			correct();
-			apply_feats();
-		}
+		changing(previous);
 	}
 	return getresult() != 0;
 }
