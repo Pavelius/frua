@@ -172,6 +172,7 @@
     <ClCompile Include="string_value.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />
+    <ClCompile Include="use.cpp" />
     <ClCompile Include="view.cpp" />
     <ClCompile Include="wear.cpp" />
     <ClCompile Include="win_clipboard.cpp" />

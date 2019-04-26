@@ -17,16 +17,16 @@ struct commandi {
 	void clear() { memset(this, 0, sizeof(commandi)); }
 };
 static commandi	command;
-static void check_flags() {
-	unsigned v1 = command.value;
-	unsigned v2 = 1 << hot.param;
-	if(v1&v2)
-		v1 &= ~v2;
-	else
-		v1 |= v2;
-	command.value = (const int)v1;
-}
 struct cmd_check : runable {
+	static void check_flags() {
+		unsigned v1 = command.value;
+		unsigned v2 = 1 << hot.param;
+		if(v1&v2)
+			v1 &= ~v2;
+		else
+			v1 |= v2;
+		command.value = (const int)v1;
+	}
 	constexpr cmd_check(const anyval& value, const void* source, unsigned index)
 		: source(source), index(index), value(value) {}
 	virtual int	getid() const { return (int)source; }
@@ -92,7 +92,7 @@ static void choose_enum() {
 }
 
 static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdata& ei) {
-	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key == KeyDown);
+	auto result = focused && (hot.key == KeyEnter || hot.key == F2);
 	if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
 		result = true;
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, getpresent(ei.get(ev)));
@@ -105,10 +105,6 @@ static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdat
 		command.data = &ei;
 		execute(choose_enum);
 	}
-}
-
-static void check_flags() {
-
 }
 
 struct markup_view {
@@ -125,7 +121,9 @@ struct markup_view {
 		result.data = source.data;
 		return result;
 	}
-	static rect start_group(int x, int& y, int width, const char* title) {
+	static rect start_group(int& x, int& y, int& width, const char* title) {
+		setposition(x, y, width);
+		setposition(x, y, width);
 		rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 		gradv(rc, colors::border, colors::edit);
 		text(rc, title, AlignCenterCenter);
@@ -152,8 +150,8 @@ struct markup_view {
 			auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
 			rc.x2 = rc.x1 + we;
 			draw::field(rc, flags, anyval(pv, bv.type->size), d, FieldNumber);
-			if(part) {
-				for(auto p = e.value.child; p; p = p->value.child) {
+			if(part && e.value.child) {
+				for(auto p = e.value.child; *p; p++) {
 					auto bv = getvalue(source, *p);
 					if(!bv.data || !bv.type)
 						continue;
@@ -174,15 +172,15 @@ struct markup_view {
 				field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd);
 		}
 	}
-	int group_vertial(int x, int y, int width, const markup* elements, const bsval& source) const {
+	int group_vertial(int x, int y, int width, const markup* elements, const bsval& source, const char*& title_override) const {
 		if(!elements)
 			return 0;
 		auto y0 = y;
 		for(auto p = elements; *p; p++)
-			y += element(x, y, width, *p, source, p->title, TitleNormal);
+			y += element(x, y, width, *p, source, p->title, TitleNormal, title_override);
 		return y - y0;
 	}
-	int group_horizontal(int x, int y, int width, const markup* elements, const bsval& source) const {
+	int group_horizontal(int x, int y, int width, const markup* elements, const bsval& source, const char*& title_override) const {
 		if(!elements)
 			return 0;
 		auto ym = 0;
@@ -193,14 +191,18 @@ struct markup_view {
 			auto we = p->width*wi;
 			if(x1 + we > width - 12)
 				we = width - x1;
-			auto yc = element(x, y, we, *p, source, p->title, TitleNormal);
+			auto yc = element(x, y, we, *p, source, p->title, TitleNormal, title_override);
 			if(ym < yc)
 				ym = yc;
 			x += we;
 		}
 		return ym;
 	}
-	void header(int& x, int y, int& width, const char* label, int title_width, title_s state) const {
+	void header(int& x, int y, int& width, const char* label, int title_width, title_s state, const char*& title_override) const {
+		if(title_override && title_override[0]) {
+			label = title_override;
+			title_override = 0;
+		}
 		if(!label || !label[0])
 			return;
 		if(state == NoTitle)
@@ -213,7 +215,19 @@ struct markup_view {
 		} else
 			titletext(x, y, width, 0, label, title_width);
 	}
-	int element(int x, int y, int width, const markup& e, const bsval& source, const char* title_text, title_s title_state) const {
+	int error(int x, int y, int width, const markup& e, const char* error_text) const {
+		auto old_color = fore;
+		fore = colors::red;
+		setposition(x, y, width);
+		titletext(x, y, width, 0, e.title ? e.title : e.value.id, title_width, ":");
+		auto h = texth() + 4 * 2;
+		rect rc = {x, y, x + width, y + h};
+		rectb(rc, colors::red);
+		text(rc, error_text, AlignCenterCenter);
+		fore = old_color;
+		return rc.height() + metrics::padding * 2;
+	}
+	int element(int x, int y, int width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override) const {
 		if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 			return 0;
 		if(e.title && e.title[0] == '#') {
@@ -226,7 +240,7 @@ struct markup_view {
 				if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
 					auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
 					if(!pb || pb->count==0)
-						return 0;
+						return error(x, y, width, e, "Не найдена база");
 					auto size = bv.type->size;
 					if(bv.type->is(KindCFlags))
 						size = bv.type->lenght;
@@ -236,7 +250,7 @@ struct markup_view {
 								continue;
 						}
 						auto p = getpresent(pb->get(i));
-						cmd_check ev({bv.data, size}, p, i);
+						cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
 						unsigned flags = 0;
 						if(ev.ischecked())
 							flags |= Checked;
@@ -254,12 +268,13 @@ struct markup_view {
 			if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
 				auto pm = plugin<markup>::get(bv.type->type);
 				if(!pm)
-					return 0;
-				return group_vertial(x, y, width, pm, bsval(pv, bv.type->type));
+					return error(x, y, width, e, "Не найдена разметка");
+				auto new_title = e.title;
+				return group_vertial(x, y, width, pm, bsval(pv, bv.type->type), new_title);
 			} else {
 				draw::state push;
 				setposition(x, y, width);
-				header(x, y, width, e.title, title_width, TitleNormal);
+				header(x, y, width, e.title, title_width, TitleNormal, title_override);
 				rect rc = {x, y, x + width, y + draw::texth() + 8};
 				field_part(rc, e, source, bv, pv, true, rc.x2);
 				return rc.height() + metrics::padding * 2;
@@ -270,9 +285,9 @@ struct markup_view {
 			if(e.title)
 				rgo = start_group(x, y, width, e.title);
 			if(e.value.child[0].width)
-				y += group_horizontal(x, y, width, e.value.child, source);
+				y += group_horizontal(x, y, width, e.value.child, source, title_override);
 			else
-				y += group_vertial(x, y, width, e.value.child, source);
+				y += group_vertial(x, y, width, e.value.child, source, title_override);
 			y += close_group(x, y, rgo);
 			return y - y0;
 		} else
@@ -284,8 +299,9 @@ struct markup_view {
 int draw::field(int x, int y, int width, const markup* elements, const bsval& source, int title_width) {
 	markup_view ev;
 	ev.title_width = title_width;
+	const char* title_override = 0;
 	if(elements->width)
-		return ev.group_horizontal(x, y, width, elements, source);
+		return ev.group_horizontal(x, y, width, elements, source, title_override);
 	else
-		return ev.group_vertial(x, y, width, elements, source);
+		return ev.group_vertial(x, y, width, elements, source, title_override);
 }

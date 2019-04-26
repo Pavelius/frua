@@ -97,9 +97,11 @@ enum feat_s : unsigned char {
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
 	HolyGrace, NoExeptionalStrenght,
-	UseLeatherArmor, UseMetalArmor, UseShield,
-	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon,
 	UniqueCharacter,
+};
+enum usability_s : unsigned char {
+	UseLeatherArmor, UseMetalArmor, UseShield,
+	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
@@ -184,7 +186,6 @@ struct sprite;
 
 typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
-typedef cflags<feat_s>		feata;
 typedef class_s				classa[3];
 
 struct name_info {
@@ -211,7 +212,6 @@ struct dam_info {
 struct feat_info {
 	const char*				id;
 	const char*				name;
-	char					use_item;
 };
 struct size_info {
 	const char*				id;
@@ -221,6 +221,10 @@ struct wear_info {
 	const char*				id;
 	const char*				name;
 	const char*				name_type;
+};
+struct usability_info {
+	const char*				id;
+	const char*				name;
 };
 struct sprite_name_info {
 	char					name[32];
@@ -248,6 +252,7 @@ struct class_info {
 	ability_s				ability;
 	adat<class_s, 4>		classes;
 	cflags<feat_s>			feats;
+	cflags<usability_s>		usability;
 	char					minimum[Charisma + 1];
 	adat<race_s, 12>		races;
 	char					bonus_hd;
@@ -259,7 +264,8 @@ struct race_info {
 	char					maximum[Charisma + 1];
 	char					adjustment[Charisma + 1];
 	char					theive_skills[(ReadLanguages - PickPockets) + 1];
-	feata					feats;
+	cflags<feat_s>			feats;
+	cflags<usability_s>		usability;
 	size_s					size;
 	char					movement;
 	const char*				info;
@@ -304,7 +310,7 @@ struct item {
 struct item_info {
 	wear_s					type;
 	const char*				name;
-	cflags<feat_s>			restricted;
+	cflags<usability_s>		usability;
 	damage_info				damage;
 	armor_info				armor;
 	int						cost, weight;
@@ -453,5 +459,6 @@ DECLENUM(gender);
 DECLENUM(race);
 DECLENUM(size);
 DECLENUM(wear);
+DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;

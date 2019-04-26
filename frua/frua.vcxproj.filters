@@ -201,6 +201,9 @@
     <ClCompile Include="draw_markup.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
+    <ClCompile Include="use.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

@@ -564,8 +564,6 @@ static void page_header(int& x, int& y, const char* title, bool padding = true) 
 	fore = colors::yellow;
 	text(x, y, title);
 	y += texth() + metrics::padding;
-	if(padding)
-		x += metrics::padding;
 }
 
 static void page_footer(int& x, int& y, bool allow_cancel = false) {
