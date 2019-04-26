@@ -3,6 +3,8 @@
 #include "collection.h"
 #include "crt.h"
 #include "dice.h"
+#include "markup.h"
+#include "plugin.h"
 #include "point.h"
 #include "stringcreator.h"
 
@@ -15,6 +17,7 @@ const int combat_map_y = 16;
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
 bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
+#define MARKUP(e) static plugin<markup> e##_markup_plugin(bsmeta<e##_info>::meta, e##_markup)
 
 enum class_s : unsigned char {
 	Monster,
@@ -59,7 +62,8 @@ enum landscape_s : unsigned  char {
 };
 enum wear_s : unsigned char {
 	Head, Neck, Armor, MeleeWeapon, OffhandWeapon, RangedWeapon, GridleWear, LeftRing, RightRing, Legs,
-	FirstWear = Head, LastWear = Legs
+	Backpack, Book, Wand, Scroll, Potion, Edible, Gem,
+	FirstWear = Head, LastWear = Gem,
 };
 enum school_s : unsigned char {
 	NoSchool,
@@ -216,6 +220,7 @@ struct size_info {
 struct wear_info {
 	const char*				id;
 	const char*				name;
+	const char*				name_type;
 };
 struct sprite_name_info {
 	char					name[32];
@@ -273,6 +278,10 @@ struct damage_info {
 	dice					damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 };
+struct armor_info {
+	char					ac;
+	char					critical;
+};
 struct attack_info : damage_info {
 	char					attacks; // per two rounds
 	item*					weapon;
@@ -295,8 +304,12 @@ struct item {
 struct item_info {
 	wear_s					type;
 	const char*				name;
+	const char*				undefined;
 	cflags<feat_s>			restrictions;
 	damage_info				damage;
+	armor_info				armor;
+	int						cost, weight;
+	char					magic;
 	bool					edit();
 };
 struct character {
@@ -431,6 +444,7 @@ struct design_info {
 	virtual int				getavatar(const void* object) const { return -1; }
 	virtual grade_s			getgrade(const void* object) const { return Fair; }
 	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
+	static bool				edit(const char* name, void* object, const bsreq* type, const markup* form = 0);
 	constexpr design_info(bsdata& source) : source(source) {}
 };
 DECLENUM(alignment);

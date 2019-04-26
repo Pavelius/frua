@@ -7,6 +7,8 @@ namespace clipboard {
 void					copy(const void* string, int lenght);
 char*					paste();
 }
+struct					bsval;
+struct					markup;
 namespace draw {
 enum column_size_s : unsigned char {
 	SizeDefault,
@@ -172,10 +174,15 @@ private:
 	int						p1, p2;
 };
 }
+enum field_type_s : unsigned char {
+	FieldNumber, FieldText,
+};
 int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
 bool						dropdown(const rect& rc, draw::controls::control& e, bool choose_mode = false);
+void						field(const rect& rco, unsigned flags, const anyval& ev, int digits, field_type_s type);
+int							field(int x, int y, int width, const markup* elements, const bsval& source, int title_width = 128);
 int							field(int x, int y, int width, const char* header_label, const char*& ev, int header_width);
 int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);

@@ -5,10 +5,6 @@
 
 using namespace draw;
 
-enum field_type_s : unsigned char {
-	FieldNumber, FieldText,
-};
-
 static anyval edit_value;
 
 static const char* getvalue(const anyval& v, field_type_s t, char* result, const char* result_end) {
@@ -102,6 +98,31 @@ static void execute(callback proc, const anyval& ev) {
 	draw::execute(proc);
 }
 
+void draw::field(const rect& rco, unsigned flags, const anyval& ev, int digits, field_type_s type) {
+	rect rc = rco;
+	draw::rectb(rc, colors::border);
+	auto focused = isfocused(flags);
+	if(type == FieldNumber) {
+		auto result = addbutton(rc, focused,
+			"+", KeyUp, "Увеличить",
+			"-", KeyDown, "Уменьшить");
+		switch(result) {
+		case 1: execute(field_up, ev);  break;
+		case 2: execute(field_down, ev); break;
+		}
+	}
+	auto a = area(rc);
+	if(focused) {
+		edit.align = flags & AlignMask;
+		edit.update(ev, type, digits);
+		edit.view(rc);
+	} else {
+		char temp[260];
+		auto p = getvalue(ev, type, temp, temp + sizeof(temp) / sizeof(temp[0]));
+		draw::texte(rc + metrics::edit, p, flags & AlignMask, -1, -1);
+	}
+}
+
 int draw::field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits) {
 	draw::state push;
 	setposition(x, y, width);
@@ -110,26 +131,7 @@ int draw::field(int x, int y, int width, const char* header_label, const anyval&
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignRight;
 	focusing((int)ev.ptr(), flags, rc);
-	bool focused = isfocused(flags);
-	draw::rectb(rc, colors::border);
-	rect rco = rc;
-	auto result = addbutton(rc, focused,
-		"+", KeyUp, "Увеличить",
-		"-", KeyDown, "Уменьшить");
-	switch(result) {
-	case 1: execute(field_up, ev);  break;
-	case 2: execute(field_down, ev); break;
-	}
-	auto a = area(rc);
-	if(isfocused(flags)) {
-		edit.align = flags & AlignMask;
-		edit.update(ev, FieldNumber, digits);
-		edit.view(rc);
-	} else {
-		char temp[32];
-		auto p = getvalue(ev, FieldNumber, temp, temp + sizeof(temp) / sizeof(temp[0]));
-		draw::texte(rc + metrics::edit, p, flags, -1, -1);
-	}
+	field(rc, flags, ev, digits, FieldNumber);
 	return rc.height() + metrics::padding * 2;
 }
 
@@ -139,20 +141,8 @@ int draw::field(int x, int y, int width, const char* header_label, const char*& 
 	if(header_label && header_label[0])
 		titletext(x, y, width, 0, header_label, header_width);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
-	unsigned flags = 0;
-	anyval ev = sev;
-	focusing((int)ev.ptr(), flags, rc);
-	bool focused = isfocused(flags);
-	draw::rectb(rc, colors::border);
-	auto a = area(rc);
-	if(isfocused(flags)) {
-		edit.align = flags & AlignMask;
-		edit.update(ev, FieldText);
-		edit.view(rc);
-	} else {
-		char temp[260];
-		auto p = getvalue(ev, FieldText, temp, temp + sizeof(temp) / sizeof(temp[0]));
-		draw::texte(rc + metrics::edit, p, flags, -1, -1);
-	}
+	unsigned flags = AlignLeft;
+	focusing((int)&sev, flags, rc);
+	field(rc, flags, anyval(sev), -1, FieldText);
 	return rc.height() + metrics::padding * 2;
 }

@@ -1449,7 +1449,7 @@ bool character::edit() {
 			y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
 			//y += edit_attacks(x, y, c3);
 			auto rgo = start_group(x, y, c3, "Предметы");
-			for(auto i = Head; i <= Legs; i = (wear_s)(i+1))
+			for(auto i = Head; i <= Legs; i = (wear_s)(i + 1))
 				y += button(x, y, c3, choose_item, &wears[i], getstr(i));
 			close_group(x, y, rgo);
 		} else if(page == 1) {
@@ -1501,34 +1501,56 @@ bool special_info::edit() {
 	return getresult() != 0;
 }
 
-bool item_info::edit() {
-	struct item_event : draw_events {
-		item_info& source;
-		bool isallow(const bsdata& e, int i) const override {
-			if(&e == &bsmeta<feat_s>::data) {
-				return bsmeta<feat_s>::data[i].use_item != 0;
-			}
-			return false;
-		}
-		constexpr item_event(item_info& v) : source(v) {}
-	} pev(*this);
+static const markup* getmarkup(bsreq* type) {
+}
+
+bool design_info::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
 	int x, y;
+	if(!elements)
+		elements = plugin<markup>::get(type);
+	if(!elements)
+		return false;
 	openform();
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, "Предмет");
-		auto y0 = y, c1 = 300;
-		auto rgo = start_group(x, y, c1, "Базовые значения");
-		y += field(x, y, c1, "Наименование", name, title_width);
-		y += field(x, y, c1, "Тип", type);
-		y += close_group(x, y, rgo);
-		y += checkboxes(x, y, c1, "Ограничение", restrictions, bsmeta<feat_s>::data, &pev);
-		//x += c1 + metrics::padding * 3;
-		//y = y0;
-		y += group(x, y, c1, damage);
+		page_header(x, y, name);
+		auto width = getwidth() - x * 2;
+		y += draw::field(x, y, width, elements, bsval(object, type), 100);
 		page_footer(x, y, true);
 		domodal();
 	}
 	closeform();
 	return getresult() != 0;
 }
+
+//bool item_info::edit() {
+//	struct item_event : draw_events {
+//		item_info& source;
+//		bool isallow(const bsdata& e, int i) const override {
+//			if(&e == &bsmeta<feat_s>::data) {
+//				return bsmeta<feat_s>::data[i].use_item != 0;
+//			}
+//			return false;
+//		}
+//		constexpr item_event(item_info& v) : source(v) {}
+//	} pev(*this);
+//	int x, y;
+//	openform();
+//	while(ismodal()) {
+//		render_background();
+//		page_header(x, y, "Предмет");
+//		auto y0 = y, c1 = 300;
+//		auto rgo = start_group(x, y, c1, "Базовые значения");
+//		y += field(x, y, c1, "Наименование", name, title_width);
+//		y += field(x, y, c1, "Тип", type);
+//		y += close_group(x, y, rgo);
+//		y += checkboxes(x, y, c1, "Ограничение", restrictions, bsmeta<feat_s>::data, &pev);
+//		//x += c1 + metrics::padding * 3;
+//		//y = y0;
+//		y += group(x, y, c1, damage);
+//		page_footer(x, y, true);
+//		domodal();
+//	}
+//	closeform();
+//	return getresult() != 0;
+//}

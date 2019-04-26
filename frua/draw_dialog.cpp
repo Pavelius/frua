@@ -25,14 +25,14 @@ void draw::focusing(int id, unsigned& flags, rect rc) {
 	}
 }
 
-void draw::titletext(int& x, int y, int& width, unsigned flags, const char* label, int title) {
+void draw::titletext(int& x, int y, int& width, unsigned flags, const char* label, int title, const char* sep) {
 	char temp[1024];
 	if(!title)
 		title = 128;
-	if(label[0] == ':')
+	if(!sep)
 		zprint(temp, "%1", label + 1);
 	else
-		zprint(temp, "%1:", label);
+		zprint(temp, "%1%2", label, sep);
 	text(x, y + 4, temp);
 	x += title;
 	width -= title;

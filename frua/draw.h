@@ -304,7 +304,7 @@ void					splitv(int x, int y, int& value, int height, int size, int minimum, int
 void					splith(int x, int y, int width, int& value, int size, int minimum, int maximum, bool down_align);
 int						tabs(int x, int y, int width, bool show_close, bool right_side, void** data, int start, int count, int current, int* hilite, proctext gtext = 0, rect position = {0, 0, 0, 0});
 int						tabs(rect rc, bool show_close, bool right_side, void** data, int start, int count, int current, int* hilite, proctext gtext, rect position = {0,0,0,0});
-void					titletext(int& x, int y, int& width, unsigned flags, const char* label, int title);
+void					titletext(int& x, int y, int& width, unsigned flags, const char* label, int title, const char* sep = ":");
 bool					tool(const rect& rc, bool disabled, bool checked, bool press, bool focused = false, int key = 0);
 void					tooltips(const char* format, ...);
 void					tooltips(int x, int y, int width, const char* format, ...);

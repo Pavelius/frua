@@ -198,6 +198,9 @@
     <ClCompile Include="wear.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_markup.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
@@ -258,6 +261,12 @@
       <Filter>Графика</Filter>
     </ClInclude>
     <ClInclude Include="bsreq.h">
+      <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="markup.h">
+      <Filter>Графика</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin.h">
       <Filter>Коллекция</Filter>
     </ClInclude>
   </ItemGroup>

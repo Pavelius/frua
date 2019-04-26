@@ -28,10 +28,12 @@ static bool test_read() {
 bool test_array();
 
 int	main(int argc, char *argv[]) {
-	//auto p = bsmeta<test_type>::meta;
+	auto p = bsmeta<damage_info>::meta;
 	if(!test_array())
 		return -1;
 	draw::initialize();
+	item_info ii = {};
+	ii.edit();
 	character::choose();
 	//event_info ei;
 	//ei.edit();

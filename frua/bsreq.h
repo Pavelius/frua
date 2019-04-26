@@ -60,6 +60,7 @@ struct bsreq {
 	static const bsreq	metadata[];
 	int					get(const void* p) const;
 	const bsreq*		getkey() const;
+	bool				is(bstype_s v) const { return subtype == v; }
 	bool				isnum() const;
 	bool				isref() const { return reference > 0; }
 	bool				istext() const;
@@ -116,6 +117,15 @@ template<> struct bsmeta<int> {
 template<> struct bsmeta<const char*> {
 	typedef const char*	type;
 	static const bsreq	meta[];
+};
+struct bsval {
+	void*				data;
+	const bsreq*		type;
+	constexpr bsval() : data(0), type(0) {}
+	constexpr bsval(void* data, const bsreq* type) : data(data), type(type) {}
+	constexpr explicit operator bool() const { return data != 0; }
+	int					get() const { return type->get(type->ptr(data)); }
+	void				set(int value) const { type->set(type->ptr(data), value); }
 };
 template<> struct bsmeta<unsigned char> : bsmeta<int> {};
 template<> struct bsmeta<char> : bsmeta<int> {};
