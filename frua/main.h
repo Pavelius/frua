@@ -248,6 +248,7 @@ struct picture_info {
 struct class_info {
 	const char*				id;
 	const char*				name;
+	char					playable;
 	char					hd;
 	ability_s				ability;
 	adat<class_s, 4>		classes;
@@ -260,6 +261,7 @@ struct class_info {
 struct race_info {
 	const char*				id;
 	const char*				name;
+	char					playable;
 	char					minimum[Charisma + 1];
 	char					maximum[Charisma + 1];
 	char					adjustment[Charisma + 1];
@@ -322,11 +324,12 @@ struct character {
 	void					apply_ability_restriction();
 	void					apply_feats();
 	void					clear();
-	bool					changing(character& e);
+	void					changing(const character& e);
 	static character*		choose();
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	bool					edit();
+	bool					edit_generate();
 	bool					generate();
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
@@ -349,7 +352,6 @@ struct character {
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
-	void					group_generate(int x, int y, int width);
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isalive() const { return hp > 0; }
 	static bool				isallow(alignment_s v, class_s type);
@@ -367,6 +369,11 @@ struct character {
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
+	static int				view_ability(int x, int y, int width, const char* id, void* object);
+	static int				view_basic(int x, int y, int width, const char* id, void* object);
+	static int				view_levels(int x, int y, int width, const char* id, void* object);
+	static int				view_skills(int x, int y, int width, const char* id, void* object);
+	static int				view_statistic(int x, int y, int width, const char* id, void* object);
 	static void				update_battle();
 private:
 	const char*				name;
@@ -438,18 +445,23 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update();
 	void					visualize();
 };
-struct design_info {
+struct decoration {
+	struct command {
+		const char*			name;
+		void(*proc)(void* object);
+		explicit operator bool() const { return name != 0; }
+	};
 	enum grade_s : unsigned char { Fair, Good, Excellent };
 	bsdata&					source;
 	virtual bool			change(void* obect) { return false; }
 	bool					choose(const char* title, const anyval& result, int width, int height, bool choose_mode);
 	virtual void			creating(void* object) const {}
 	bool					edit(void* object, void* copy_object, bool run);
+	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, void(*changed)(void* pr, const void* pp) = 0, const command* commands = 0);
 	virtual int				getavatar(const void* object) const { return -1; }
 	virtual grade_s			getgrade(const void* object) const { return Fair; }
 	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
-	static bool				edit(const char* name, void* object, const bsreq* type, const markup* form = 0);
-	constexpr design_info(bsdata& source) : source(source) {}
+	constexpr decoration(bsdata& source) : source(source) {}
 };
 DECLENUM(alignment);
 DECLENUM(class);

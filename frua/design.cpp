@@ -1,6 +1,6 @@
 #include "main.h"
 
-bool design_info::edit(void* object, void* copy_object, bool run) {
+bool decoration::edit(void* object, void* copy_object, bool run) {
 	auto result = true;
 	if(run) {
 		char copy_buffer[256] = {};

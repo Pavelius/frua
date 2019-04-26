@@ -76,5 +76,5 @@ static markup item_markup[] = {{4, "Базовые параметры", {0, 0, column1}},
 MARKUP(item);
 
 bool item_info::edit() {
-	return design_info::edit("Предметы", this, bsmeta<item_info>::meta, 0);
+	return decoration::edit("Предметы", this, sizeof(*this), bsmeta<item_info>::meta);
 }

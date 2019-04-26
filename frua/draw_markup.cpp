@@ -17,16 +17,19 @@ struct commandi {
 	void clear() { memset(this, 0, sizeof(commandi)); }
 };
 static commandi	command;
+static void check_flags() {
+	unsigned v1 = command.value;
+	unsigned v2 = 1 << hot.param;
+	if(v1&v2)
+		v1 &= ~v2;
+	else
+		v1 |= v2;
+	command.value = (const int)v1;
+}
+static void set_command_value() {
+	command.value = (const int)hot.param;
+}
 struct cmd_check : runable {
-	static void check_flags() {
-		unsigned v1 = command.value;
-		unsigned v2 = 1 << hot.param;
-		if(v1&v2)
-			v1 &= ~v2;
-		else
-			v1 |= v2;
-		command.value = (const int)v1;
-	}
 	constexpr cmd_check(const anyval& value, const void* source, unsigned index)
 		: source(source), index(index), value(value) {}
 	virtual int	getid() const { return (int)source; }
@@ -37,6 +40,18 @@ struct cmd_check : runable {
 	}
 	virtual bool isdisabled() const { return false; }
 	bool ischecked() const { return (((int)value) & (1 << index)) != 0; }
+private:
+	const void*		source;
+	unsigned		index;
+	const anyval	value;
+};
+struct cmd_radio : runable {
+	constexpr cmd_radio(const anyval& value, const void* source, unsigned index)
+		: source(source), index(index), value(value) {}
+	virtual int	getid() const { return (int)source; }
+	virtual void execute() const { command.value = value; draw::execute(set_command_value, index); }
+	virtual bool isdisabled() const { return false; }
+	bool ischecked() const { return (int)value == index; }
 private:
 	const void*		source;
 	unsigned		index;
@@ -230,7 +245,9 @@ struct markup_view {
 	int element(int x, int y, int width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override) const {
 		if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 			return 0;
-		if(e.title && e.title[0] == '#') {
+		else if(e.proc.custom)
+			return e.proc.custom(x, y, width, e.value.id, source.data);
+		else if(e.title && e.title[0] == '#') {
 			auto pn = e.title + 1;
 			auto y0 = y;
 			if(e.value.id) {
@@ -256,14 +273,32 @@ struct markup_view {
 							flags |= Checked;
 						y += checkbox(x, y, width, flags, ev, p, 0) + 2;
 					}
-				}
+				} else if(strcmp(pn, "radio") == 0 && bv.type->is(KindEnum)) {
+					auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+					if(!pb || pb->count == 0)
+						return error(x, y, width, e, "Не найдена база");
+					auto size = bv.type->size;
+					for(unsigned i = 0; i < pb->count; i++) {
+						if(e.proc.isallow) {
+							if(!e.proc.isallow(source.data, i))
+								continue;
+						}
+						auto p = getpresent(pb->get(i));
+						cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
+						unsigned flags = 0;
+						if(ev.ischecked())
+							flags |= Checked;
+						y += radio(x, y, width, flags, ev, p, 0) + 2;
+					}
+				} else
+					return error(x, y, width, e, pn);
 			}
 			return y - y0;
 		} else if(e.value.id) {
 			auto bv = getvalue(source, e);
 			if(!bv.data || !bv.type)
 				return 0;
-			auto pv = bv.type->ptr(bv.data);
+			auto pv = bv.type->ptr(bv.data, e.value.index);
 			// Вначале найдем целую форму объекта
 			if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
 				auto pm = plugin<markup>::get(bv.type->type);

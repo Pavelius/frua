@@ -32,9 +32,9 @@ int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	draw::initialize();
-	item_info ii = {};
-	ii.edit();
-	character::choose();
+	character ii = {};
+	ii.edit_generate();
+	//character::choose();
 	//event_info ei;
 	//ei.edit();
 	//picture_info::pick_monster();

@@ -10,6 +10,7 @@ struct markup {
 	struct proci {
 		bool(*isvisible)(const void* object, const markup& e);
 		bool(*isallow)(const void* object, int param);
+		int(*custom)(int x, int y, int width, const char* id, void* object);
 		void(*command)();
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }

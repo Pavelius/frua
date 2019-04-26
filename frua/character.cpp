@@ -17,6 +17,48 @@ const bsreq bsmeta<character>::meta[] = {
 {}};
 BSDATA(character, 512);
 
+static bool allow_race(const void* source, int value) {
+	return bsmeta<race_s>::data[value].playable != 0;
+}
+
+static bool allow_class(const void* source, int value) {
+	if(!bsmeta<class_s>::data[value].playable)
+		return false;
+	return ((character*)source)->isallow((class_s)value);
+}
+
+static bool allow_alignment(const void* source, int value) {
+	return ((character*)source)->isallow((alignment_s)value);
+}
+
+static markup character_gender_radio[] = {{0, "#radio", {"gender"}}, {}};
+static markup character_race_radio[] = {{0, "#radio", {"race"}, 0, {0, allow_race}}, {}};
+static markup character_class_radio[] = {{0, "#radio", {"type"}, 0, {0, allow_class}}, {}};
+static markup character_alignment_radio[] = {{0, "#radio", {"alignment"}, 0, {0, allow_alignment}}, {}};
+static markup generate_c1[] = {{0, "Пол", {0, 0, character_gender_radio}},
+{0, "Раса", {0, 0, character_race_radio}},
+{}};
+static markup generate_c2[] = {{0, "Классы", {0, 0, character_class_radio}},
+{}};
+static markup generate_c3[] = {{0, "Мировозрение", {0, 0, character_alignment_radio}},
+{}};
+static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
+{3, 0, {0, 0, generate_c2}},
+{4, 0, {0, 0, generate_c3}},
+{}};
+static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, character::view_ability}}, {}};
+static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, character::view_statistic}}, {}};
+static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, character::view_skills}}, {}};
+static markup abilities_c1[] = {{0, "Атрибуты", {0, 0, abilities_ability_group}},
+{0, "Боевая статистика", {0, 0, abilities_statistic_group}},
+{}};
+static markup abilities_c2[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
+{}};
+static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
+{4, 0, {0, 0, abilities_c2}},
+//{4, 0, {0, 0, generate_c3}},
+{}};
+
 static char hit_probability[] = {
 	-5, -5, -3, -3, -2, -2, -1, -1, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 1, 1,
@@ -291,14 +333,12 @@ int picture_info::random(const char* mask) {
 	return source[rand() % count];
 }
 
-bool character::changing(character& previous) {
-	auto result = (memcmp(this, &previous, sizeof(character)) != 0);
+void character::changing(const character& previous) {
 	if(race != previous.race || type != previous.type) {
 		correct();
 		apply_feats();
 		apply_ability_restriction();
 	}
-	return result;
 }
 
 void character::correct() {
@@ -326,8 +366,8 @@ void character::correct() {
 }
 
 character* character::choose() {
-	struct design : design_info {
-		constexpr design() : design_info(bsmeta<character>::data) {}
+	struct design : decoration {
+		constexpr design() : decoration(bsmeta<character>::data) {}
 		int	getavatar(const void* object) const override { return ((character*)object)->getavatar(); }
 		void creating(void* object) const override {
 			((character*)object)->clear();
@@ -355,4 +395,31 @@ character* character::choose() {
 	if(e.choose("Выбирайте героя, персонажа или монстра", result, 256, 60, false))
 		return (character*)bsmeta<character>::data.get(result);
 	return 0;
+}
+
+static void character_changed(void* v1, const void* v2) {
+	((character*)v1)->changing(*((character*)v2));
+}
+
+static void character_reroll(void* v1) {
+	((character*)v1)->reroll();
+}
+
+bool character::edit_generate() {
+	static decoration::command commands[] = {{"Перебросить", character_reroll},
+	{}};
+	create((race_s)xrand(Human, Halfling), (gender_s)xrand(Male, Female),
+		(class_s)xrand(Cleric, Theif), (alignment_s)xrand(LawfulGood, ChaoticEvil), Player);
+	correct();
+	if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+		generate_markup, character_changed))
+		return false;
+	create(race, gender, type, alignment, Player);
+	if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+		abilities_markup, character_changed,
+		commands))
+		return false;
+	if(!picture_info::choose(avatar, "Генерация персонажа (Шаг 3 из 3)", "character*", 64))
+		return false;
+	return true;
 }

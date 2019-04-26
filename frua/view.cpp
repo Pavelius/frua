@@ -12,9 +12,6 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 const int combat_moverate = 3;
 
-struct page_view;
-struct command;
-
 static anyval					command_value;
 static bsdata*					command_data;
 static rect						command_rect;
@@ -32,13 +29,6 @@ typedef adat<const char*, 256>	strings_array;
 static void set_command_value() {
 	command_value = (const int)hot.param;
 }
-
-struct command {
-	const char*			name;
-	callback			proc;
-	unsigned			key;
-	explicit operator bool() const { return name != 0; }
-};
 
 static struct char_code_info {
 	char ru, en;
@@ -625,33 +615,6 @@ static int page_tabs(int x, int y, const char** source, int& current_page) {
 	return x - x0;
 }
 
-static int small_header(int x, int y, int width, const char* title) {
-	if(!title)
-		return 0;
-	draw::state push;
-	font = metrics::h3;
-	fore = colors::yellow.mix(colors::border);
-	text(x, y, title);
-	return texth() + metrics::padding;
-}
-
-static rect start_group_light(int x, int& y, int width, const char* title, unsigned flags = AlignLeft) {
-	auto old_font = font;
-	auto old_fore = fore;
-	font = metrics::h3;
-	fore = colors::h3;
-	rect rc = {x, y, x + width, y + texth() + 1};
-	text(rc, title, flags);
-	font = old_font;
-	fore = old_fore;
-	y = rc.y2 + metrics::padding * 2;
-	return rc;
-}
-
-static int close_group_light(int x, int y, const rect& rc) {
-	return metrics::padding;
-}
-
 static rect start_group(int x, int& y, int width, const char* title, unsigned flags = AlignCenterCenter) {
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 	gradv(rc, colors::border, colors::edit);
@@ -797,217 +760,12 @@ void event_info::edit() {
 	}
 }
 
-struct page_view {
-	int	page_current, page_maximum;
-	constexpr page_view(int page_maximum) : page_current(0), page_maximum(page_maximum) {}
-	virtual const char*	getheader() const { return "Нет названия"; }
-	virtual int	 getmaximum() const { return page_maximum; }
-	virtual const command* getcommands() { return 0; }
-	virtual bool nextpage(bool run) {
-		if(page_current >= getmaximum() - 1)
-			return false;
-		if(run)
-			page_current++;
-		return true;
-	}
-	virtual bool prevpage(bool run) {
-		if(page_current < 1)
-			return false;
-		if(run)
-			page_current--;
-		return true;
-	}
-	virtual void clear() {}
-	virtual void redraw(int x, int y, int width) {}
-	static void next_page() {
-		auto p = (page_view*)hot.param;
-		p->nextpage(true);
-	}
-	static void prev_page() {
-		auto p = (page_view*)hot.param;
-		p->prevpage(true);
-	}
-	int view() {
-		setfocus(0, true);
-		clear();
-		while(ismodal()) {
-			render_background();
-			auto y = getheight() - texth() - metrics::padding * 3;
-			auto x = metrics::padding * 2;
-			x += button(x, y, "Готово", cmd(buttonok), KeyEnter);
-			x += button(x, y, "Далее", cmd(next_page, (int)this, !nextpage(false)), Alpha + 'N');
-			x += button(x, y, "Назад", cmd(prev_page, (int)this, !prevpage(false)), Alpha + 'P');
-			x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
-			for(auto pc = getcommands(); pc && *pc; pc++)
-				x += button(x, y, pc->name, cmd(pc->proc, (int)this), pc->key);
-			y = metrics::padding * 2;
-			x = metrics::padding * 2;
-			page_header(x, y, getheader());
-			redraw(x, y, getwidth() - x * 2);
-			domodal();
-		}
-		return getresult();
-	}
-};
-
-static int group_combat_ability(int x, int y, int width, const character* player, bool range_hits) {
-	char temp[260];
-	auto& col = bsmeta<class_s>::data;
-	attack_info ai = {}; player->get(MeleeWeapon, ai);
-	auto y1 = y;
-	auto rga = start_group(x, y, width, "Боевые параметры");
-	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
-	y += fieldv(x, y, width, "THAC0", ai.thac0);
-	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
-	y += fieldv(x, y, width, "Класс брони", player->getac());
-	if(range_hits) {
-		auto type = player->getclass();
-		auto rolled = 0;
-		for(unsigned i = 0; i < col[type].classes.count; i++)
-			rolled += col[col[type].classes[i]].hd * player->getlevel(i);
-		auto min = player->gethpmax(0);
-		auto max = player->gethpmax(rolled);
-		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
-	} else
-		y += fieldv(x, y, width, "Хиты", player->gethp(), player->gethpmax());
-	y += close_group(x, y, rga);
-	return y - y1;
-}
-
-static int group_ability(int x, int y, int width, const character* player) {
-	auto y1 = y;
-	auto rga = start_group(x, y, width, "Атрибуты");
-	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
-		auto v = player->get(i);
-		if(i == Strenght && v == 18)
-			y += fieldv(x, y, width, getstr(i), v, player->getstrper(), "%1i/%2.2i");
-		else
-			y += fieldv(x, y, width, getstr(i), v);
-	}
-	y += metrics::padding;
-	y += close_group(x, y, rga);
-	return y - y1;
-}
-
-void character::group_generate(int x, int y, int width) {
-	const int w1 = 200;
-	auto y1 = y;
-	y += group(x, y, w1, "Пол", gender);
-	y += group(x, y, w1, "Раса", race);
-	x += w1 + metrics::padding * 3;
-	y = y1;
-	y += group(x, y, w1, "Класс", type);
-	x += w1 + metrics::padding * 3;
-	y = y1;
-	y += group(x, y, w1, "Мировозрение", alignment);
-}
-
-struct character_view : page_view {
-	character*	player;
-	const char* getheader() const {
-		return "Создание персонажа";
-	}
-	void reroll() {
-		player->create(player->race, player->gender, player->type, player->alignment, Player);
-	}
-	void clear() override {
-		player->clear();
-		player->race = (race_s)xrand(Human, Halfling);
-		player->gender = (gender_s)xrand(Male, Female);
-		player->alignment = (alignment_s)xrand(LawfulGood, ChaoticEvil);
-		reroll();
-	}
-	static void reroll_command() {
-		auto p = (character_view*)hot.param;
-		p->reroll();
-	}
-	virtual const command* getcommands() {
-		static command information_command[] = {{"Перебросить", reroll_command, Alpha + 'R'},
-		{}};
-		switch(page_current) {
-		case 1: return information_command;
-		default: return 0;
-		}
-	}
-	int group_basic(int x, int y, int w1, int w2) {
-		char temp[260];
-		auto y1 = y;
-		auto width = w1 + w2 + metrics::padding * 4;
-		auto old_stroke = fore_stroke;
-		fore_stroke = colors::black;
-		auto rga = start_group(x, y, width, "Павелиус великий", AlignCenterCenter | TextBold);
-		fore_stroke = old_stroke;
-		auto y2 = y;
-		zprint(temp, "%1 %-2", getstr(player->gender), getstr(player->race));
-		text(x, y, temp); y += texth();
-		text(x, y, getstr(player->alignment)); y += texth();
-		y = y2;
-		auto x1 = x + w1 + metrics::padding * 4;
-		auto& col = bsmeta<class_s>::data;
-		auto class_count = col[player->type].classes.count;
-		if(!class_count)
-			class_count = 1;
-		for(unsigned i = 0; i < col[player->type].classes.count; i++) {
-			auto e = col[player->type].classes.data[i];
-			text(x1, y, getstr(e));
-			auto exp = player->experience / class_count;
-			zprint(temp, "%1i уровень (опыт %2i)", player->levels[i], exp);
-			text(x1 + w2 - textw(temp), y, temp);
-			y += texth();
-		}
-		y2 += texth() * 3;
-		y2 += close_group(x, y2, rga);
-		return y2 - y1;
-	}
-	int group_skills(int x, int y, int width) {
-		auto y1 = y;
-		auto rga = start_group(x, y, width, "Навыки");
-		for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
-			auto v = player->get(i);
-			if(v <= 0)
-				continue;
-			y += fieldp(x, y, width, getstr(i), v);
-		}
-		y += close_group(x, y, rga);
-		return y - y1;
-	}
-	void information(int x, int y, int width) {
-		auto w1 = 160;
-		auto w2 = 250;
-		auto y1 = y;
-		y += group_basic(x, y, w1, w2) + metrics::padding;
-		auto y2 = y;
-		y += group_ability(x, y, w1, player) + metrics::padding;
-		y += group_combat_ability(x, y, w1, player, false) + metrics::padding;
-		y = y2;
-		x += w1 + metrics::padding * 4;
-		y += group_skills(x, y, w2) + metrics::padding;
-	}
-	bool nextpage(bool run) override {
-		if(!page_view::nextpage(run))
-			return false;
-		if(run) {
-			switch(page_current) {
-			case 1: reroll(); break;
-			}
-		}
-		return true;
-	}
-	void redraw(int x, int y, int width) override {
-		switch(page_current) {
-		case 0: player->group_generate(x, y, width); break;
-		case 1: information(x, y, width); break;
-		}
-	}
-	constexpr character_view(character* player) : page_view(2), player(player) {}
-};
-
-bool character::generate() {
-	character_view ev(this);
-	if(!ev.view())
-		return false;
-	return picture_info::choose(avatar, "Как выглядит ваш герой?", "character*", 64);
-}
+//bool character::generate() {
+//	character_view ev(this);
+//	if(!ev.view())
+//		return false;
+//	return picture_info::choose(avatar, "Как выглядит ваш герой?", "character*", 64);
+//}
 
 struct image_info : point {
 	const sprite*			ps;
@@ -1277,9 +1035,9 @@ static void choose_spells() {}
 
 static void choose_feats() {}
 
-bool design_info::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {
+bool decoration::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {
 	struct table : controls::picker {
-		design_info& source;
+		decoration& source;
 		int getmaximum() const override { return source.source.count; }
 		void rowhilite(const rect& rc, int index) const override {
 			static color grade_colors[] = {colors::window,
@@ -1346,7 +1104,7 @@ bool design_info::choose(const char* title, const anyval& result, int width, int
 			source.edit((void*)source.source.get(getcurrent()), 0, true);
 		}
 		static void command_change() { ((table*)hot.param)->change(); }
-		constexpr table(design_info& source) : source(source) {}
+		constexpr table(decoration& source) : source(source) {}
 	} e1(*this);
 	e1.show_border = false;
 	e1.pixels_per_line = height;
@@ -1415,7 +1173,6 @@ bool character::edit() {
 			y = y0;
 			x += c1 + metrics::padding * 3;
 			y += edit_abilities(x, y, c2);
-			y += group_combat_ability(x, y, c2, this, hp_rolled == 0);
 			y = y0;
 			x += c2 + metrics::padding * 3;
 			auto c3 = getwidth() - x - metrics::padding * 2;
@@ -1474,56 +1231,136 @@ bool special_info::edit() {
 	return getresult() != 0;
 }
 
-static const markup* getmarkup(bsreq* type) {
+int character::view_basic(int x, int y, int width, const char* id, void* object) {
+	auto y0 = y;
+	auto p = (character*)object;
+	char temp[260]; zprint(temp, "%1 %-2", getstr(p->gender), getstr(p->race));
+	text(x, y, temp); y += texth();
+	text(x, y, getstr(p->alignment)); y += texth();
+	return y - y0;
 }
 
-bool design_info::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
+int character::view_levels(int x, int y, int width, const char* id, void* object) {
+	auto y0 = y;
+	char temp[260];
+	auto p = (character*)object;
+	auto& col = bsmeta<class_s>::data;
+	auto class_count = col[p->type].classes.count;
+	if(!class_count)
+		class_count = 1;
+	for(unsigned i = 0; i < col[p->type].classes.count; i++) {
+		auto e = col[p->type].classes.data[i];
+		text(x, y, getstr(e));
+		auto exp = p->experience / class_count;
+		zprint(temp, "%1i уровень (опыт %2i)", p->levels[i], exp);
+		text(x + width - textw(temp), y, temp);
+		y += texth();
+	}
+	return y0 - y;
+}
+
+int character::view_skills(int x, int y, int width, const char* id, void* object) {
+	auto p = (character*)object;
+	auto y0 = y;
+	for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
+		auto v = p->get(i);
+		if(v <= 0)
+			continue;
+		y += fieldp(x, y, width, getstr(i), v);
+	}
+	return y - y0;
+}
+
+int character::view_ability(int x, int y, int width, const char* id, void* object) {
+	auto p = (character*)object;
+	auto y0 = y;
+	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
+		auto v = p->get(i);
+		if(i == Strenght && v == 18)
+			y += fieldv(x, y, width, getstr(i), v, p->getstrper(), "%1i/%2.2i");
+		else
+			y += fieldv(x, y, width, getstr(i), v);
+	}
+	return y - y0;
+}
+
+int character::view_statistic(int x, int y, int width, const char* id, void* object) {
+	char temp[260];
+	auto p = (character*)object;
+	auto& col = bsmeta<class_s>::data;
+	attack_info ai = {}; p->get(MeleeWeapon, ai);
+	auto y0 = y;
+	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
+	y += fieldv(x, y, width, "THAC0", ai.thac0);
+	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
+	y += fieldv(x, y, width, "Класс брони", p->getac());
+	if(p->hp_rolled) {
+		auto type = p->getclass();
+		auto rolled = 0;
+		for(unsigned i = 0; i < col[type].classes.count; i++)
+			rolled += col[col[type].classes[i]].hd * p->getlevel(i);
+		auto min = p->gethpmax(0);
+		auto max = p->gethpmax(rolled);
+		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
+	} else
+		y += fieldv(x, y, width, "Хиты", p->gethpmax());
+	return y - y0;
+}
+
+static const decoration::command* command_decoration;
+static void call_command() {
+	command_decoration->proc((void*)hot.param);
+}
+
+bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
+	const markup* elements, void(*changed)(void* pr, const void* pp),
+	const command* commands) {
+	struct cmd : runable {
+		cmd(const decoration::command* v1, void* object) : source(v1), object(object) {}
+		void execute() const { command_decoration = source; draw::execute(call_command, (int)object); }
+		int				getid() const { return (int)source; }
+		bool			isdisabled() const { return false; }
+	private:
+		const decoration::command*	source;
+		void*						object;
+	};
 	int x, y;
 	if(!elements)
 		elements = plugin<markup>::get(type);
 	if(!elements)
 		return false;
+	char r1_buffer[128];
+	char r2_buffer[128];
+	auto r1 = r1_buffer;
+	auto r2 = r2_buffer;
+	if(size > sizeof(r1_buffer)) {
+		r1 = new char[size];
+		r2 = new char[size];
+	}
+	memcpy(r1, object, size);
 	openform();
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, name);
 		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, elements, bsval(object, type), 100);
+		y += draw::field(x, y, width, elements, bsval(r1, type), 100);
 		page_footer(x, y, true);
+		if(commands) {
+			for(auto p = commands; *p; p++)
+				x += button(x, y, p->name, cmd(p, r1), 0);
+		}
+		memcpy(r2, r1, size);
 		domodal();
+		if(changed && memcmp(r1, r2, size) != 0)
+			changed(r1, r2);
 	}
 	closeform();
-	return getresult() != 0;
+	auto result = getresult() != 0;
+	if(result)
+		memcpy(object, r1, size);
+	if(r1 != r1_buffer)
+		delete r1;
+	if(r2 != r2_buffer)
+		delete r2;
+	return result;
 }
-
-//bool item_info::edit() {
-//	struct item_event : draw_events {
-//		item_info& source;
-//		bool isallow(const bsdata& e, int i) const override {
-//			if(&e == &bsmeta<feat_s>::data) {
-//				return bsmeta<feat_s>::data[i].use_item != 0;
-//			}
-//			return false;
-//		}
-//		constexpr item_event(item_info& v) : source(v) {}
-//	} pev(*this);
-//	int x, y;
-//	openform();
-//	while(ismodal()) {
-//		render_background();
-//		page_header(x, y, "Предмет");
-//		auto y0 = y, c1 = 300;
-//		auto rgo = start_group(x, y, c1, "Базовые значения");
-//		y += field(x, y, c1, "Наименование", name, title_width);
-//		y += field(x, y, c1, "Тип", type);
-//		y += close_group(x, y, rgo);
-//		y += checkboxes(x, y, c1, "Ограничение", restrictions, bsmeta<feat_s>::data, &pev);
-//		//x += c1 + metrics::padding * 3;
-//		//y = y0;
-//		y += group(x, y, c1, damage);
-//		page_footer(x, y, true);
-//		domodal();
-//	}
-//	closeform();
-//	return getresult() != 0;
-//}
