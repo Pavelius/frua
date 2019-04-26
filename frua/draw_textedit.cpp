@@ -207,6 +207,8 @@ bool textedit::keyinput(unsigned id) {
 				i = linee(linee(p1) + 1);
 			if(i >= 0)
 				select(i, (id & Shift) != 0);
+			else
+				return false;
 		}
 		break;
 	case KeyUp:
@@ -217,6 +219,8 @@ bool textedit::keyinput(unsigned id) {
 				i = linee(lineb(p1) - 1);
 			if(i >= 0)
 				select(i, (id & Shift) != 0);
+			else
+				return false;
 		}
 		break;
 	case KeyRight:

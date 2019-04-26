@@ -35,6 +35,9 @@ struct bsreq {
 	template<class T> struct btype<T[]> : btype<T> {};
 	template<class T> struct btype<const T> : btype<T> {};
 	template<class T> struct btype<const T*> : btype<T> {};
+	template<class T> struct btype<aref<T>> : btype<T> {};
+	template<class T, unsigned N> struct btype<adat<T,N>> : btype<T> {};
+	template<class T, class DT> struct btype<cflags<T, DT>> : btype<T> {};
 	// Get subtype
 	template<class T> struct isubtype : static_value<bstype_s, __is_enum(T) ? KindEnum : KindScalar> {};
 	template<class T> struct isubtype<T*> : static_value<bstype_s, isubtype<T>::value> {};

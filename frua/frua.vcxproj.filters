@@ -263,11 +263,11 @@
     <ClInclude Include="bsreq.h">
       <Filter>Коллекция</Filter>
     </ClInclude>
-    <ClInclude Include="markup.h">
-      <Filter>Графика</Filter>
-    </ClInclude>
     <ClInclude Include="plugin.h">
       <Filter>Коллекция</Filter>
+    </ClInclude>
+    <ClInclude Include="markup.h">
+      <Filter>Поддержка</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

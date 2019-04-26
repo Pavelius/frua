@@ -304,12 +304,10 @@ struct item {
 struct item_info {
 	wear_s					type;
 	const char*				name;
-	const char*				undefined;
-	cflags<feat_s>			restrictions;
+	cflags<feat_s>			restricted;
 	damage_info				damage;
 	armor_info				armor;
 	int						cost, weight;
-	char					magic;
 	bool					edit();
 };
 struct character {

@@ -52,6 +52,10 @@ static void standart_domodal() {
 	case KeyTab | Shift:
 	case KeyTab | Ctrl:
 	case KeyTab | Ctrl | Shift:
+	case KeyLeft:
+	case KeyRight:
+	case KeyUp:
+	case KeyDown:
 		id = getnext(draw::getfocus(), hot.key);
 		if(id)
 			setfocus(id, true);

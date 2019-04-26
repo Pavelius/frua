@@ -104,8 +104,8 @@ void draw::field(const rect& rco, unsigned flags, const anyval& ev, int digits, 
 	auto focused = isfocused(flags);
 	if(type == FieldNumber) {
 		auto result = addbutton(rc, focused,
-			"+", KeyUp, "Увеличить",
-			"-", KeyDown, "Уменьшить");
+			"+", KeyPageUp, "Увеличить",
+			"-", KeyPageDown, "Уменьшить");
 		switch(result) {
 		case 1: execute(field_up, ev);  break;
 		case 2: execute(field_down, ev); break;

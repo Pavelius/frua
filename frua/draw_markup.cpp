@@ -12,14 +12,37 @@ struct commandi {
 	void*			object;
 	bsdata*			data;
 	const markup*	element;
-	int				range[2];
 	rect			rc;
 	anyval			value;
 	void clear() { memset(this, 0, sizeof(commandi)); }
 };
+static commandi	command;
+static void check_flags() {
+	unsigned v1 = command.value;
+	unsigned v2 = 1 << hot.param;
+	if(v1&v2)
+		v1 &= ~v2;
+	else
+		v1 |= v2;
+	command.value = (const int)v1;
 }
-
-static commandi		command;
+struct cmd_check : runable {
+	constexpr cmd_check(const anyval& value, const void* source, unsigned index)
+		: source(source), index(index), value(value) {}
+	virtual int	getid() const { return (int)source; }
+	virtual void execute() const {
+		command.clear();
+		command.value = value;
+		draw::execute(check_flags, index);
+	}
+	virtual bool isdisabled() const { return false; }
+	bool ischecked() const { return (((int)value) & (1 << index)) != 0; }
+private:
+	const void*		source;
+	unsigned		index;
+	const anyval	value;
+};
+}
 
 static const char* getpresent(const void* p) {
 	return ((const char**)p)[1];
@@ -47,10 +70,6 @@ static void choose_enum() {
 	ev.hilite_odd_lines = false;
 	auto i1 = 0;
 	auto i2 = command.data->count - 1;
-	if(command.range[1]) {
-		i1 = command.range[0];
-		i2 = command.range[1];
-	}
 	for(unsigned i = i1; i < i2; i++) {
 		if(command.element) {
 			if(command.element->proc.isallow) {
@@ -72,7 +91,7 @@ static void choose_enum() {
 		command.value = ev.getcurrent();
 }
 
-static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdata& ei, int i1, int i2) {
+static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdata& ei) {
 	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key == KeyDown);
 	if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
 		result = true;
@@ -84,20 +103,40 @@ static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdat
 		command.value = ev;
 		command.rc = rc;
 		command.data = &ei;
-		command.range[0] = i1;
-		command.range[1] = i2;
 		execute(choose_enum);
 	}
 }
 
+static void check_flags() {
+
+}
+
 struct markup_view {
+	enum title_s : unsigned char {NoTitle, TitleNormal, TitleShort};
 	int typedef (markup_view::*callback)(int x, int y, int width, const markup& e, const bsval& source) const;
+	typedef decltype(markup::proc.isallow) callback_allow;
 	int			title_width;
-	virtual bsval getvalue(const bsval& source, const markup& e) const {
+	static void render_title(int& x, int y, int& width, const char* title, title_s state) {
+
+	}
+	bsval getvalue(const bsval& source, const markup& e) const {
 		bsval result;
 		result.type = source.type->find(e.value.id);
 		result.data = source.data;
 		return result;
+	}
+	static rect start_group(int x, int& y, int width, const char* title) {
+		rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
+		gradv(rc, colors::border, colors::edit);
+		text(rc, title, AlignCenterCenter);
+		y = rc.y2 + metrics::padding * 2;
+		return rc;
+	}
+	static int close_group(int x, int y, const rect& rc) {
+		if(!rc)
+			return 0;
+		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+		return metrics::padding * 2;
 	}
 	void field_part(rect& rc, const markup& e, const bsval& source, const bsval& bv, void* pv, bool part, int rc_x2) const {
 		unsigned flags = AlignLeft;
@@ -132,7 +171,7 @@ struct markup_view {
 		} else if(bv.type->is(KindEnum)) {
 			auto pd = bsdata::find(bv.type->type, bsdata::firstenum);
 			if(pd)
-				field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd, 0, 0);
+				field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd);
 		}
 	}
 	int group_vertial(int x, int y, int width, const markup* elements, const bsval& source) const {
@@ -140,7 +179,7 @@ struct markup_view {
 			return 0;
 		auto y0 = y;
 		for(auto p = elements; *p; p++)
-			y += element(x, y, width, *p, source);
+			y += element(x, y, width, *p, source, p->title, TitleNormal);
 		return y - y0;
 	}
 	int group_horizontal(int x, int y, int width, const markup* elements, const bsval& source) const {
@@ -154,17 +193,59 @@ struct markup_view {
 			auto we = p->width*wi;
 			if(x1 + we > width - 12)
 				we = width - x1;
-			auto yc = element(x, y, we, *p, source);
+			auto yc = element(x, y, we, *p, source, p->title, TitleNormal);
 			if(ym < yc)
 				ym = yc;
 			x += we;
 		}
 		return ym;
 	}
-	int element(int x, int y, int width, const markup& e, const bsval& source) const {
+	void header(int& x, int y, int& width, const char* label, int title_width, title_s state) const {
+		if(!label || !label[0])
+			return;
+		if(state == NoTitle)
+			return;
+		if(state == TitleShort) {
+			auto w = textw(label);
+			x += 4;
+			width -= 4;
+			titletext(x, y, width, 0, label, w, 0);
+		} else
+			titletext(x, y, width, 0, label, title_width);
+	}
+	int element(int x, int y, int width, const markup& e, const bsval& source, const char* title_text, title_s title_state) const {
 		if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 			return 0;
-		if(e.value.id) {
+		if(e.title && e.title[0] == '#') {
+			auto pn = e.title + 1;
+			auto y0 = y;
+			if(e.value.id) {
+				auto bv = getvalue(source, e);
+				if(!bv.data || !bv.type)
+					return 0;
+				if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
+					auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+					if(!pb || pb->count==0)
+						return 0;
+					auto size = bv.type->size;
+					if(bv.type->is(KindCFlags))
+						size = bv.type->lenght;
+					for(unsigned i = 0; i < pb->count; i++) {
+						if(e.proc.isallow) {
+							if(!e.proc.isallow(source.data, i))
+								continue;
+						}
+						auto p = getpresent(pb->get(i));
+						cmd_check ev({bv.data, size}, p, i);
+						unsigned flags = 0;
+						if(ev.ischecked())
+							flags |= Checked;
+						y += checkbox(x, y, width, flags, ev, p, 0) + 2;
+					}
+				}
+			}
+			return y - y0;
+		} else if(e.value.id) {
 			auto bv = getvalue(source, e);
 			if(!bv.data || !bv.type)
 				return 0;
@@ -175,19 +256,25 @@ struct markup_view {
 				if(!pm)
 					return 0;
 				return group_vertial(x, y, width, pm, bsval(pv, bv.type->type));
+			} else {
+				draw::state push;
+				setposition(x, y, width);
+				header(x, y, width, e.title, title_width, TitleNormal);
+				rect rc = {x, y, x + width, y + draw::texth() + 8};
+				field_part(rc, e, source, bv, pv, true, rc.x2);
+				return rc.height() + metrics::padding * 2;
 			}
-			draw::state push;
-			setposition(x, y, width);
-			if(e.title && e.title[0])
-				titletext(x, y, width, 0, e.title, title_width);
-			rect rc = {x, y, x + width, y + draw::texth() + 8};
-			field_part(rc, e, source, bv, pv, true, rc.x2);
-			return rc.height() + metrics::padding * 2;
 		} else if(e.value.child) {
+			rect rgo = {};
+			auto y0 = y;
+			if(e.title)
+				rgo = start_group(x, y, width, e.title);
 			if(e.value.child[0].width)
-				return group_horizontal(x, y, width, e.value.child, source);
+				y += group_horizontal(x, y, width, e.value.child, source);
 			else
-				return group_vertial(x, y, width, e.value.child, source);
+				y += group_vertial(x, y, width, e.value.child, source);
+			y += close_group(x, y, rgo);
+			return y - y0;
 		} else
 			return 0;
 	}

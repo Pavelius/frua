@@ -13,9 +13,10 @@ struct markup {
 		void(*command)();
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
-	char			width;
-	const char*		title;
-	element			value;
-	int				param;
-	proci			proc;
+	char				width;
+	const char*			title;
+	element				value;
+	int					param;
+	proci				proc;
+	bool				isfield() const { return value.id != 0; }
 };

@@ -103,18 +103,6 @@ void view_initialize() {
 	load_campaign();
 }
 
-static void move_focus_prev() {
-	auto id = getnext(draw::getfocus(), Shift + KeyTab);
-	if(id)
-		setfocus(id, true);
-}
-
-static void move_focus_next() {
-	auto id = getnext(draw::getfocus(), KeyTab);
-	if(id)
-		setfocus(id, true);
-}
-
 static int button(int x, int y, const char* string, const runable& ev, unsigned key, bool checked = false) {
 	auto id = ev.getid();
 	auto dx = textw(string);
@@ -123,13 +111,8 @@ static int button(int x, int y, const char* string, const runable& ev, unsigned 
 	auto focused = getfocus() == ev.getid();
 	if(draw::buttonh(rc, checked, focused, ev.isdisabled(), true, string, key, false))
 		ev.execute();
-	if(focused) {
+	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-		switch(hot.key) {
-		case KeyLeft: execute(move_focus_prev); break;
-		case KeyRight: execute(move_focus_next); break;
-		}
-	}
 	return rc.width() + 2;
 }
 
@@ -379,12 +362,6 @@ static void button_handle(bool& result) {
 	case F2:
 		result = true;
 		break;
-	case KeyUp:
-		execute(move_focus_prev);
-		break;
-	case KeyDown:
-		execute(move_focus_next);
-		break;
 	}
 }
 
@@ -521,7 +498,7 @@ static int field(int x, int y, int width, const char* title, const anyval& ev, b
 	unsigned flags = 0;
 	focusing((int)ev.ptr(), flags, rc);
 	auto focused = isfocused(flags);
-	auto result = focused && (hot.key == KeyEnter || hot.key == F4 || hot.key == KeyDown);
+	auto result = focused && (hot.key == KeyEnter || hot.key == F2);
 	if(buttonh(rc, ischecked(flags), focused, isdisabled(flags), true, 0, 0, false, 0))
 		result = true;
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, ((name_info*)ei.get(ev))->name);
@@ -634,15 +611,13 @@ static int page_tabs(int x, int y, const char** source, int& current_page) {
 				if(current_page > 0) {
 					command_value = anyval(current_page);
 					execute(set_page, current_page - 1);
-				} else
-					execute(move_focus_prev);
+				}
 				break;
 			case KeyRight:
 				if(source[current_page + 1] != 0) {
 					command_value = anyval(current_page);
 					execute(set_page, current_page + 1);
-				} else
-					execute(move_focus_next);
+				}
 				break;
 			}
 		}
