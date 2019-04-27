@@ -99,7 +99,7 @@ static int button(int x, int y, const char* string, const runable& ev, unsigned 
 	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
 	addelement(id, rc);
 	auto focused = getfocus() == ev.getid();
-	if(draw::buttonh(rc, checked, focused, ev.isdisabled(), true, string, key, false))
+	if(draw::buttonh(rc, checked, focused, false, true, string, key, false))
 		ev.execute();
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
@@ -1007,15 +1007,6 @@ static void choose_attack() {
 	setfocus(old_focus, true);
 }
 
-static void choose_item() {
-	auto p = (item_info*)hot.param;
-	auto e = *p;
-	auto old_focus = getfocus();
-	if(e.edit())
-		*p = e;
-	setfocus(old_focus, true);
-}
-
 int	character::edit_attacks(int x, int y, int width) {
 	auto x0 = x, y0 = y;
 	auto rga = start_group(x, y, width, "Специальные атаки");
@@ -1031,21 +1022,19 @@ int	character::edit_feats(int x, int y, int width) {
 	return y - y0;
 }
 
-static void choose_spells() {}
-static void choose_feats() {}
-
-bool decoration::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {
+int decoration::choose(const char* title, int width, int height, bool choose_mode, bsdata& source, markup::proci proc) {
 	struct table : controls::picker {
-		decoration& source;
-		int getmaximum() const override { return source.source.count; }
+		bsdata&				source;
+		const markup::proci	proc;
+		int getmaximum() const override { return source.count; }
 		void rowhilite(const rect& rc, int index) const override {
 			static color grade_colors[] = {colors::window,
 				colors::window.mix(color::create(0, 121, 191), 192),
 				colors::window.mix(color::create(97, 189, 79), 224),
 				colors::window.mix(color::create(242, 214, 0), 192),
 			};
-			auto p = source.source.get(index);
-			auto g = source.getgrade(p);
+			auto pv = source.get(index);
+			auto g = (grade_s)proc.getvalue(pv, 1);
 			auto f = grade_colors[g];
 			if(g != Fair)
 				rectf(rc, grade_colors[g]);
@@ -1059,11 +1048,10 @@ bool decoration::choose(const char* title, const anyval& result, int width, int 
 		}
 		void row(const rect& rcorigin, int index) override {
 			char temp[260]; temp[0] = 0;
-			stringcreator sc(temp);
-			auto pv = source.source.get(index);
+			auto pv = source.get(index);
 			rect rc = rcorigin;
 			rowhilite(rc, index);
-			auto avatar = source.getavatar(pv);
+			auto avatar = proc.getvalue(pv, 0);
 			if(avatar != -1) {
 				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
 				draw::state push;
@@ -1071,40 +1059,39 @@ bool decoration::choose(const char* title, const anyval& result, int width, int 
 				image(rp.x1 + rp.width() / 2, rp.y2 - rp.height() / 4, spr_monsters, avatar * 2, 0);
 				rc.x1 += rc.height() + 2;
 			}
-			auto p = source.getname(pv, sc, 0);
+			auto pn = proc.getname(pv, temp, zendof(temp), 0);
 			rc.offset(4, 4);
-			if(p) {
-				draw::textc(rc.x1, rc.y1, rc.width(), p);
+			if(pn) {
+				draw::textc(rc.x1, rc.y1, rc.width(), pn);
 				rc.y1 += texth() + 2;
 			}
-			sc.clear();
-			p = source.getname(pv, sc, 1);
-			if(p) {
+			pn = proc.getname(pv, temp, zendof(temp), 0);
+			if(pn) {
 				auto old_fore = fore;
 				fore = colors::text.mix(colors::form, 128);
-				text(rc, p);
+				text(rc, pn);
 				fore = old_fore;
 			}
 		}
 		int getcurrent() const {
-			if(!source.source.count)
+			if(!source.count)
 				return -1;
 			return current;
 		}
 		void add() {
-			source.edit(0, 0, true);
+			//decoration::edit(0, 0, true);
 		}
 		static void command_add() { ((table*)hot.param)->add(); }
 		void copy() {
-			source.edit(0, (void*)source.source.get(getcurrent()), true);
+			//decoration::edit(0, (void*)source.source.get(getcurrent()), true);
 		}
 		static void command_copy() { ((table*)hot.param)->copy(); }
 		void change() {
-			source.edit((void*)source.source.get(getcurrent()), 0, true);
+			//decoration::edit((void*)source.source.get(getcurrent()), 0, true);
 		}
 		static void command_change() { ((table*)hot.param)->change(); }
-		constexpr table(decoration& source) : source(source) {}
-	} e1(*this);
+		constexpr table(bsdata& source, const markup::proci& proc) : source(source), proc(proc) {}
+	} e1(source, proc);
 	e1.show_border = false;
 	e1.pixels_per_line = height;
 	e1.pixels_per_column = width;
@@ -1116,7 +1103,7 @@ bool decoration::choose(const char* title, const anyval& result, int width, int 
 		page_header(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
-		if(source.count < source.maximum && edit(0, 0, false)) {
+		if(source.count < source.maximum) {
 			x += button(x, y, "Добавить", cmd(table::command_add, (int)&e1), F3);
 			x += button(x, y, "Скопировать", cmd(table::command_copy, (int)&e1), F4);
 		}
@@ -1129,12 +1116,12 @@ bool decoration::choose(const char* title, const anyval& result, int width, int 
 		domodal();
 	}
 	if(getresult()) {
-		result = e1.getcurrent();
+		auto result = e1.getcurrent();
 		if(!choose_mode)
 			save_campaign();
-		return true;
+		return result;
 	}
-	return false;
+	return -1;
 }
 
 static void character_reroll() {
@@ -1177,10 +1164,6 @@ bool character::edit() {
 			auto c3 = getwidth() - x - metrics::padding * 2;
 			y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
 			//y += edit_attacks(x, y, c3);
-			auto rgo = start_group(x, y, c3, "Предметы");
-			for(auto i = Head; i <= Legs; i = (wear_s)(i + 1))
-				y += button(x, y, c3, choose_item, &wears[i], getstr(i));
-			close_group(x, y, rgo);
 		} else if(page == 1) {
 			auto c1 = 300;
 			y += edit_feats(x, y, c1);
@@ -1188,9 +1171,7 @@ bool character::edit() {
 		page_footer(x, y, true);
 		x += button(x, y, "Перебросить", cmd(character_reroll, (int)this), Ctrl + Alpha + 'R');
 		x += page_tabs(x, y, page_strings, page);
-		character previous = *this;
 		domodal();
-		changing(previous);
 	}
 	return getresult() != 0;
 }
@@ -1230,7 +1211,7 @@ bool special_info::edit() {
 	return getresult() != 0;
 }
 
-int character::view_basic(int x, int y, int width, const char* id, void* object) {
+int character::view_basic(int x, int y, int width, const char* id, const void* object) {
 	auto y0 = y;
 	auto p = (character*)object;
 	char temp[260]; zprint(temp, "%1 %-2", getstr(p->gender), getstr(p->race));
@@ -1239,7 +1220,7 @@ int character::view_basic(int x, int y, int width, const char* id, void* object)
 	return y - y0;
 }
 
-int character::view_levels(int x, int y, int width, const char* id, void* object) {
+int character::view_levels(int x, int y, int width, const char* id, const void* object) {
 	auto y0 = y;
 	char temp[260];
 	auto p = (character*)object;
@@ -1258,7 +1239,7 @@ int character::view_levels(int x, int y, int width, const char* id, void* object
 	return y0 - y;
 }
 
-int character::view_skills(int x, int y, int width, const char* id, void* object) {
+int character::view_skills(int x, int y, int width, const char* id, const void* object) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
@@ -1270,7 +1251,7 @@ int character::view_skills(int x, int y, int width, const char* id, void* object
 	return y - y0;
 }
 
-int character::view_ability(int x, int y, int width, const char* id, void* object) {
+int character::view_ability(int x, int y, int width, const char* id, const void* object) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -1283,7 +1264,7 @@ int character::view_ability(int x, int y, int width, const char* id, void* objec
 	return y - y0;
 }
 
-int character::view_statistic(int x, int y, int width, const char* id, void* object) {
+int character::view_statistic(int x, int y, int width, const char* id, const void* object) {
 	char temp[260];
 	auto p = (character*)object;
 	auto& col = bsmeta<class_s>::data;
@@ -1306,22 +1287,23 @@ int character::view_statistic(int x, int y, int width, const char* id, void* obj
 	return y - y0;
 }
 
-static const decoration::command* command_decoration;
-static void call_command() {
-	command_decoration->proc((void*)hot.param);
+static markup::proci	command_proc;
+static void*			command_object;
+static void excute_command() {
+	command_proc.getvalue(command_object, hot.param);
 }
 
 bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
 	const markup* elements, void(*changed)(void* pr, const void* pp),
-	const command* commands) {
+	const markup* commands) {
 	struct cmd : runable {
-		cmd(const decoration::command* v1, void* object) : source(v1), object(object) {}
-		void execute() const { command_decoration = source; draw::execute(call_command, (int)object); }
-		int				getid() const { return (int)source; }
+		cmd(const markup::proci& v1, void* object) : source(v1), object(object) {}
+		void execute() const { command_proc = source; draw::execute(excute_command, (int)object); }
+		int				getid() const { return (int)&source; }
 		bool			isdisabled() const { return false; }
 	private:
-		const decoration::command*	source;
-		void*						object;
+		const markup::proci&	source;
+		void*					object;
 	};
 	int x, y;
 	if(!elements)
@@ -1346,7 +1328,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		page_footer(x, y, true);
 		if(commands) {
 			for(auto p = commands; *p; p++)
-				x += button(x, y, p->name, cmd(p, r1), 0);
+				x += button(x, y, p->title, cmd(p->proc, r1), 0);
 		}
 		memcpy(r2, r1, size);
 		domodal();

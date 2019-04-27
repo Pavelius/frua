@@ -189,9 +189,6 @@
     <ClCompile Include="collection_test.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
-    <ClCompile Include="design.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="item.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -202,6 +199,9 @@
       <Filter>Графика</Filter>
     </ClCompile>
     <ClCompile Include="use.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="decoration.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

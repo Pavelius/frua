@@ -50,8 +50,11 @@ static bool ability_visibility(const void* source, const markup& e) {
 	auto p = (item_info*)source;
 	return bsmeta<wear_s>::data[p->type].use_ability;
 }
-static const char* wear_type_name(const void* object) {
-	return ((wear_info*)object)->name_type;
+static const char* wear_getname(const void* object, char* result, const char* result_max, int column) {
+	switch(column) {
+	case 0:return ((wear_info*)object)->name_type;
+	}
+	return "";
 }
 static markup deflection_markup[] = {{0, "/", {"toughness"}}, {}};
 static markup armor_markup[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
@@ -79,7 +82,7 @@ static markup resistance_block[] = {{0, "#dam", {"resistance"}, 3}, {}};
 static markup threshold_block[] = {{0, "#dam", {"threshold"}, 3}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
 {0, "Имя силы", {"power_name"}},
-{0, "Группа", {"type"}, 0, {0, allow_item, 0, wear_type_name}},
+{0, "Группа", {"type"}, 0, {wear_getname, 0, allow_item}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
 {}};
@@ -94,9 +97,9 @@ static markup column1[] = {{0, "Базовые параметры", {0, 0, basic_markup}},
 static markup column2[] = {{0, "Сопротивление", {0, 0, resistance_block}},
 {0, "Порог урона", {0, 0, threshold_block}},
 {}};
-static markup column3[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {damage_visibility}},
-{0, "Броня", {0, 0, armor_block}, 0, {armor_visibility}},
-{0, "Атрибуты", {0, 0, ability_block}, 0, {ability_visibility}},
+static markup column3[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, damage_visibility}},
+{0, "Броня", {0, 0, armor_block}, 0, {0, 0, 0, armor_visibility}},
+{0, "Атрибуты", {0, 0, ability_block}, 0, {0, 0, 0, ability_visibility}},
 {}};
 static markup item_markup[] = {{4, 0, {0, 0, column1}},
 {3, 0, {0, 0, column2}},
@@ -104,6 +107,28 @@ static markup item_markup[] = {{4, 0, {0, 0, column1}},
 {}};
 MARKUP(item);
 
-bool item_info::edit() {
-	return decoration::edit("Предметы", this, sizeof(*this), bsmeta<item_info>::meta);
+const char* item_info::getname(const void* object, char* result, const char* result_max, int id) {
+	auto p = (item_info*)object;
+	switch(id) {
+	case Name:
+		if(!p->name)
+			return "Нет предмета";
+		return p->name;
+	default: return "";
+	}
 }
+
+int item_info::getvalue(const void* object, int id) {
+	auto p = (item_info*)object;
+	switch(id) {
+	case Avatar: return -1;
+	case Grade:
+		if(p->power_name)
+			return Good;
+		return Fair;
+	default: return 0;
+	}
+}
+
+command_info item_info::commands[] = {
+{}};

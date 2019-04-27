@@ -65,16 +65,14 @@ static const char* getpresent(const void* p) {
 }
 
 static void choose_enum() {
-	struct enum_view : controls::list, adat<int, 256> {
+	struct enum_view : controls::list, adat<int, 512> {
 		markup::proci	proc;
 		const bsdata&	source;
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
+			if(proc.getname)
+				return proc.getname(source.get(data[line]), result, result_max, column);
 			switch(column) {
-			case 0:
-				if(proc.getname)
-					return proc.getname(source.get(data[line]));
-				return getpresent(source.get(data[line]));
-			default: return "";
+			case 0: return getpresent(source.get(data[line]));
 			}
 			return "";
 		}
@@ -222,6 +220,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 	} else if(type->is(KindEnum)) {
 		auto pb = bsdata::find(type->type, bsdata::firstenum);
 		if(pb) {
+			char temp[128];
 			auto focused = isfocused(flags);
 			auto result = focused && (hot.key == KeyEnter || hot.key == F2);
 			anyval ev(pv, type->size);
@@ -230,7 +229,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 			auto pn = "";
 			auto pv = pb->get(ev);
 			if(pri && pri->getname)
-				pn = pri->getname(pv);
+				pn = pri->getname(pv, temp, zendof(temp), 0);
 			else
 				pn = getpresent(pb->get(ev));
 			textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);

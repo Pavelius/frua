@@ -167,6 +167,14 @@ enum item_state_s : unsigned char {
 enum attack_feat_s : unsigned char {
 	PreviousAttackHit,
 };
+enum grade_s : unsigned char {
+	Fair, Good, Excellent,
+	Bad,
+};
+enum decoration_value_s {
+	Name, Description,
+	Avatar, Grade,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -189,6 +197,13 @@ typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
 typedef class_s				classa[3];
 
+struct command_info {
+	const char*				id;
+	const char*				name;
+	void(*proc)(void* object);
+	unsigned				key;
+	constexpr explicit operator bool() const { return id != 0; }
+};
 struct name_info {
 	const char*				id;
 	const char*				name;
@@ -233,6 +248,14 @@ struct usability_info {
 };
 struct sprite_name_info {
 	char					name[32];
+};
+struct base_info {
+	bsdata&					source;
+	const char*				name;
+	base_info*				next;
+	base_info(const char* name, bsdata& source) : name(name), source(source), next(0) {
+
+	}
 };
 struct picture_info {
 	const char*				folder;
@@ -325,8 +348,11 @@ struct item_info {
 	char					threshold[Fire + 1];
 	char					abilities[Charisma + 1];
 	int						cost, weight;
-	//
-	bool					edit();
+	// Database engine methods
+	static void				changed(void* object, const void* previous) {}
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	static int				getvalue(const void* object, int id);
+	static command_info		commands[];
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -334,8 +360,9 @@ struct character {
 	void					apply_ability_restriction();
 	void					apply_feats();
 	void					clear();
-	void					changing(const character& e);
+	static void				changed(void* p, const void* pp);
 	static character*		choose();
+	static command_info		commands[];
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	bool					edit();
@@ -357,10 +384,12 @@ struct character {
 	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
 	const char*				getname() const { return name; }
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	race_s					getrace() const { return race; }
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
+	static int				getvalue(const void* object, int id);
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isalive() const { return hp > 0; }
 	static bool				isallow(alignment_s v, class_s type);
@@ -372,17 +401,18 @@ struct character {
 	static const bsreq		metadata[];
 	void					raise(class_s v);
 	void					reroll();
+	static void				reroll(void* p) { ((character*)p)->reroll(); }
 	void					set(direction_s v) { direction = v; }
 	void					set(feat_s v) { feats |= 1 << v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
-	static int				view_ability(int x, int y, int width, const char* id, void* object);
-	static int				view_basic(int x, int y, int width, const char* id, void* object);
-	static int				view_levels(int x, int y, int width, const char* id, void* object);
-	static int				view_skills(int x, int y, int width, const char* id, void* object);
-	static int				view_statistic(int x, int y, int width, const char* id, void* object);
+	static int				view_ability(int x, int y, int width, const char* id, const void* object);
+	static int				view_basic(int x, int y, int width, const char* id, const void* object);
+	static int				view_levels(int x, int y, int width, const char* id, const void* object);
+	static int				view_skills(int x, int y, int width, const char* id, const void* object);
+	static int				view_statistic(int x, int y, int width, const char* id, const void* object);
 	static void				update_battle();
 private:
 	const char*				name;
@@ -455,22 +485,25 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					visualize();
 };
 struct decoration {
-	struct command {
-		const char*			name;
-		void(*proc)(void* object);
-		explicit operator bool() const { return name != 0; }
-	};
-	enum grade_s : unsigned char { Fair, Good, Excellent };
+	typedef void(*changedp)(void* p, const void* pp);
+	typedef void(*commandp)(void* p);
+	const char*				name;
 	bsdata&					source;
-	virtual bool			change(void* obect) { return false; }
-	bool					choose(const char* title, const anyval& result, int width, int height, bool choose_mode);
-	virtual void			creating(void* object) const {}
-	bool					edit(void* object, void* copy_object, bool run);
-	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, void(*changed)(void* pr, const void* pp) = 0, const command* commands = 0);
-	virtual int				getavatar(const void* object) const { return -1; }
-	virtual grade_s			getgrade(const void* object) const { return Fair; }
-	virtual const char*		getname(const void* object, stringcreator& result, int column) const { return ""; }
-	constexpr decoration(bsdata& source) : source(source) {}
+	markup::proci			proc;
+	point					size;
+	changedp				changed;
+	const command_info*		commands;
+	static decoration		data[];
+	template<class T> constexpr decoration(const char* name, point size, T) : name(name), size(size),
+		source(bsmeta<T>::data), proc{T::getname, T::getvalue}, changed(T::changed), commands(T::commands) {}
+	static int				choose(const char* title, int width, int height, bool choose_mode, bsdata& source, markup::proci proc);
+	static int				choose(const bsreq* type);
+	static bool				choose(void** result, const bsreq* type);
+	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
+	static bool				edit(bsdata& source, void* object, void* copy_object, bool run);
+	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type,
+		const markup* elements = 0, changedp changed = 0, const markup* commands = 0);
+	static const decoration* find(const bsreq* type);
 };
 DECLENUM(alignment);
 DECLENUM(class);

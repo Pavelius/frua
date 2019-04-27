@@ -32,10 +32,9 @@ int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	draw::initialize();
+	auto index = decoration::choose(bsmeta<item_info>::meta);
 	//character ii = {};
 	//ii.edit_generate();
-	item_info ii = {};
-	ii.edit();
 	//character::choose();
 	//event_info ei;
 	//ei.edit();

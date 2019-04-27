@@ -1,10 +1,10 @@
 #pragma once
 
 template<class T> struct plugin {
-	const void*				key;
-	const T*				value;
-	plugin*					next;
-	static plugin*			first;
+	const void*			key;
+	const T*			value;
+	plugin*				next;
+	static plugin*		first;
 	plugin(const void* key, const T* value) : key(key), value(value) {
 		auto pf = &first;
 		while(*pf)

@@ -29,9 +29,9 @@ static bool allow_alignment(const void* source, int value) {
 	return ((character*)source)->isallow((alignment_s)value);
 }
 static markup character_gender_radio[] = {{0, "#radiobuttons", {"gender"}}, {}};
-static markup character_race_radio[] = {{0, "#radiobuttons", {"race"}, 0, {0, allow_race}}, {}};
-static markup character_class_radio[] = {{0, "#radiobuttons", {"type"}, 0, {0, allow_class}}, {}};
-static markup character_alignment_radio[] = {{0, "#radiobuttons", {"alignment"}, 0, {0, allow_alignment}}, {}};
+static markup character_race_radio[] = {{0, "#radiobuttons", {"race"}, 0, {0, 0, allow_race}}, {}};
+static markup character_class_radio[] = {{0, "#radiobuttons", {"type"}, 0, {0, 0, allow_class}}, {}};
+static markup character_alignment_radio[] = {{0, "#radiobuttons", {"alignment"}, 0, {0, 0, allow_alignment}}, {}};
 static markup generate_c1[] = {{0, "Пол", {0, 0, character_gender_radio}},
 {0, "Раса", {0, 0, character_race_radio}},
 {}};
@@ -43,9 +43,9 @@ static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
 {3, 0, {0, 0, generate_c2}},
 {4, 0, {0, 0, generate_c3}},
 {}};
-static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, character::view_ability}}, {}};
-static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, character::view_statistic}}, {}};
-static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, character::view_skills}}, {}};
+static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, 0, 0, character::view_ability}}, {}};
+static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, 0, 0, character::view_statistic}}, {}};
+static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, 0, 0, character::view_skills}}, {}};
 static markup abilities_c1[] = {{0, "Атрибуты", {0, 0, abilities_ability_group}},
 {0, "Боевая статистика", {0, 0, abilities_statistic_group}},
 {}};
@@ -330,11 +330,13 @@ int picture_info::random(const char* mask) {
 	return source[rand() % count];
 }
 
-void character::changing(const character& previous) {
-	if(race != previous.race || type != previous.type) {
-		correct();
-		apply_feats();
-		apply_ability_restriction();
+void character::changed(void* object, const void* previous) {
+	auto p1 = (character*)object;
+	auto p2 = (character*)previous;
+	if(p1->race != p2->race || p1->type != p2->type) {
+		p1->correct();
+		p1->apply_feats();
+		p1->apply_ability_restriction();
 	}
 }
 
@@ -358,44 +360,42 @@ void character::correct() {
 			alignment = (alignment_s)(alignment + 1);
 			if(alignment > ChaoticEvil)
 				alignment = LawfulGood;
-		} while(alignment!=old && !isallow(alignment));
+		} while(alignment != old && !isallow(alignment));
+	}
+}
+
+int character::getvalue(const void* object, int id) {
+	auto p = (character*)object;
+	switch(id) {
+	case Avatar: return p->avatar;
+	case Grade:
+		if(p->is(UniqueCharacter))
+			return Excellent;
+		return Fair;
+	default: return 0;
+	}
+}
+
+const char* character::getname(const void* object, char* result, const char* result_max, int id) {
+	auto p = (character*)object;
+	switch(id) {
+	case Name: return p->name;
+	case Description:
+		if(true) {
+			stringcreator sc(result, result_max);
+			sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
+			sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->getac(), p->gethpmax());
+		}
+		return result;
+	default: return "";
 	}
 }
 
 character* character::choose() {
-	struct design : decoration {
-		constexpr design() : decoration(bsmeta<character>::data) {}
-		int	getavatar(const void* object) const override { return ((character*)object)->getavatar(); }
-		void creating(void* object) const override {
-			((character*)object)->clear();
-		}
-		grade_s getgrade(const void* object) const override {
-			auto player = (character*)object;
-			if(player->is(UniqueCharacter))
-				return Excellent;
-			return Fair;
-		}
-		bool change(void* object) override { return ((character*)object)->edit(); }
-		const char* getname(const void* object, stringcreator& sc, int column) const override {
-			auto p = ((character*)object);
-			switch(column) {
-			case 0: return p->getname();
-			case 1:
-				sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
-				sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->getac(), p->gethpmax());
-				return sc;
-			}
-			return "";
-		}
-	} e;
-	int result = 0;
-	if(e.choose("Выбирайте героя, персонажа или монстра", result, 256, 60, false))
-		return (character*)bsmeta<character>::data.get(result);
+	//int result = 0;
+	//if(decoration::choose("Персонажи или монстры", result, 256, 60, false))
+	//	return (character*)bsmeta<character>::data.get(result);
 	return 0;
-}
-
-static void character_changed(void* v1, const void* v2) {
-	((character*)v1)->changing(*((character*)v2));
 }
 
 static void character_reroll(void* v1) {
@@ -403,20 +403,21 @@ static void character_reroll(void* v1) {
 }
 
 bool character::edit_generate() {
-	static decoration::command commands[] = {{"Перебросить", character_reroll},
-	{}};
 	create((race_s)xrand(Human, Halfling), (gender_s)xrand(Male, Female),
 		(class_s)xrand(Cleric, Theif), (alignment_s)xrand(LawfulGood, ChaoticEvil), Player);
 	correct();
-	if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-		generate_markup, character_changed))
-		return false;
+	//if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+	//	generate_markup, character_changed))
+	//	return false;
 	create(race, gender, type, alignment, Player);
-	if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-		abilities_markup, character_changed,
-		commands))
-		return false;
+	//if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+	//	abilities_markup, character_changed,
+	//	commands))
+	//	return false;
 	if(!picture_info::choose(avatar, "Генерация персонажа (Шаг 3 из 3)", "character*", 64))
 		return false;
 	return true;
 }
+
+command_info character::commands[] = {{"Reroll", "Перебросить", character::reroll},
+{}};

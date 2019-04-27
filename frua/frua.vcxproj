@@ -135,7 +135,7 @@
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
     <ClCompile Include="dam.cpp" />
-    <ClCompile Include="design.cpp" />
+    <ClCompile Include="decoration.cpp" />
     <ClCompile Include="dice.cpp" />
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
