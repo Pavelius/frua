@@ -224,10 +224,6 @@ struct decoration {
 	static bool				edit(bsdata& source, void* object, void* copy_object);
 	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, changedp changed = 0);
 	static const decoration* find(const bsreq* type);
-	static const markup*	findcommands(const markup* form);
-	const markup*			findmarkup(const char* id) const;
-	static const markup*	getpage(const markup* p, const void* object, int result);
-	static int				getpagecount(const markup* p, const void* object);
 };
 
 struct name_info {

@@ -204,6 +204,9 @@
     <ClCompile Include="decoration.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="markup.cpp">
+      <Filter>Поддержка</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

@@ -397,10 +397,3 @@ const char* character::getname(const void* object, char* result, const char* res
 	default: return "";
 	}
 }
-
-//if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-//	abilities_markup, character_changed,
-//	commands))
-//	return false;
-//if(!picture_info::choose(avatar, "Генерация персонажа (Шаг 3 из 3)", "character*", 64))
-//	return false;

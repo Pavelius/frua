@@ -481,34 +481,30 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 }
 
 static void page_header_pages(int page, int page_maximum) {
-	if(page_maximum <= 0)
-		return;
-	char temp[260]; zprint(temp, "Страница %1i из %2i", page + 1, page_maximum);
-	auto height = texth();
-	if(metrics::h1)
-		height = metrics::h1->height;
-	auto x = metrics::padding;
-	auto y = metrics::padding;
-	draw::state push;
-	font = metrics::h3;
-	fore = colors::h3;
-	text(getwidth() - x - textw(temp), y + height - texth(), temp);
 }
 
-static void page_header(int& x, int& y, const char* title, int page, int page_maximum) {
-	page_header_pages(page, page_maximum);
+static void page_header(int& x, int& y, const char* title, int page, int page_maximum, const char* page_title, const char* title_prefix) {
+	char temp[260]; stringcreator sc(temp);
 	x = metrics::padding;
 	y = metrics::padding;
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
-	text(x, y, title);
+	if(title_prefix)
+		sc.add(title_prefix);
+	sc.adds(title);
+	if(page_title)
+		sc.adds("(%1)", page_title);
+	text(x, y, temp);
+	if(page_maximum > 0) {
+		sc.clear();
+		sc.add("Страница %1i из %2i", page + 1, page_maximum);
+		auto height = texth();
+		font = metrics::h3;
+		fore = colors::h3;
+		text(getwidth() - x - textw(temp), y + height - texth(), temp);
+	}
 	y += texth() + metrics::padding;
-}
-
-static void page_header(int& x, int& y, const char* title) {
-	char temp[260]; zprint(temp, "Доступные %1", title);
-	page_header(x, y, temp, 0, 0);
 }
 
 static void page_footer(int& x, int& y, bool allow_cancel = false) {
@@ -835,7 +831,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title);
+		page_header(x, y, title, 0, 0, 0, 0);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		page_footer(x, y, true);
 		x += button(x, y, "Редактировать", cmd(picture_info::edit_monsters), Ctrl + Alpha + 'E');
@@ -1031,17 +1027,25 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	auto old_focus = getfocus();
 	openform();
 	auto current_page = 0;
-	auto commands = findcommands(elements);
+	auto commands = elements->findcommands(object);
 	while(ismodal()) {
 		render_background();
-		auto page_maximum = getpagecount(elements, object);
+		auto page_maximum = elements->getpagecount(object);
 		if(current_page < 0)
 			current_page = 0;
 		if(current_page > page_maximum)
 			current_page = page_maximum - 1;
-		page_header(x, y, name, current_page, page_maximum);
+		auto page_title = name;
+		auto page = elements;
+		auto page_markup = elements->getpage(object, current_page);
+		if(page_markup) {
+			page = page_markup->value.child;
+			if(page_markup->title)
+				page_title = page_markup->title;
+		}
+		page_header(x, y, name, current_page, page_maximum, page_title, 0);
 		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, getpage(elements, object, current_page), bsval(object, type), 100);
+		y += draw::field(x, y, width, page, bsval(object, type), 100);
 		page_footer(x, y, true);
 		if(page_maximum > 0) {
 			if(current_page<page_maximum-1)
@@ -1049,8 +1053,8 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 			if(current_page>0)
 				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
 		}
-		if(commands) {
-			for(auto p = commands; *p; p++)
+		if(commands && commands->value.child) {
+			for(auto p = commands->value.child; *p; p++)
 				x += button(x, y, p->title, cmd(p->proc.command, object), 0);
 		}
 		memcpy(r2, object, size);
@@ -1137,7 +1141,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title);
+		page_header(x, y, title, 0, 0, 0, "Доступные");
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
 		if(database->count < database->maximum) {

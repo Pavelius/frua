@@ -21,5 +21,11 @@ struct markup {
 	element				value;
 	int					param;
 	proci				proc;
+	//
 	bool				isfield() const { return value.id != 0; }
+	int					getcount(const char* id, const void* object) const;
+	const markup*		getpage(const void* object, int index) const { return find("page", object, index); }
+	int					getpagecount(const void* object) const { return getcount("page", object); }
+	const markup*		find(const char* id, const void* object, int result) const;
+	const markup*		findcommands(const void* object) const { return find("commands", object, 0); }
 };
