@@ -17,7 +17,6 @@ const int combat_map_y = 16;
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
 bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
-#define MARKUP(e) static plugin<markup> e##_markup_plugin(bsmeta<e##_info>::meta, e##_markup)
 
 enum class_s : unsigned char {
 	Monster,
@@ -197,13 +196,47 @@ typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
 typedef class_s				classa[3];
 
-struct command_info {
-	const char*				id;
+struct decoration {
+	typedef void(*changedp)(void* p, const void* pp);
+	typedef void(*commandp)(void* p);
+	struct command {
+		const char*			id;
+		const char*			name;
+		commandp			proc;
+		unsigned			key;
+		constexpr explicit operator bool() const { return id != 0; }
+	};
 	const char*				name;
-	void(*proc)(void* object);
-	unsigned				key;
-	constexpr explicit operator bool() const { return id != 0; }
+	bsdata*					database;
+	const bsreq*			meta;
+	markup::proci			proc;
+	point					size;
+	const markup*			form_element;
+	changedp				changed;
+	commandp				created;
+	const command*			commands;
+	static decoration		data[];
+	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
+		meta(bsmeta<T>::meta), database(&bsmeta<T>::data),
+		proc{T::getname, T::getvalue},
+		form_element(T::form_element),
+		changed(T::changed), created(T::created),
+		commands(T::commands) {}
+	template<class T> decoration(const char* name, const T& object) : name(name), size(),
+		meta(bsmeta<T>::meta), database(0),
+		proc{T::getname, T::getvalue},
+		form_element(T::form_element),
+		changed(0), created(0),
+		commands(0) {}
+	int						choose(const char* title, int width, int height, bool choose_mode) const;
+	static int				choose(const bsreq* type);
+	static bool				choose(void** result, const bsreq* type);
+	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
+	static bool				edit(bsdata& source, void* object, void* copy_object);
+	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, changedp changed = 0, const command* commands = 0);
+	static const decoration* find(const bsreq* type);
 };
+
 struct name_info {
 	const char*				id;
 	const char*				name;
@@ -313,24 +346,33 @@ struct damage_info {
 	dice					damage;
 	dice					damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
+	//
+	static markup			form_element[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct armor_info {
 	char					ac, toughness;
 	char					critical;
+	//
+	static markup			form_element[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct attack_info : damage_info {
-	char					attacks; // per two rounds
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
 struct special_info : damage_info {
 	char					used, use_per_day;
 	unsigned				feats;
-	bool					edit();
+	//
+	static markup			form_element[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct item {
 	unsigned char			type;
-	magic_power_s			power;
 	item_state_s			state : 2;
 	unsigned char			quality : 2;
 	unsigned char			identify : 1;
@@ -350,9 +392,11 @@ struct item_info {
 	int						cost, weight;
 	// Database engine methods
 	static void				changed(void* object, const void* previous) {}
+	static void				created(void* object) {}
+	static markup			form_element[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
-	static command_info		commands[];
+	static decoration::command commands[];
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -360,12 +404,8 @@ struct character {
 	void					apply_ability_restriction();
 	void					apply_feats();
 	void					clear();
-	static void				changed(void* p, const void* pp);
-	static character*		choose();
-	static command_info		commands[];
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
-	bool					edit();
 	bool					edit_generate();
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
@@ -384,12 +424,10 @@ struct character {
 	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
 	const char*				getname() const { return name; }
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	race_s					getrace() const { return race; }
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
-	static int				getvalue(const void* object, int id);
 	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
 	bool					isalive() const { return hp > 0; }
 	static bool				isallow(alignment_s v, class_s type);
@@ -414,6 +452,13 @@ struct character {
 	static int				view_skills(int x, int y, int width, const char* id, const void* object);
 	static int				view_statistic(int x, int y, int width, const char* id, const void* object);
 	static void				update_battle();
+	// Database engine methods
+	static void				changed(void* object, const void* previous);
+	static void				created(void* object) { ((character*)object)->clear(); }
+	static markup			form_element[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	static int				getvalue(const void* object, int id);
+	static decoration::command commands[];
 private:
 	const char*				name;
 	gender_s				gender;
@@ -437,13 +482,7 @@ private:
 	unsigned				coopers;
 	unsigned				experience;
 	special_info			special_attacks[4];
-	friend struct character_view;
-	friend struct character_events;
 	friend struct bsmeta<character>;
-	int						edit_abilities(int x, int y, int width);
-	int						edit_attacks(int x, int y, int width);
-	int						edit_basic(int x, int y, int width, draw_events* pev);
-	int						edit_feats(int x, int y, int width);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 };
@@ -483,27 +522,6 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					playround();
 	void					update();
 	void					visualize();
-};
-struct decoration {
-	typedef void(*changedp)(void* p, const void* pp);
-	typedef void(*commandp)(void* p);
-	const char*				name;
-	bsdata&					source;
-	markup::proci			proc;
-	point					size;
-	changedp				changed;
-	const command_info*		commands;
-	static decoration		data[];
-	template<class T> constexpr decoration(const char* name, point size, T) : name(name), size(size),
-		source(bsmeta<T>::data), proc{T::getname, T::getvalue}, changed(T::changed), commands(T::commands) {}
-	static int				choose(const char* title, int width, int height, bool choose_mode, bsdata& source, markup::proci proc);
-	static int				choose(const bsreq* type);
-	static bool				choose(void** result, const bsreq* type);
-	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
-	static bool				edit(bsdata& source, void* object, void* copy_object, bool run);
-	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type,
-		const markup* elements = 0, changedp changed = 0, const markup* commands = 0);
-	static const decoration* find(const bsreq* type);
 };
 DECLENUM(alignment);
 DECLENUM(class);

@@ -2,8 +2,8 @@
 
 const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(name),
-	BSREQ(power_name),
 	BSREQ(type),
+	BSREQ(power_name),
 	BSREQ(cost),
 	BSREQ(weight),
 	BSREQ(damage),
@@ -57,12 +57,11 @@ static const char* wear_getname(const void* object, char* result, const char* re
 	return "";
 }
 static markup deflection_markup[] = {{0, "/", {"toughness"}}, {}};
-static markup armor_markup[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
+markup armor_info::form_element[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
 {0, "Отражение(%)", {"critical"}},
 {}};
-MARKUP(armor);
 static markup multiplier_right[] = {{0, "X", {"multiplier"}}, {}};
-static markup damage_markup[] = {{0, "Тип урона", {"type"}},
+markup damage_info::form_element[] = {{0, "Тип урона", {"type"}},
 {0, "К-во атак", {"attacks"}},
 {0, "Бонус", {"thac0"}},
 {0, "Дистанция", {"range"}},
@@ -70,7 +69,6 @@ static markup damage_markup[] = {{0, "Тип урона", {"type"}},
 {0, "Урон", {"damage"}},
 {0, "Урон (большим)", {"damage_large"}},
 {}};
-MARKUP(damage);
 static markup dice_markup_right[] = {{0, "d", {"d", 0, }}, {0, "+", {"m", 0, }}, {}};
 static markup dice_markup[] = {{0, "Урон", {"c", 0, dice_markup_right}},
 {}};
@@ -101,11 +99,10 @@ static markup column3[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, dama
 {0, "Броня", {0, 0, armor_block}, 0, {0, 0, 0, armor_visibility}},
 {0, "Атрибуты", {0, 0, ability_block}, 0, {0, 0, 0, ability_visibility}},
 {}};
-static markup item_markup[] = {{4, 0, {0, 0, column1}},
+markup item_info::form_element[] = {{4, 0, {0, 0, column1}},
 {3, 0, {0, 0, column2}},
 {5, 0, {0, 0, column3}},
 {}};
-MARKUP(item);
 
 const char* item_info::getname(const void* object, char* result, const char* result_max, int id) {
 	auto p = (item_info*)object;
@@ -130,5 +127,5 @@ int item_info::getvalue(const void* object, int id) {
 	}
 }
 
-command_info item_info::commands[] = {
+decoration::command item_info::commands[] = {
 {}};

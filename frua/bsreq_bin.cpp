@@ -107,8 +107,15 @@ struct bsdata_bin {
 					}
 				}
 			} else {
-				// Подчиненный объект
-				serial(p->ptr(object), p->type, 0);
+				switch(p->subtype) {
+				case KindCFlags:
+					serial(p->ptr(object), p->lenght);
+					break;
+				default:
+					// Подчиненный объект
+					serial(p->ptr(object), p->type, 0);
+					break;
+				}
 			}
 		}
 	}

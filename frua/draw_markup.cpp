@@ -3,9 +3,10 @@
 #include "crt.h"
 #include "draw_control.h"
 #include "markup.h"
-#include "plugin.h"
 
 using namespace draw;
+
+const markup* getmarkup(const bsreq* type);
 
 namespace {
 enum title_s : unsigned char { NoTitle, TitleNormal, TitleShort };
@@ -323,7 +324,7 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
 		if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
-			auto pm = plugin<markup>::get(bv.type->type);
+			auto pm = getmarkup(bv.type->type);
 			if(!pm)
 				return error(x, y, width, title_width, e, "Не найдена разметка");
 			auto new_title = e.title;

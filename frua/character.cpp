@@ -39,10 +39,11 @@ static markup generate_c2[] = {{0, "Классы", {0, 0, character_class_radio}},
 {}};
 static markup generate_c3[] = {{0, "Мировозрение", {0, 0, character_alignment_radio}},
 {}};
-static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
+markup character::form_element[] = {{2, 0, {0, 0, generate_c1}},
 {3, 0, {0, 0, generate_c2}},
 {4, 0, {0, 0, generate_c3}},
 {}};
+//
 static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, 0, 0, character::view_ability}}, {}};
 static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, 0, 0, character::view_statistic}}, {}};
 static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, 0, 0, character::view_skills}}, {}};
@@ -391,13 +392,6 @@ const char* character::getname(const void* object, char* result, const char* res
 	}
 }
 
-character* character::choose() {
-	//int result = 0;
-	//if(decoration::choose("Персонажи или монстры", result, 256, 60, false))
-	//	return (character*)bsmeta<character>::data.get(result);
-	return 0;
-}
-
 static void character_reroll(void* v1) {
 	((character*)v1)->reroll();
 }
@@ -419,5 +413,5 @@ bool character::edit_generate() {
 	return true;
 }
 
-command_info character::commands[] = {{"Reroll", "Перебросить", character::reroll},
+decoration::command character::commands[] = {{"Reroll", "Перебросить", character::reroll},
 {}};
