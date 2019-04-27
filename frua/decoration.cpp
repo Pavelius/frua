@@ -29,8 +29,10 @@ bool decoration::edit(bsdata& source, void* object, void* copy_object) {
 		memcpy(copy, object, size);
 	else if(copy_object)
 		memcpy(copy, copy_object, size);
-	else
-		pd->created(copy);
+	else {
+		memset(copy, 0, size);
+		pd->form_element->action("create", copy);
+	}
 	if(edit(pd->name, copy, source.size, source.meta, pd->form_element, pd->changed)) {
 		if(!object)
 			object = source.add();

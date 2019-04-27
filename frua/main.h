@@ -205,18 +205,17 @@ struct decoration {
 	point					size;
 	const markup*			form_element;
 	changedp				changed;
-	commandp				created;
 	static decoration		data[];
 	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
 		meta(bsmeta<T>::meta), database(&bsmeta<T>::data),
 		proc{T::getname, T::getvalue},
 		form_element(T::form_element),
-		changed(T::changed), created(T::created) {}
+		changed(T::changed) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), database(0),
 		proc{T::getname, T::getvalue},
 		form_element(T::form_element),
-		changed(0), created(0) {}
+		changed(0) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type);
 	static bool				choose(void** result, const bsreq* type);
@@ -395,8 +394,10 @@ struct character {
 	operator bool() const { return name != 0; }
 	void					addbattle();
 	void					apply_ability_restriction();
+	static void				apply_avatar(void* object);
 	void					apply_feats();
 	void					clear();
+	static void				clear(void* object) { ((character*)object)->clear(); }
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					get(wear_s id, attack_info& ai) const;
@@ -430,6 +431,7 @@ struct character {
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
 	void					raise(class_s v);
+	static void				random(void* object);
 	void					recreate();
 	static void				recreate(void* p) { ((character*)p)->recreate(); }
 	void					reroll();
@@ -448,7 +450,6 @@ struct character {
 	static void				update_battle();
 	// Database engine methods
 	static void				changed(void* object, const void* previous);
-	static void				created(void* object) { ((character*)object)->clear(); }
 	static markup			form_element[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);

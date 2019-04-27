@@ -63,9 +63,11 @@ static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {4, 0, {0, 0, abilities_c2}},
 //{4, 0, {0, 0, generate_c3}},
 {}};
-markup character::form_element[] = {{0, 0, {"#commands", 0, generate_commands}},
+markup character::form_element[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::random}},
+{0, 0, {"#commands", 0, generate_commands}},
 {0, "Генерация персонажа", {"#page", 0, generate_markup}},
 {0, "Листок персонажа", {"#page", 0, abilities_markup}, 0, {0, 0, 0, 0, 0, character::recreate}},
+{0, 0, {"#apply"}, 0, {0, 0, 0, 0, 0, character::apply_avatar}},
 {}};
 
 static char hit_probability[] = {
@@ -181,6 +183,16 @@ void character::recreate() {
 	create(race, gender, type, alignment, Player);
 }
 
+void character::random(void* object) {
+	auto p = (character*)object;
+	p->clear();
+	p->gender = (gender_s)xrand(Male, Female);
+	p->race = (race_s)xrand(Human, Halfling);
+	p->type = (class_s)xrand(Cleric, Theif);
+	p->alignment = (alignment_s)xrand(LawfulGood, ChaoticEvil);
+	p->recreate();
+}
+
 void character::reroll() {
 	roll_ability();
 	apply_feats();
@@ -200,6 +212,7 @@ void character::create(race_s race, gender_s gender, class_s type, alignment_s a
 	this->type = type;
 	this->alignment = alignment;
 	this->reaction = reaction;
+	correct();
 	roll_ability();
 	apply_feats();
 	apply_ability_restriction();

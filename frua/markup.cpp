@@ -2,13 +2,13 @@
 
 extern "C" int strcmp(const char* s1, const char* s2);
 
-const markup* markup::find(const char* id, const void* object, int result) const {
+const markup* markup::find(const char* id, const void* object, int result, bool need_child) const {
 	if(!this)
 		return 0;
 	for(auto p = this; *p; p++) {
 		if(!p->value.id || p->value.id[0] != '#')
 			return 0;
-		if(!p->value.child)
+		if(need_child && !p->value.child)
 			continue;
 		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
 			continue;
@@ -20,14 +20,14 @@ const markup* markup::find(const char* id, const void* object, int result) const
 	return 0;
 }
 
-int	markup::getcount(const char* id, const void* object) const {
+int	markup::getcount(const char* id, const void* object, bool need_child) const {
 	if(!this)
 		return 0;
 	auto result = 0;
 	for(auto p = this; *p; p++) {
 		if(!p->value.id || p->value.id[0] != '#')
 			return 0;
-		if(!p->value.child)
+		if(need_child && !p->value.child)
 			continue;
 		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
 			continue;
@@ -36,4 +36,13 @@ int	markup::getcount(const char* id, const void* object) const {
 		result++;
 	}
 	return result;
+}
+
+bool markup::action(const char* id, void* object) const {
+	auto p = find(id, object, 0, false);
+	if(!p)
+		return false;
+	if(p->proc.command)
+		p->proc.command(object);
+	return true;
 }

@@ -1004,6 +1004,12 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	return y - y0;
 }
 
+void character::apply_avatar(void* object) {
+	auto p = (character*)object;
+	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))
+		return;
+}
+
 static void add_value() {
 	auto& p = *((int*)hot.param);
 	p++;
@@ -1074,7 +1080,10 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	setfocus(old_focus, true);
 	if(r2 != r2_buffer)
 		delete r2;
-	return getresult() != 0;
+	auto result = getresult() != 0;
+	if(result)
+		elements->action("apply", object);
+	return result;
 }
 
 int decoration::choose(const char* title, int width, int height, bool choose_mode) const {

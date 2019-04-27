@@ -22,10 +22,11 @@ struct markup {
 	int					param;
 	proci				proc;
 	//
+	bool				action(const char* id, void* object) const;
 	bool				isfield() const { return value.id != 0; }
-	int					getcount(const char* id, const void* object) const;
-	const markup*		getpage(const void* object, int index) const { return find("page", object, index); }
-	int					getpagecount(const void* object) const { return getcount("page", object); }
-	const markup*		find(const char* id, const void* object, int result) const;
-	const markup*		findcommands(const void* object) const { return find("commands", object, 0); }
+	int					getcount(const char* id, const void* object, bool need_child) const;
+	const markup*		getpage(const void* object, int index) const { return find("page", object, index, true); }
+	int					getpagecount(const void* object) const { return getcount("page", object, true); }
+	const markup*		find(const char* id, const void* object, int result, bool need_child) const;
+	const markup*		findcommands(const void* object) const { return find("commands", object, 0, true); }
 };
