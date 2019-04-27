@@ -66,10 +66,14 @@ static const char* getpresent(const void* p) {
 
 static void choose_enum() {
 	struct enum_view : controls::list, adat<int, 256> {
+		markup::proci	proc;
 		const bsdata&	source;
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
 			switch(column) {
-			case 0: return getpresent(source.get(data[line]));
+			case 0:
+				if(proc.getname)
+					return proc.getname(source.get(data[line]));
+				return getpresent(source.get(data[line]));
 			default: return "";
 			}
 			return "";
@@ -80,10 +84,11 @@ static void choose_enum() {
 				return 0;
 			return data[current];
 		}
-		constexpr enum_view(const bsdata& source) : source(source) {}
+		constexpr enum_view(const bsdata& source) : source(source), proc() {}
 	};
 	enum_view ev(*command.data);
 	ev.hilite_odd_lines = false;
+	ev.proc = command.proc;
 	auto i1 = 0;
 	auto i2 = command.data->count - 1;
 	for(unsigned i = i1; i < i2; i++) {
@@ -222,7 +227,13 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 			anyval ev(pv, type->size);
 			if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
 				result = true;
-			textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, getpresent(pb->get(ev)));
+			auto pn = "";
+			auto pv = pb->get(ev);
+			if(pri && pri->getname)
+				pn = pri->getname(pv);
+			else
+				pn = getpresent(pb->get(ev));
+			textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
 			if(focused)
 				rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
 			if(result) {

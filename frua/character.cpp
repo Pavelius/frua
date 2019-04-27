@@ -20,17 +20,14 @@ BSDATA(character, 512);
 static bool allow_race(const void* source, int value) {
 	return bsmeta<race_s>::data[value].playable != 0;
 }
-
 static bool allow_class(const void* source, int value) {
 	if(!bsmeta<class_s>::data[value].playable)
 		return false;
 	return ((character*)source)->isallow((class_s)value);
 }
-
 static bool allow_alignment(const void* source, int value) {
 	return ((character*)source)->isallow((alignment_s)value);
 }
-
 static markup character_gender_radio[] = {{0, "#radiobuttons", {"gender"}}, {}};
 static markup character_race_radio[] = {{0, "#radiobuttons", {"race"}, 0, {0, allow_race}}, {}};
 static markup character_class_radio[] = {{0, "#radiobuttons", {"type"}, 0, {0, allow_class}}, {}};

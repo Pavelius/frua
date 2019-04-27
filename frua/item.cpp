@@ -2,6 +2,7 @@
 
 const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(name),
+	BSREQ(power_name),
 	BSREQ(type),
 	BSREQ(cost),
 	BSREQ(weight),
@@ -10,6 +11,7 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(usability),
 	BSREQ(resistance),
 	BSREQ(threshold),
+	BSREQ(abilities),
 {}};
 BSDATA(item_info, 512);
 const bsreq bsmeta<armor_info>::meta[] = {
@@ -44,6 +46,13 @@ static bool armor_visibility(const void* source, const markup& e) {
 	auto p = (item_info*)source;
 	return bsmeta<wear_s>::data[p->type].use_armor;
 }
+static bool ability_visibility(const void* source, const markup& e) {
+	auto p = (item_info*)source;
+	return bsmeta<wear_s>::data[p->type].use_ability;
+}
+static const char* wear_type_name(const void* object) {
+	return ((wear_info*)object)->name_type;
+}
 static markup deflection_markup[] = {{0, "/", {"toughness"}}, {}};
 static markup armor_markup[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
 {0, "Отражение(%)", {"critical"}},
@@ -69,9 +78,15 @@ static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
 static markup resistance_block[] = {{0, "#dam", {"resistance"}, 3}, {}};
 static markup threshold_block[] = {{0, "#dam", {"threshold"}, 3}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
-{0, "Тип", {"type"}, 0, {0, allow_item}},
+{0, "Имя силы", {"power_name"}},
+{0, "Группа", {"type"}, 0, {0, allow_item, 0, wear_type_name}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
+{}};
+static markup phisycal_addon[] = {{0, "/", {"abilities", 1}, 2}, {0, "/", {"abilities", 2}, 2}, {}};
+static markup mental_addon[] = {{0, "/", {"abilities", 4}, 2}, {0, "/", {"abilities", 5}, 2}, {}};
+static markup ability_block[] = {{0, "Физические", {"abilities", 0, phisycal_addon}, 2},
+{0, "Ментальные", {"abilities", 3, mental_addon}, 2},
 {}};
 static markup column1[] = {{0, "Базовые параметры", {0, 0, basic_markup}},
 {0, "Использование", {0, 0, usability_block}},
@@ -81,6 +96,7 @@ static markup column2[] = {{0, "Сопротивление", {0, 0, resistance_block}},
 {}};
 static markup column3[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {damage_visibility}},
 {0, "Броня", {0, 0, armor_block}, 0, {armor_visibility}},
+{0, "Атрибуты", {0, 0, ability_block}, 0, {ability_visibility}},
 {}};
 static markup item_markup[] = {{4, 0, {0, 0, column1}},
 {3, 0, {0, 0, column2}},

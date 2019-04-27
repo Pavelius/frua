@@ -225,6 +225,7 @@ struct wear_info {
 	wear_s					wear[2];
 	char					use_damage;
 	char					use_armor;
+	char					use_ability;
 };
 struct usability_info {
 	const char*				id;
@@ -316,12 +317,15 @@ struct item {
 struct item_info {
 	wear_s					type;
 	const char*				name;
+	const char*				power_name;
 	cflags<usability_s>		usability;
 	damage_info				damage;
 	armor_info				armor;
 	char					resistance[Fire + 1];
 	char					threshold[Fire + 1];
+	char					abilities[Charisma + 1];
 	int						cost, weight;
+	//
 	bool					edit();
 };
 struct character {
@@ -336,7 +340,6 @@ struct character {
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	bool					edit();
 	bool					edit_generate();
-	bool					generate();
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
