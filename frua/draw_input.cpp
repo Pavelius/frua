@@ -68,6 +68,8 @@ static void standart_domodal() {
 
 static void setfocus_callback() {
 	setfocus(hot.param, true);
+	if(hot.key == MouseLeft || hot.key == MouseRight)
+		hot.key = InputUpdate;
 }
 
 static focusable_element* getby(int id) {

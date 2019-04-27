@@ -101,7 +101,8 @@ enum feat_s : unsigned char {
 };
 enum usability_s : unsigned char {
 	UseLeatherArmor, UseMetalArmor, UseShield,
-	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon
+	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon,
+	UseMagicDevice, UseScrolls,
 };
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,

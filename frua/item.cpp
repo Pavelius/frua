@@ -38,8 +38,8 @@ static bool armor_visibility(const void* source, const markup& e) {
 	auto p = (item_info*)source;
 	return p->type == Armor || p->type == MeleeWeapon || p->type==OffhandWeapon;
 }
-static markup armor_markup[] = {{0, "Класс брони", {"ac"}},
-{0, "Отражение", {"critical"}},
+static markup deflection_markup[] = {{0, "Отражение", {"critical"}}, {}};
+static markup armor_markup[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
 {}};
 MARKUP(armor);
 static markup multiplier_right[] = {{0, "X", {"multiplier"}}, {}};

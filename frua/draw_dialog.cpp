@@ -30,7 +30,7 @@ void draw::titletext(int& x, int y, int& width, unsigned flags, const char* labe
 	if(!title)
 		title = 128;
 	if(!sep)
-		zprint(temp, "%1", label + 1);
+		zprint(temp, "%1", label);
 	else
 		zprint(temp, "%1%2", label, sep);
 	text(x, y + 4, temp);

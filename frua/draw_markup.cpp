@@ -8,6 +8,7 @@
 using namespace draw;
 
 namespace {
+enum title_s : unsigned char { NoTitle, TitleNormal, TitleShort };
 struct commandi {
 	void*			object;
 	bsdata*			data;
@@ -122,221 +123,205 @@ static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdat
 	}
 }
 
-struct markup_view {
-	enum title_s : unsigned char {NoTitle, TitleNormal, TitleShort};
-	int typedef (markup_view::*callback)(int x, int y, int width, const markup& e, const bsval& source) const;
-	typedef decltype(markup::proc.isallow) callback_allow;
-	int			title_width;
-	static void render_title(int& x, int y, int& width, const char* title, title_s state) {
+static bsval getvalue(const bsval& source, const markup& e) {
+	bsval result;
+	result.type = source.type->find(e.value.id);
+	result.data = source.data;
+	return result;
+}
+static rect start_group(int& x, int& y, int& width, const char* title) {
+	setposition(x, y, width);
+	setposition(x, y, width);
+	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
+	gradv(rc, colors::border, colors::edit);
+	text(rc, title, AlignCenterCenter);
+	y = rc.y2 + metrics::padding * 2;
+	return rc;
+}
 
+static int close_group(int x, int y, const rect& rc) {
+	if(!rc)
+		return 0;
+	rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+	return metrics::padding * 2;
+}
+
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override, int* right_x2 = 0);
+
+static int group_vertial(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
+	if(!elements)
+		return 0;
+	auto y0 = y;
+	for(auto p = elements; *p; p++)
+		y += element(x, y, width, title_width, *p, source, p->title, title_state, title_override);
+	return y - y0;
+}
+
+static int group_horizontal(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
+	if(!elements)
+		return 0;
+	auto ym = 0;
+	auto wi = width / 12;
+	auto wp = 0;
+	for(auto p = elements; *p; p++) {
+		auto x1 = x + wp * wi;
+		auto we = p->width*wi;
+		if(x1 + we > width - 12)
+			we = width - x1;
+		auto yc = element(x, y, we, title_width, *p, source, p->title, title_state, title_override);
+		if(ym < yc)
+			ym = yc;
+		x += we;
 	}
-	bsval getvalue(const bsval& source, const markup& e) const {
-		bsval result;
-		result.type = source.type->find(e.value.id);
-		result.data = source.data;
-		return result;
+	return ym;
+}
+
+static void header(int& x, int y, int& width, const char* label, int title_width, title_s state, const char*& title_override) {
+	if(title_override && title_override[0]) {
+		label = title_override;
+		title_override = 0;
 	}
-	static rect start_group(int& x, int& y, int& width, const char* title) {
-		setposition(x, y, width);
-		setposition(x, y, width);
-		rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
-		gradv(rc, colors::border, colors::edit);
-		text(rc, title, AlignCenterCenter);
-		y = rc.y2 + metrics::padding * 2;
-		return rc;
-	}
-	static int close_group(int x, int y, const rect& rc) {
-		if(!rc)
-			return 0;
-		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
-		return metrics::padding * 2;
-	}
-	void field_part(rect& rc, const markup& e, const bsval& source, const bsval& bv, void* pv, bool part, int rc_x2) const {
-		unsigned flags = AlignLeft;
-		if(bv.type->isnum())
-			flags = AlignRight;
-		draw::focusing((int)pv, flags, rc);
-		if(bv.type->istext())
-			draw::field(rc, flags, anyval(pv, bv.type->size), -1, FieldText);
-		else if(bv.type->isnum()) {
-			auto d = e.param;
-			if(!d)
-				d = 2;
-			auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
-			rc.x2 = rc.x1 + we;
-			draw::field(rc, flags, anyval(pv, bv.type->size), d, FieldNumber);
-			if(part && e.value.child) {
-				for(auto p = e.value.child; *p; p++) {
-					auto bv = getvalue(source, *p);
-					if(!bv.data || !bv.type)
-						continue;
-					auto pv = bv.type->ptr(bv.data);
-					rc.x1 = rc.x2 + 4;
-					if(p->title) {
-						auto tw = textw(p->title);
-						text(rc.x1, rc.y1 + 4, p->title);
-						rc.x1 += tw + 4;
-					}
-					rc.x2 = rc_x2;
-					field_part(rc, *p, source, bv, pv, false, rc_x2);
-				}
-			}
-		} else if(bv.type->is(KindEnum)) {
-			auto pd = bsdata::find(bv.type->type, bsdata::firstenum);
-			if(pd)
-				field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd);
-		}
-	}
-	int group_vertial(int x, int y, int width, const markup* elements, const bsval& source, const char*& title_override) const {
-		if(!elements)
-			return 0;
+	if(!label || !label[0])
+		return;
+	if(state == NoTitle)
+		return;
+	if(state == TitleShort) {
+		auto w = textw(label);
+		titletext(x, y, width, 0, label, w, 0);
+		x += metrics::padding;
+		width -= metrics::padding;
+	} else
+		titletext(x, y, width, 0, label, title_width);
+}
+
+static int error(int x, int y, int width, int title_width, const markup& e, const char* error_text) {
+	auto old_color = fore;
+	fore = colors::red;
+	setposition(x, y, width);
+	titletext(x, y, width, 0, e.title ? e.title : e.value.id, title_width, ":");
+	auto h = texth() + 4 * 2;
+	rect rc = {x, y, x + width, y + h};
+	rectb(rc, colors::red);
+	text(rc, error_text, AlignCenterCenter);
+	fore = old_color;
+	return rc.height() + metrics::padding * 2;
+}
+
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override, int* right_x2) {
+	if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
+		return 0;
+	else if(e.proc.custom)
+		return e.proc.custom(x, y, width, e.value.id, source.data);
+	else if(e.title && e.title[0] == '#') {
+		auto pn = e.title + 1;
 		auto y0 = y;
-		for(auto p = elements; *p; p++)
-			y += element(x, y, width, *p, source, p->title, TitleNormal, title_override);
-		return y - y0;
-	}
-	int group_horizontal(int x, int y, int width, const markup* elements, const bsval& source, const char*& title_override) const {
-		if(!elements)
-			return 0;
-		auto ym = 0;
-		auto wi = width / 12;
-		auto wp = 0;
-		for(auto p = elements; *p; p++) {
-			auto x1 = x + wp*wi;
-			auto we = p->width*wi;
-			if(x1 + we > width - 12)
-				we = width - x1;
-			auto yc = element(x, y, we, *p, source, p->title, TitleNormal, title_override);
-			if(ym < yc)
-				ym = yc;
-			x += we;
-		}
-		return ym;
-	}
-	void header(int& x, int y, int& width, const char* label, int title_width, title_s state, const char*& title_override) const {
-		if(title_override && title_override[0]) {
-			label = title_override;
-			title_override = 0;
-		}
-		if(!label || !label[0])
-			return;
-		if(state == NoTitle)
-			return;
-		if(state == TitleShort) {
-			auto w = textw(label);
-			x += 4;
-			width -= 4;
-			titletext(x, y, width, 0, label, w, 0);
-		} else
-			titletext(x, y, width, 0, label, title_width);
-	}
-	int error(int x, int y, int width, const markup& e, const char* error_text) const {
-		auto old_color = fore;
-		fore = colors::red;
-		setposition(x, y, width);
-		titletext(x, y, width, 0, e.title ? e.title : e.value.id, title_width, ":");
-		auto h = texth() + 4 * 2;
-		rect rc = {x, y, x + width, y + h};
-		rectb(rc, colors::red);
-		text(rc, error_text, AlignCenterCenter);
-		fore = old_color;
-		return rc.height() + metrics::padding * 2;
-	}
-	int element(int x, int y, int width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override) const {
-		if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
-			return 0;
-		else if(e.proc.custom)
-			return e.proc.custom(x, y, width, e.value.id, source.data);
-		else if(e.title && e.title[0] == '#') {
-			auto pn = e.title + 1;
-			auto y0 = y;
-			if(e.value.id) {
-				auto bv = getvalue(source, e);
-				if(!bv.data || !bv.type)
-					return 0;
-				if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
-					auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-					if(!pb || pb->count==0)
-						return error(x, y, width, e, "Не найдена база");
-					auto size = bv.type->size;
-					if(bv.type->is(KindCFlags))
-						size = bv.type->lenght;
-					for(unsigned i = 0; i < pb->count; i++) {
-						if(e.proc.isallow) {
-							if(!e.proc.isallow(source.data, i))
-								continue;
-						}
-						auto p = getpresent(pb->get(i));
-						cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
-						unsigned flags = 0;
-						if(ev.ischecked())
-							flags |= Checked;
-						y += checkbox(x, y, width, flags, ev, p, 0) + 2;
-					}
-				} else if(strcmp(pn, "radio") == 0 && bv.type->is(KindEnum)) {
-					auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-					if(!pb || pb->count == 0)
-						return error(x, y, width, e, "Не найдена база");
-					auto size = bv.type->size;
-					for(unsigned i = 0; i < pb->count; i++) {
-						if(e.proc.isallow) {
-							if(!e.proc.isallow(source.data, i))
-								continue;
-						}
-						auto p = getpresent(pb->get(i));
-						cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
-						unsigned flags = 0;
-						if(ev.ischecked())
-							flags |= Checked;
-						y += radio(x, y, width, flags, ev, p, 0) + 2;
-					}
-				} else
-					return error(x, y, width, e, pn);
-			}
-			return y - y0;
-		} else if(e.value.id) {
+		if(e.value.id) {
 			auto bv = getvalue(source, e);
 			if(!bv.data || !bv.type)
 				return 0;
-			auto pv = bv.type->ptr(bv.data, e.value.index);
-			// Вначале найдем целую форму объекта
-			if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
-				auto pm = plugin<markup>::get(bv.type->type);
-				if(!pm)
-					return error(x, y, width, e, "Не найдена разметка");
-				auto new_title = e.title;
-				return group_vertial(x, y, width, pm, bsval(pv, bv.type->type), new_title);
-			} else {
-				draw::state push;
-				setposition(x, y, width);
-				header(x, y, width, e.title, title_width, TitleNormal, title_override);
-				rect rc = {x, y, x + width, y + draw::texth() + 8};
-				field_part(rc, e, source, bv, pv, true, rc.x2);
-				return rc.height() + metrics::padding * 2;
-			}
-		} else if(e.value.child) {
-			rect rgo = {};
+			if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
+				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+				if(!pb || pb->count == 0)
+					return error(x, y, width, title_width, e, "Не найдена база");
+				auto size = bv.type->size;
+				if(bv.type->is(KindCFlags))
+					size = bv.type->lenght;
+				for(unsigned i = 0; i < pb->count; i++) {
+					if(e.proc.isallow) {
+						if(!e.proc.isallow(source.data, i))
+							continue;
+					}
+					auto p = getpresent(pb->get(i));
+					cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
+					unsigned flags = 0;
+					if(ev.ischecked())
+						flags |= Checked;
+					y += checkbox(x, y, width, flags, ev, p, 0) + 2;
+				}
+			} else if(strcmp(pn, "radio") == 0 && bv.type->is(KindEnum)) {
+				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+				if(!pb || pb->count == 0)
+					return error(x, y, width, title_width, e, "Не найдена база");
+				auto size = bv.type->size;
+				for(unsigned i = 0; i < pb->count; i++) {
+					if(e.proc.isallow) {
+						if(!e.proc.isallow(source.data, i))
+							continue;
+					}
+					auto p = getpresent(pb->get(i));
+					cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
+					unsigned flags = 0;
+					if(ev.ischecked())
+						flags |= Checked;
+					y += radio(x, y, width, flags, ev, p, 0) + 2;
+				}
+			} else
+				return error(x, y, width, title_width, e, pn);
+		}
+		return y - y0;
+	} else if(e.value.id) {
+		auto bv = getvalue(source, e);
+		if(!bv.data || !bv.type)
+			return 0; // Данные не найдены, но это не ошибка
+		auto pv = bv.type->ptr(bv.data, e.value.index);
+		// Вначале найдем целую форму объекта
+		if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
+			auto pm = plugin<markup>::get(bv.type->type);
+			if(!pm)
+				return error(x, y, width, title_width, e, "Не найдена разметка");
+			auto new_title = e.title;
+			return group_vertial(x, y, width, title_width, pm, bsval(pv, bv.type->type), title_state, new_title);
+		} else {
+			auto xe = x + width;
 			auto y0 = y;
-			if(e.title)
-				rgo = start_group(x, y, width, e.title);
-			if(e.value.child[0].width)
-				y += group_horizontal(x, y, width, e.value.child, source, title_override);
-			else
-				y += group_vertial(x, y, width, e.value.child, source, title_override);
-			y += close_group(x, y, rgo);
-			return y - y0;
-		} else
-			return 0;
-	}
-	constexpr markup_view() : title_width(128) {}
-};
+			setposition(x, y, width);
+			header(x, y, width, e.title, title_width, title_state, title_override);
+			rect rc = {x, y, x + width, y + draw::texth() + 8};
+			unsigned flags = AlignLeft;
+			if(bv.type->isnum())
+				flags = AlignRight;
+			draw::focusing((int)pv, flags, rc);
+			if(bv.type->istext())
+				draw::field(rc, flags, anyval(pv, bv.type->size), -1, FieldText);
+			else if(bv.type->isnum()) {
+				auto d = e.param;
+				if(!d)
+					d = 2;
+				auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
+				rc.x2 = rc.x1 + we;
+				draw::field(rc, flags, anyval(pv, bv.type->size), d, FieldNumber);
+				if(right_x2)
+					*right_x2 = rc.x2;
+				if(e.value.child) {
+					for(auto p = e.value.child; *p && rc.x2 < xe; p++)
+						element(rc.x2, y0, xe - rc.x2, title_width, *p, source, p->title, TitleShort, title_override, &rc.x2);
+				}
+			} else if(bv.type->is(KindEnum)) {
+				auto pd = bsdata::find(bv.type->type, bsdata::firstenum);
+				if(pd)
+					field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd);
+			}
+			return rc.height() + metrics::padding * 2;
+		}
+	} else if(e.value.child) {
+		rect rgo = {};
+		auto y0 = y;
+		if(e.title)
+			rgo = start_group(x, y, width, e.title);
+		if(e.value.child[0].width)
+			y += group_horizontal(x, y, width, title_width, e.value.child, source, title_state, title_override);
+		else
+			y += group_vertial(x, y, width, title_width, e.value.child, source, title_state, title_override);
+		y += close_group(x, y, rgo);
+		return y - y0;
+	} else
+		return 0;
+}
 
 int draw::field(int x, int y, int width, const markup* elements, const bsval& source, int title_width) {
-	markup_view ev;
-	ev.title_width = title_width;
 	const char* title_override = 0;
 	if(elements->width)
-		return ev.group_horizontal(x, y, width, elements, source, title_override);
+		return group_horizontal(x, y, width, title_width, elements, source, TitleNormal, title_override);
 	else
-		return ev.group_vertial(x, y, width, elements, source, title_override);
+		return group_vertial(x, y, width, title_width, elements, source, TitleNormal, title_override);
 }

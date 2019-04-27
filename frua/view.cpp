@@ -1032,7 +1032,6 @@ int	character::edit_feats(int x, int y, int width) {
 }
 
 static void choose_spells() {}
-
 static void choose_feats() {}
 
 bool decoration::choose(const char* title, const anyval& result, int width, int height, bool choose_mode) {

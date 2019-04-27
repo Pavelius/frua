@@ -6,6 +6,8 @@ usability_info usability_data[] = {{"UseLeatherArmor", "Кожанные доспехи"},
 {"UseTheifWeapon", "Оружие воров"},
 {"UseMartialWeapon", "Ратное оружие"},
 {"UseLargeWeapon", "Большое оружие"},
+{"UseMagicDevice", "Волшебное устройство"},
+{"UseScrolls", "Свиток"},
 };
-assert_enum(usability, UseLargeWeapon);
+assert_enum(usability, UseScrolls);
 getstr_enum(usability);
