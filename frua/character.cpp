@@ -31,10 +31,10 @@ static bool allow_alignment(const void* source, int value) {
 	return ((character*)source)->isallow((alignment_s)value);
 }
 
-static markup character_gender_radio[] = {{0, "#radio", {"gender"}}, {}};
-static markup character_race_radio[] = {{0, "#radio", {"race"}, 0, {0, allow_race}}, {}};
-static markup character_class_radio[] = {{0, "#radio", {"type"}, 0, {0, allow_class}}, {}};
-static markup character_alignment_radio[] = {{0, "#radio", {"alignment"}, 0, {0, allow_alignment}}, {}};
+static markup character_gender_radio[] = {{0, "#radiobuttons", {"gender"}}, {}};
+static markup character_race_radio[] = {{0, "#radiobuttons", {"race"}, 0, {0, allow_race}}, {}};
+static markup character_class_radio[] = {{0, "#radiobuttons", {"type"}, 0, {0, allow_class}}, {}};
+static markup character_alignment_radio[] = {{0, "#radiobuttons", {"alignment"}, 0, {0, allow_alignment}}, {}};
 static markup generate_c1[] = {{0, "Пол", {0, 0, character_gender_radio}},
 {0, "Раса", {0, 0, character_race_radio}},
 {}};

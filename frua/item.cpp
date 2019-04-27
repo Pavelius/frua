@@ -8,10 +8,13 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(damage),
 	BSREQ(armor),
 	BSREQ(usability),
+	BSREQ(resistance),
+	BSREQ(threshold),
 {}};
 BSDATA(item_info, 512);
 const bsreq bsmeta<armor_info>::meta[] = {
 	BSREQ(ac),
+	BSREQ(toughness),
 	BSREQ(critical),
 {}};
 const bsreq bsmeta<damage_info>::meta[] = {
@@ -30,16 +33,20 @@ const bsreq bsmeta<dice>::meta[] = {
 	BSREQ(b),
 	BSREQ(m),
 {}};
+static bool allow_item(const void* source, int value) {
+	return bsmeta<wear_s>::data[value].name_type != 0;
+}
 static bool damage_visibility(const void* source, const markup& e) {
 	auto p = (item_info*)source;
-	return p->type == MeleeWeapon || p->type == RangedWeapon || p->type == OffhandWeapon;
+	return bsmeta<wear_s>::data[p->type].use_damage;
 }
 static bool armor_visibility(const void* source, const markup& e) {
 	auto p = (item_info*)source;
-	return p->type == Armor || p->type == MeleeWeapon || p->type==OffhandWeapon;
+	return bsmeta<wear_s>::data[p->type].use_armor;
 }
-static markup deflection_markup[] = {{0, "Отражение", {"critical"}}, {}};
+static markup deflection_markup[] = {{0, "/", {"toughness"}}, {}};
 static markup armor_markup[] = {{0, "Класс брони", {"ac", 0, deflection_markup}},
+{0, "Отражение(%)", {"critical"}},
 {}};
 MARKUP(armor);
 static markup multiplier_right[] = {{0, "X", {"multiplier"}}, {}};
@@ -59,17 +66,23 @@ static plugin<markup> dice_markup_plugin(bsmeta<dice>::meta, dice_markup);
 static markup weapon_block[] = {{0, 0, {"damage"}}, {}};
 static markup armor_block[] = {{0, 0, {"armor"}}, {}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
-static markup column1[] = {{0, "Название", {"name"}},
-{0, "Тип", {"type"}},
+static markup resistance_block[] = {{0, "#dam", {"resistance"}, 3}, {}};
+static markup threshold_block[] = {{0, "#dam", {"threshold"}, 3}, {}};
+static markup basic_markup[] = {{0, "Название", {"name"}},
+{0, "Тип", {"type"}, 0, {0, allow_item}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
 {}};
-static markup column2[] = {{0, "Использование", {0, 0, usability_block}},
+static markup column1[] = {{0, "Базовые параметры", {0, 0, basic_markup}},
+{0, "Использование", {0, 0, usability_block}},
+{}};
+static markup column2[] = {{0, "Сопротивление", {0, 0, resistance_block}},
+{0, "Порог урона", {0, 0, threshold_block}},
 {}};
 static markup column3[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {damage_visibility}},
 {0, "Броня", {0, 0, armor_block}, 0, {armor_visibility}},
 {}};
-static markup item_markup[] = {{4, "Базовые параметры", {0, 0, column1}},
+static markup item_markup[] = {{4, 0, {0, 0, column1}},
 {3, 0, {0, 0, column2}},
 {5, 0, {0, 0, column3}},
 {}};

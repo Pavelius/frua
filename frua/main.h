@@ -222,6 +222,9 @@ struct wear_info {
 	const char*				id;
 	const char*				name;
 	const char*				name_type;
+	wear_s					wear[2];
+	char					use_damage;
+	char					use_armor;
 };
 struct usability_info {
 	const char*				id;
@@ -288,7 +291,7 @@ struct damage_info {
 	explicit constexpr operator bool() const { return damage.d != 0; }
 };
 struct armor_info {
-	char					ac;
+	char					ac, toughness;
 	char					critical;
 };
 struct attack_info : damage_info {
@@ -316,6 +319,8 @@ struct item_info {
 	cflags<usability_s>		usability;
 	damage_info				damage;
 	armor_info				armor;
+	char					resistance[Fire + 1];
+	char					threshold[Fire + 1];
 	int						cost, weight;
 	bool					edit();
 };

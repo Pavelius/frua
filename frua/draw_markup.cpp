@@ -12,7 +12,7 @@ enum title_s : unsigned char { NoTitle, TitleNormal, TitleShort };
 struct commandi {
 	void*			object;
 	bsdata*			data;
-	const markup*	element;
+	markup::proci	proc;
 	rect			rc;
 	anyval			value;
 	void clear() { memset(this, 0, sizeof(commandi)); }
@@ -87,11 +87,9 @@ static void choose_enum() {
 	auto i1 = 0;
 	auto i2 = command.data->count - 1;
 	for(unsigned i = i1; i < i2; i++) {
-		if(command.element) {
-			if(command.element->proc.isallow) {
-				if(!command.element->proc.isallow(command.object, i))
-					continue;
-			}
+		if(command.proc.isallow) {
+			if(!command.proc.isallow(command.object, i))
+				continue;
 		}
 		ev.add(i);
 	}
@@ -105,22 +103,6 @@ static void choose_enum() {
 	rectf(rc, colors::form);
 	if(dropdown(rc, ev, true))
 		command.value = ev.getcurrent();
-}
-
-static void field_dropdown(const rect& rc, bool focused, const anyval& ev, bsdata& ei) {
-	auto result = focused && (hot.key == KeyEnter || hot.key == F2);
-	if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
-		result = true;
-	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, getpresent(ei.get(ev)));
-	if(focused)
-		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-	if(result) {
-		command.clear();
-		command.value = ev;
-		command.rc = rc;
-		command.data = &ei;
-		execute(choose_enum);
-	}
 }
 
 static bsval getvalue(const bsval& source, const markup& e) {
@@ -146,14 +128,14 @@ static int close_group(int x, int y, const rect& rc) {
 	return metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override, int* right_x2 = 0);
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2 = 0);
 
 static int group_vertial(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
 	if(!elements)
 		return 0;
 	auto y0 = y;
 	for(auto p = elements; *p; p++)
-		y += element(x, y, width, title_width, *p, source, p->title, title_state, title_override);
+		y += element(x, y, width, title_width, *p, source, title_state, title_override);
 	return y - y0;
 }
 
@@ -168,7 +150,7 @@ static int group_horizontal(int x, int y, int width, int title_width, const mark
 		auto we = p->width*wi;
 		if(x1 + we > width - 12)
 			we = width - x1;
-		auto yc = element(x, y, we, title_width, *p, source, p->title, title_state, title_override);
+		auto yc = element(x, y, we, title_width, *p, source, title_state, title_override);
 		if(ym < yc)
 			ym = yc;
 		x += we;
@@ -207,7 +189,57 @@ static int error(int x, int y, int width, int title_width, const markup& e, cons
 	return rc.height() + metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, const char* title_text, title_s title_state, const char*& title_override, int* right_x2) {
+static int field_main(int x, int y, int width, int title_width, const bsval& source, void* pv, const bsreq* type, int param, const char* title_text, title_s title_state, const char*& title_override, int* right_x2, const markup* child, const markup::proci* pri) {
+	auto xe = x + width;
+	auto y0 = y;
+	setposition(x, y, width);
+	header(x, y, width, title_text, title_width, title_state, title_override);
+	rect rc = {x, y, x + width, y + draw::texth() + 8};
+	unsigned flags = AlignLeft;
+	if(type->isnum())
+		flags = AlignRight;
+	draw::focusing((int)pv, flags, rc);
+	if(type->istext())
+		draw::field(rc, flags, anyval(pv, type->size), -1, FieldText);
+	else if(type->isnum()) {
+		auto d = param;
+		if(!d)
+			d = 2;
+		auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
+		rc.x2 = rc.x1 + we;
+		draw::field(rc, flags, anyval(pv, type->size), d, FieldNumber);
+		if(right_x2)
+			*right_x2 = rc.x2;
+		if(child) {
+			for(auto p = child; *p && rc.x2 < xe; p++)
+				element(rc.x2, y0, xe - rc.x2, title_width, *p, source, TitleShort, title_override, &rc.x2);
+		}
+	} else if(type->is(KindEnum)) {
+		auto pb = bsdata::find(type->type, bsdata::firstenum);
+		if(pb) {
+			auto focused = isfocused(flags);
+			auto result = focused && (hot.key == KeyEnter || hot.key == F2);
+			anyval ev(pv, type->size);
+			if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
+				result = true;
+			textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, getpresent(pb->get(ev)));
+			if(focused)
+				rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+			if(result) {
+				command.clear();
+				command.rc = rc;
+				command.value = ev;
+				command.data = pb;
+				if(pri)
+					command.proc = *pri;
+				execute(choose_enum);
+			}
+		}
+	}
+	return rc.height() + metrics::padding * 2;
+}
+
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2) {
 	if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 		return 0;
 	else if(e.proc.custom)
@@ -238,7 +270,7 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 						flags |= Checked;
 					y += checkbox(x, y, width, flags, ev, p, 0) + 2;
 				}
-			} else if(strcmp(pn, "radio") == 0 && bv.type->is(KindEnum)) {
+			} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
 				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
 				if(!pb || pb->count == 0)
 					return error(x, y, width, title_width, e, "Не найдена база");
@@ -255,8 +287,23 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 						flags |= Checked;
 					y += radio(x, y, width, flags, ev, p, 0) + 2;
 				}
-			} else
-				return error(x, y, width, title_width, e, pn);
+			} else {
+				if(!bv.type->isnum())
+					return error(x, y, width, title_width, e, bv.type->id);
+				auto pb = bsdata::find(pn, bsdata::firstenum);
+				if(!pb)
+					return error(x, y, width, title_width, e, pn);
+				if(pb->count == 0)
+					return 0;
+				auto count = pb->count;
+				if(count > bv.type->count)
+					count = bv.type->count;
+				for(unsigned i = 0; i < pb->count; i++) {
+					auto pv = bv.type->ptr(bv.data, i);
+					y += field_main(x, y, width, title_width, source, pv, bv.type,
+						e.param, getpresent(pb->get(i)), title_state, title_override, right_x2, 0, &e.proc);
+				}
+			}
 		}
 		return y - y0;
 	} else if(e.value.id) {
@@ -272,36 +319,9 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 			auto new_title = e.title;
 			return group_vertial(x, y, width, title_width, pm, bsval(pv, bv.type->type), title_state, new_title);
 		} else {
-			auto xe = x + width;
-			auto y0 = y;
-			setposition(x, y, width);
-			header(x, y, width, e.title, title_width, title_state, title_override);
-			rect rc = {x, y, x + width, y + draw::texth() + 8};
-			unsigned flags = AlignLeft;
-			if(bv.type->isnum())
-				flags = AlignRight;
-			draw::focusing((int)pv, flags, rc);
-			if(bv.type->istext())
-				draw::field(rc, flags, anyval(pv, bv.type->size), -1, FieldText);
-			else if(bv.type->isnum()) {
-				auto d = e.param;
-				if(!d)
-					d = 2;
-				auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
-				rc.x2 = rc.x1 + we;
-				draw::field(rc, flags, anyval(pv, bv.type->size), d, FieldNumber);
-				if(right_x2)
-					*right_x2 = rc.x2;
-				if(e.value.child) {
-					for(auto p = e.value.child; *p && rc.x2 < xe; p++)
-						element(rc.x2, y0, xe - rc.x2, title_width, *p, source, p->title, TitleShort, title_override, &rc.x2);
-				}
-			} else if(bv.type->is(KindEnum)) {
-				auto pd = bsdata::find(bv.type->type, bsdata::firstenum);
-				if(pd)
-					field_dropdown(rc, isfocused(flags), anyval(pv, bv.type->size), *pd);
-			}
-			return rc.height() + metrics::padding * 2;
+			return field_main(x, y, width, title_width, source, pv, bv.type, e.param,
+				e.title, title_state, title_override, right_x2, e.value.child,
+				&e.proc);
 		}
 	} else if(e.value.child) {
 		rect rgo = {};
