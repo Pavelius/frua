@@ -927,32 +927,31 @@ static void character_reroll() {
 //	return getresult() != 0;
 //}
 
-int character::view_basic(int x, int y, int width, const char* id, const void* object) {
+int character::view_personal(int x, int y, int width, const char* id, const void* object) {
 	auto y0 = y;
 	auto p = (character*)object;
-	char temp[260]; zprint(temp, "%1 %-2", getstr(p->gender), getstr(p->race));
-	text(x, y, temp); y += texth();
-	text(x, y, getstr(p->alignment)); y += texth();
+	char temp[260]; zprint(temp, "%+2 %-1", getstr(p->gender), getstr(p->race));
+	x += metrics::padding;
+	width -= metrics::padding * 2;
+	text(x, y, getstr(p->alignment)); y += texth() + 2;
+	text(x, y, temp); y += texth() + 2;
 	return y - y0;
 }
 
 int character::view_levels(int x, int y, int width, const char* id, const void* object) {
 	auto y0 = y;
-	char temp[260];
 	auto p = (character*)object;
 	auto& col = bsmeta<class_s>::data;
 	auto class_count = col[p->type].classes.count;
 	if(!class_count)
 		class_count = 1;
+	auto exp = p->experience / class_count;
 	for(unsigned i = 0; i < col[p->type].classes.count; i++) {
 		auto e = col[p->type].classes.data[i];
-		text(x, y, getstr(e));
-		auto exp = p->experience / class_count;
-		zprint(temp, "%1i уровень (опыт %2i)", p->levels[i], exp);
-		text(x + width - textw(temp), y, temp);
-		y += texth();
+		char temp[260]; zprint(temp, "%1i уровень (опыт %2i)", p->levels[i], exp);
+		y += fieldv(x, y, width, getstr(e), temp);
 	}
-	return y0 - y;
+	return y - y0;
 }
 
 int character::view_skills(int x, int y, int width, const char* id, const void* object) {
@@ -990,7 +989,7 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	y += fieldv(x, y, width, "THAC0", ai.thac0);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", p->getac());
-	if(p->hp_rolled) {
+	if(p->hp_rolled==0) {
 		auto type = p->getclass();
 		auto rolled = 0;
 		for(unsigned i = 0; i < col[type].classes.count; i++)
@@ -998,8 +997,10 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 		auto min = p->gethpmax(0);
 		auto max = p->gethpmax(rolled);
 		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
-	} else
+	} else if(p->hp==0)
 		y += fieldv(x, y, width, "Хиты", p->gethpmax());
+	else
+		y += fieldv(x, y, width, "Хиты", p->gethp(), p->gethpmax(), "%1i/%2i");
 	return y - y0;
 }
 
@@ -1027,9 +1028,9 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	auto old_focus = getfocus();
 	openform();
 	auto current_page = 0;
+	const markup* page_markup_last = 0;
 	auto commands = elements->findcommands(object);
 	while(ismodal()) {
-		render_background();
 		auto page_maximum = elements->getpagecount(object);
 		if(current_page < 0)
 			current_page = 0;
@@ -1042,7 +1043,14 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 			page = page_markup->value.child;
 			if(page_markup->title)
 				page_title = page_markup->title;
+			if(page_markup_last != page_markup) {
+				page_markup_last = page_markup;
+				setfocus(0, true);
+				if(page_markup->proc.command)
+					cmd(page_markup->proc.command, object).execute();
+			}
 		}
+		render_background();
 		page_header(x, y, name, current_page, page_maximum, page_title, 0);
 		auto width = getwidth() - x * 2;
 		y += draw::field(x, y, width, page, bsval(object, type), 100);

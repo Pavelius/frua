@@ -43,15 +43,21 @@ static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
 {3, 0, {0, 0, generate_c2}},
 {4, 0, {0, 0, generate_c3}},
 {}};
-static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0, character::reroll}},
+static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0, character::recreate}},
 {}};
+static markup abilities_personal_group[] = {{0, 0, {"name"}},
+{0, 0, {"personal"}, 0, {0, 0, 0, 0, character::view_personal}},
+{}};
+static markup abilities_levels_group[] = {{0, 0, {"levels"}, 0, {0, 0, 0, 0, character::view_levels}}, {}};
 static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, 0, 0, character::view_ability}}, {}};
-static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, 0, 0, character::view_statistic}}, {}};
+static markup abilities_statistic_group[] = {{0, 0, {"statistics"}, 0, {0, 0, 0, 0, character::view_statistic}}, {}};
 static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, 0, 0, character::view_skills}}, {}};
-static markup abilities_c1[] = {{0, "Атрибуты", {0, 0, abilities_ability_group}},
+static markup abilities_c1[] = {{0, "Имя", {0, 0, abilities_personal_group}},
+{0, "Атрибуты", {0, 0, abilities_ability_group}},
 {0, "Боевая статистика", {0, 0, abilities_statistic_group}},
 {}};
-static markup abilities_c2[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
+static markup abilities_c2[] = {{0, "Уровни и опыт", {0, 0, abilities_levels_group}},
+{0, "Навыки", {0, 0, abilities_skills_group}},
 {}};
 static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {4, 0, {0, 0, abilities_c2}},
@@ -59,7 +65,7 @@ static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {}};
 markup character::form_element[] = {{0, 0, {"#commands", 0, generate_commands}},
 {0, "Генерация персонажа", {"#page", 0, generate_markup}},
-{0, "Листок персонажа", {"#page", 0, abilities_markup}},
+{0, "Листок персонажа", {"#page", 0, abilities_markup}, 0, {0, 0, 0, 0, 0, character::recreate}},
 {}};
 
 static char hit_probability[] = {
@@ -169,6 +175,10 @@ void character::apply_feats() {
 	feats |= bsmeta<class_s>::data[type].feats.data;
 	movement = bsmeta<race_s>::data[race].movement;
 	size = bsmeta<race_s>::data[race].size;
+}
+
+void character::recreate() {
+	create(race, gender, type, alignment, Player);
 }
 
 void character::reroll() {

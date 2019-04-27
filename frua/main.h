@@ -430,6 +430,8 @@ struct character {
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
 	void					raise(class_s v);
+	void					recreate();
+	static void				recreate(void* p) { ((character*)p)->recreate(); }
 	void					reroll();
 	static void				reroll(void* p) { ((character*)p)->reroll(); }
 	void					set(direction_s v) { direction = v; }
@@ -439,8 +441,8 @@ struct character {
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
 	static int				view_ability(int x, int y, int width, const char* id, const void* object);
-	static int				view_basic(int x, int y, int width, const char* id, const void* object);
 	static int				view_levels(int x, int y, int width, const char* id, const void* object);
+	static int				view_personal(int x, int y, int width, const char* id, const void* object);
 	static int				view_skills(int x, int y, int width, const char* id, const void* object);
 	static int				view_statistic(int x, int y, int width, const char* id, const void* object);
 	static void				update_battle();
