@@ -26,14 +26,18 @@ struct runable {
 	virtual int				getid() const = 0;
 };
 struct cmd : runable {
-	constexpr cmd() : proc(0), param(0) {}
-	constexpr cmd(callback proc, int param = 0, bool disabled = false) : proc(proc), param(param) {}
-	explicit operator bool() const { return proc != 0; }
-	void					execute() const override { draw::execute(proc, param); }
-	int						getid() const override { return (int)proc; }
+	typedef void(*p0)();
+	typedef void(*p1)(void* v);
+	constexpr cmd(p0 p, int v = 0) : p(p), v(v), call(&cmd::call0) {}
+	template<typename T> constexpr cmd(void(*p)(T*), T* v) : p((p0)p), v((int)v), call(&cmd::call1) {}
+	void					execute() const override;
+	int						getid() const override;
 private:
-	callback				proc;
-	int						param;
+	void					call0() const;
+	void					call1() const;
+	void					(cmd::*call)() const;
+	p0						p;
+	int						v;
 };
 namespace controls {
 struct control {

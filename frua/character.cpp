@@ -279,7 +279,8 @@ int	character::gethpmax(int v) const {
 void character::get(wear_s id, attack_info& ai) const {
 	ai.attacks = 2;
 	ai.thac0 = 20;
-	ai.damage = dice::create(1, 2);
+	ai.damage.c = 1;
+	ai.damage.d = 2;
 	if(id == MeleeWeapon || id == OffhandWeapon) {
 		auto str = getstrex();
 		ai.thac0 -= maptbl(hit_probability, str);

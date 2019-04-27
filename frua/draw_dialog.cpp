@@ -3,6 +3,24 @@
 
 using namespace draw;
 
+static void* cmd_p;
+void cmd::execute() const {
+	(this->*call)();
+}
+int cmd::getid() const {
+	return (int)p;
+}
+void cmd::call0() const {
+	draw::execute(p, v);
+}
+static void cmd_p1() {
+	((cmd::p1)cmd_p)((void*)hot.param);
+}
+void cmd::call1() const {
+	cmd_p = p;
+	draw::execute(cmd_p1, v);
+}
+
 void draw::setposition(int& x, int& y, int& width, int padding) {
 	if(padding == -1)
 		padding = metrics::padding;

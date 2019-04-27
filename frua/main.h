@@ -4,7 +4,6 @@
 #include "crt.h"
 #include "dice.h"
 #include "markup.h"
-#include "plugin.h"
 #include "point.h"
 #include "stringcreator.h"
 
@@ -337,14 +336,19 @@ struct event_info {
 	picture_info			picture;
 	void					edit();
 };
+struct dice_info : dice {
+	static markup			form_element[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
+};
 struct damage_info {
 	dam_s					type;
 	char					thac0;
 	char					critical, multiplier;
 	char					attacks; // per two rounds
 	char					range; // in squars.
-	dice					damage;
-	dice					damage_large;
+	dice_info				damage;
+	dice_info				damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	//
 	static markup			form_element[];

@@ -12,6 +12,8 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 const int combat_moverate = 3;
 
+const markup* getmarkup(const bsreq* type);
+
 static anyval					command_value;
 static bsdata*					command_data;
 static rect						command_rect;
@@ -27,22 +29,6 @@ typedef adat<const char*, 256>	strings_array;
 static void set_command_value() {
 	command_value = (const int)hot.param;
 }
-
-static void(*command_object_proc)(void* object);
-struct cmo : runable {
-	cmo(void(*proc)(void* p), void* p) : proc(proc), object(object) {}
-	int				getid() const override { return (int)proc; }
-	void execute() const override {
-		command_object_proc = proc;
-		draw::execute(execute_callback, (int)object);
-	}
-private:
-	static void execute_callback() {
-		command_object_proc((void*)hot.param);
-	}
-	void(*proc)(void* p);
-	void*			object;
-};
 
 static struct char_code_info {
 	char ru, en;
@@ -490,6 +476,11 @@ static void page_header(int& x, int& y, const char* title, bool padding = true) 
 	fore = colors::yellow;
 	text(x, y, title);
 	y += texth() + metrics::padding;
+}
+
+static void page_header_list(int& x, int& y, const char* title, bool padding = true) {
+	char temp[260]; zprint(temp, "Доступные %1", title);
+	page_header(x, y, temp, padding);
 }
 
 static void page_footer(int& x, int& y, bool allow_cancel = false) {
@@ -993,7 +984,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	const command* commands) {
 	int x, y;
 	if(!elements)
-		elements = plugin<markup>::get(type);
+		elements = getmarkup(type);
 	if(!elements)
 		return false;
 	char r2_buffer[256];
@@ -1010,7 +1001,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		page_footer(x, y, true);
 		if(commands) {
 			for(auto p = commands; *p; p++)
-				x += button(x, y, p->name, cmo(p->proc, object), 0);
+				x += button(x, y, p->name, cmd(p->proc, object), 0);
 		}
 		memcpy(r2, object, size);
 		domodal();
@@ -1080,12 +1071,9 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 				return -1;
 			return current;
 		}
-		void add() { manager.edit(source, 0, 0); }
-		static void command_add() { ((table*)hot.param)->add(); }
-		void copy() { manager.edit(source, 0, (void*)source.get(getcurrent())); }
-		static void command_copy() { ((table*)hot.param)->copy(); }
-		void change() { manager.edit(source, (void*)source.get(getcurrent()), 0); }
-		static void command_change() { ((table*)hot.param)->change(); }
+		static void add(table* p) { p->manager.edit(p->source, 0, 0); }
+		static void copy(table* p) { p->manager.edit(p->source, 0, (void*)p->source.get(p->getcurrent())); }
+		static void change(table* p) { p->manager.edit(p->source, (void*)p->source.get(p->getcurrent()), 0); }
 		constexpr table(bsdata& source, const decoration& manager) : source(source), manager(manager) {}
 	};
 	if(!database || !proc.getvalue || !proc.getname)
@@ -1099,18 +1087,18 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title, false);
+		page_header_list(x, y, title, false);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
 		if(database->count < database->maximum) {
-			x += button(x, y, "Добавить", cmd(table::command_add, (int)&e1), F3);
+			x += button(x, y, "Добавить", cmd(table::add, &e1), F3);
 			if(database->count > 0)
-				x += button(x, y, "Скопировать", cmd(table::command_copy, (int)&e1), F4);
+				x += button(x, y, "Скопировать", cmd(table::copy, &e1), F4);
 		}
 		if(database->count > 0)
-			x += button(x, y, "Редактировать", cmd(table::command_change, (int)&e1), KeyEnter);
+			x += button(x, y, "Редактировать", cmd(table::change, &e1), KeyEnter);
 		if(hot.key == F2)
-			execute(table::command_change, (int)&e1);
+			cmd(table::change, &e1).execute();
 		domodal();
 	}
 	if(getresult()) {

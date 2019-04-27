@@ -29,7 +29,7 @@ const bsreq bsmeta<damage_info>::meta[] = {
 	BSREQ(damage),
 	BSREQ(damage_large),
 {}};
-const bsreq bsmeta<dice>::meta[] = {
+const bsreq bsmeta<dice_info>::meta[] = {
 	BSREQ(c),
 	BSREQ(d),
 	BSREQ(b),
@@ -70,9 +70,8 @@ markup damage_info::form_element[] = {{0, "Тип урона", {"type"}},
 {0, "Урон (большим)", {"damage_large"}},
 {}};
 static markup dice_markup_right[] = {{0, "d", {"d", 0, }}, {0, "+", {"m", 0, }}, {}};
-static markup dice_markup[] = {{0, "Урон", {"c", 0, dice_markup_right}},
+markup dice_info::form_element[] = {{0, "Урон", {"c", 0, dice_markup_right}},
 {}};
-static plugin<markup> dice_markup_plugin(bsmeta<dice>::meta, dice_markup);
 static markup weapon_block[] = {{0, 0, {"damage"}}, {}};
 static markup armor_block[] = {{0, 0, {"armor"}}, {}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};

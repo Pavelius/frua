@@ -6,25 +6,6 @@ static void add_position(aref<character*> source) {
 		p->setposition(combat_info::random());
 }
 
-static bool test_write() {
-	auto p1 = bsmeta<character>::data.add();
-	p1->create(Elf, Female, Mage, LawfulEvil, Player);
-	p1->setname("Мирандина");
-	auto p2 = bsmeta<character>::data.add();
-	p2->create(Human, Male, Paladin, LawfulGood, Player);
-	p2->setname("Вольган");
-	auto p3 = bsmeta<character>::data.add();
-	p3->create(Dwarf, Male, Fighter, LawfulGood, Player);
-	p3->setname("Йорген");
-	return bsdata::write("character.dat")==3;
-}
-
-static bool test_read() {
-	if(bsdata::read("character.dat")<=0)
-		return false;
-	return true;
-}
-
 bool test_array();
 
 int	main(int argc, char *argv[]) {
@@ -32,7 +13,8 @@ int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	draw::initialize();
-	auto index = decoration::choose(bsmeta<item_info>::meta);
+	auto index = decoration::choose(bsmeta<character>::meta);
+	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//character ii = {};
 	//ii.edit_generate();
 	//character::choose();
