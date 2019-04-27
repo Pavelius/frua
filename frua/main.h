@@ -198,13 +198,6 @@ typedef class_s				classa[3];
 struct decoration {
 	typedef void(*changedp)(void* p, const void* pp);
 	typedef void(*commandp)(void* p);
-	struct command {
-		const char*			id;
-		const char*			name;
-		commandp			proc;
-		unsigned			key;
-		constexpr explicit operator bool() const { return id != 0; }
-	};
 	const char*				name;
 	bsdata*					database;
 	const bsreq*			meta;
@@ -213,27 +206,28 @@ struct decoration {
 	const markup*			form_element;
 	changedp				changed;
 	commandp				created;
-	const command*			commands;
 	static decoration		data[];
 	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
 		meta(bsmeta<T>::meta), database(&bsmeta<T>::data),
 		proc{T::getname, T::getvalue},
 		form_element(T::form_element),
-		changed(T::changed), created(T::created),
-		commands(T::commands) {}
+		changed(T::changed), created(T::created) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), database(0),
 		proc{T::getname, T::getvalue},
 		form_element(T::form_element),
-		changed(0), created(0),
-		commands(0) {}
+		changed(0), created(0) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type);
 	static bool				choose(void** result, const bsreq* type);
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object);
-	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, changedp changed = 0, const command* commands = 0);
+	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, changedp changed = 0);
 	static const decoration* find(const bsreq* type);
+	static const markup*	findcommands(const markup* form);
+	const markup*			findmarkup(const char* id) const;
+	static const markup*	getpage(const markup* p, const void* object, int result);
+	static int				getpagecount(const markup* p, const void* object);
 };
 
 struct name_info {
@@ -400,7 +394,6 @@ struct item_info {
 	static markup			form_element[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
-	static decoration::command commands[];
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -410,7 +403,6 @@ struct character {
 	void					clear();
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
-	bool					edit_generate();
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
@@ -462,7 +454,6 @@ struct character {
 	static markup			form_element[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
-	static decoration::command commands[];
 private:
 	const char*				name;
 	gender_s				gender;

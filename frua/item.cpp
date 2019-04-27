@@ -125,6 +125,3 @@ int item_info::getvalue(const void* object, int id) {
 	default: return 0;
 	}
 }
-
-decoration::command item_info::commands[] = {
-{}};

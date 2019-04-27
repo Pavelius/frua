@@ -103,6 +103,18 @@ static int button(int x, int y, const char* string, const runable& ev, unsigned 
 	return rc.width() + 2;
 }
 
+int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips, int key) {
+	setposition(x, y, width);
+	rect rc = {x, y, x + width, y + texth() + metrics::padding * 2};
+	addelement(cmd.getid(), rc);
+	auto focused = (getfocus() == cmd.getid());
+	if(draw::buttonh(rc, false, focused, false, true, label, key, false))
+		cmd.execute();
+	if(focused)
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+	return rc.height();
+}
+
 static void render_picture(int x, int y) {
 	auto x1 = x, y1 = y;
 	auto w = picture_width;
@@ -980,8 +992,7 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 }
 
 bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
-	const markup* elements, void(*changed)(void* pr, const void* pp),
-	const command* commands) {
+	const markup* elements, changedp changed) {
 	int x, y;
 	if(!elements)
 		elements = getmarkup(type);
@@ -993,6 +1004,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		r2 = new char[size];
 	auto old_focus = getfocus();
 	openform();
+	auto commands = findcommands(elements);
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, name);
@@ -1001,7 +1013,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		page_footer(x, y, true);
 		if(commands) {
 			for(auto p = commands; *p; p++)
-				x += button(x, y, p->name, cmd(p->proc, object), 0);
+				x += button(x, y, p->title, cmd(p->proc.command, object), 0);
 		}
 		memcpy(r2, object, size);
 		domodal();

@@ -13,6 +13,7 @@ struct markup {
 		bool(*isallow)(const void* object, int index);
 		bool(*isvisible)(const void* object, const markup& e);
 		int(*custom)(int x, int y, int width, const char* id, const void* object);
+		void(*command)(void* object);
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
 	char				width;

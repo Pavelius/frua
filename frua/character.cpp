@@ -39,9 +39,14 @@ static markup generate_c2[] = {{0, "Классы", {0, 0, character_class_radio}},
 {}};
 static markup generate_c3[] = {{0, "Мировозрение", {0, 0, character_alignment_radio}},
 {}};
-markup character::form_element[] = {{2, 0, {0, 0, generate_c1}},
+static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
 {3, 0, {0, 0, generate_c2}},
 {4, 0, {0, 0, generate_c3}},
+{}};
+static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0, character::reroll}},
+{}};
+markup character::form_element[] = {{0, 0, {"#commands", 0, generate_commands}},
+{0, 0, {0, 0, generate_markup}},
 {}};
 //
 static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, 0, 0, character::view_ability}}, {}};
@@ -393,26 +398,12 @@ const char* character::getname(const void* object, char* result, const char* res
 	}
 }
 
-static void character_reroll(void* v1) {
-	((character*)v1)->reroll();
-}
-
-bool character::edit_generate() {
-	create((race_s)xrand(Human, Halfling), (gender_s)xrand(Male, Female),
-		(class_s)xrand(Cleric, Theif), (alignment_s)xrand(LawfulGood, ChaoticEvil), Player);
-	correct();
-	//if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-	//	generate_markup, character_changed))
-	//	return false;
-	create(race, gender, type, alignment, Player);
-	//if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-	//	abilities_markup, character_changed,
-	//	commands))
-	//	return false;
-	if(!picture_info::choose(avatar, "Генерация персонажа (Шаг 3 из 3)", "character*", 64))
-		return false;
-	return true;
-}
-
-decoration::command character::commands[] = {{"Reroll", "Перебросить", character::reroll},
-{}};
+//if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+//	generate_markup, character_changed))
+//	return false;
+//if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
+//	abilities_markup, character_changed,
+//	commands))
+//	return false;
+//if(!picture_info::choose(avatar, "Генерация персонажа (Шаг 3 из 3)", "character*", 64))
+//	return false;

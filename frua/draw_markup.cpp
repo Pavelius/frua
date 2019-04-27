@@ -253,8 +253,13 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2) {
 	if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 		return 0;
+	else if(e.value.id && e.value.id[0] == '#')
+		// Страницы, команды, любые другие управляющие структуры.
+		return 0;
 	else if(e.proc.custom)
 		return e.proc.custom(x, y, width, e.value.id, source.data);
+	else if(e.proc.command)
+		return button(x, y, width, 0, cmd(e.proc.command, source.data), e.title);
 	else if(e.title && e.title[0] == '#') {
 		auto pn = e.title + 1;
 		auto y0 = y;
