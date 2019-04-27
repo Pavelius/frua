@@ -93,8 +93,10 @@ int decoration::getpagecount(const markup* p, const void* object) {
 	if(!p)
 		return 0;
 	auto result = 0;
-	while(*p && p->value.id[0] == '#') {
-		if(!p->proc.isvisible(object, *p))
+	for(; *p && p->value.id && p->value.id[0] == '#'; p++) {
+		if(strcmp(p->value.id + 1, "page") != 0)
+			continue;
+		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
 			continue;
 		result++;
 	}
@@ -104,11 +106,15 @@ int decoration::getpagecount(const markup* p, const void* object) {
 const markup* decoration::getpage(const markup* p, const void* object, int result) {
 	if(!p)
 		return 0;
-	while(*p && p->value.id[0] == '#') {
-		if(!p->proc.isvisible(object, *p))
+	if(result < 0)
+		return p;
+	for(; *p && p->value.id && p->value.id[0] == '#'; p++) {
+		if(strcmp(p->value.id + 1, "page") != 0)
 			continue;
-		if(--result <= 0)
-			return p;
+		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
+			continue;
+		if(--result < 0)
+			return p->value.child;
 	}
 	return 0;
 }
@@ -116,7 +122,7 @@ const markup* decoration::getpage(const markup* p, const void* object, int resul
 const markup* decoration::findcommands(const markup* form) {
 	if(!form
 		|| !form->value.id
-		|| form->value.id[0]!='#')
+		|| form->value.id[0] != '#')
 		return 0;
 	for(auto p = form; *p; p++) {
 		if(!p->value.id || p->value.id[0] != '#')

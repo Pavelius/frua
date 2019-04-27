@@ -355,6 +355,8 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 }
 
 int draw::field(int x, int y, int width, const markup* elements, const bsval& source, int title_width) {
+	if(!elements)
+		return 0;
 	const char* title_override = 0;
 	if(elements->width)
 		return group_horizontal(x, y, width, title_width, elements, source, TitleNormal, title_override);

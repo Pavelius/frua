@@ -480,7 +480,23 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 	return fieldv(x, y, width, title, temp);
 }
 
-static void page_header(int& x, int& y, const char* title, bool padding = true) {
+static void page_header_pages(int page, int page_maximum) {
+	if(page_maximum <= 0)
+		return;
+	char temp[260]; zprint(temp, "Страница %1i из %2i", page + 1, page_maximum);
+	auto height = texth();
+	if(metrics::h1)
+		height = metrics::h1->height;
+	auto x = metrics::padding;
+	auto y = metrics::padding;
+	draw::state push;
+	font = metrics::h3;
+	fore = colors::h3;
+	text(getwidth() - x - textw(temp), y + height - texth(), temp);
+}
+
+static void page_header(int& x, int& y, const char* title, int page, int page_maximum) {
+	page_header_pages(page, page_maximum);
 	x = metrics::padding;
 	y = metrics::padding;
 	draw::state push;
@@ -490,9 +506,9 @@ static void page_header(int& x, int& y, const char* title, bool padding = true) 
 	y += texth() + metrics::padding;
 }
 
-static void page_header_list(int& x, int& y, const char* title, bool padding = true) {
+static void page_header(int& x, int& y, const char* title) {
 	char temp[260]; zprint(temp, "Доступные %1", title);
-	page_header(x, y, temp, padding);
+	page_header(x, y, temp, 0, 0);
 }
 
 static void page_footer(int& x, int& y, bool allow_cancel = false) {
@@ -819,7 +835,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title, false);
+		page_header(x, y, title);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
 		page_footer(x, y, true);
 		x += button(x, y, "Редактировать", cmd(picture_info::edit_monsters), Ctrl + Alpha + 'E');
@@ -991,6 +1007,16 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	return y - y0;
 }
 
+static void add_value() {
+	auto& p = *((int*)hot.param);
+	p++;
+}
+
+static void sub_value() {
+	auto& p = *((int*)hot.param);
+	p--;
+}
+
 bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
 	const markup* elements, changedp changed) {
 	int x, y;
@@ -1004,13 +1030,25 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		r2 = new char[size];
 	auto old_focus = getfocus();
 	openform();
+	auto current_page = 0;
 	auto commands = findcommands(elements);
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, name);
+		auto page_maximum = getpagecount(elements, object);
+		if(current_page < 0)
+			current_page = 0;
+		if(current_page > page_maximum)
+			current_page = page_maximum - 1;
+		page_header(x, y, name, current_page, page_maximum);
 		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, elements, bsval(object, type), 100);
+		y += draw::field(x, y, width, getpage(elements, object, current_page), bsval(object, type), 100);
 		page_footer(x, y, true);
+		if(page_maximum > 0) {
+			if(current_page<page_maximum-1)
+				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
+			if(current_page>0)
+				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
+		}
 		if(commands) {
 			for(auto p = commands; *p; p++)
 				x += button(x, y, p->title, cmd(p->proc.command, object), 0);
@@ -1099,7 +1137,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header_list(x, y, title, false);
+		page_header(x, y, title);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
 		if(database->count < database->maximum) {

@@ -45,10 +45,6 @@ static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
 {}};
 static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0, character::reroll}},
 {}};
-markup character::form_element[] = {{0, 0, {"#commands", 0, generate_commands}},
-{0, 0, {0, 0, generate_markup}},
-{}};
-//
 static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, 0, 0, character::view_ability}}, {}};
 static markup abilities_statistic_group[] = {{0, 0, {"statistic"}, 0, {0, 0, 0, 0, character::view_statistic}}, {}};
 static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, 0, 0, character::view_skills}}, {}};
@@ -60,6 +56,10 @@ static markup abilities_c2[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
 static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {4, 0, {0, 0, abilities_c2}},
 //{4, 0, {0, 0, generate_c3}},
+{}};
+markup character::form_element[] = {{0, 0, {"#commands", 0, generate_commands}},
+{0, "Генерация персонажа", {"#page", 0, generate_markup}},
+{0, "Листок персонажа", {"#page", 0, abilities_markup}},
 {}};
 
 static char hit_probability[] = {
@@ -398,9 +398,6 @@ const char* character::getname(const void* object, char* result, const char* res
 	}
 }
 
-//if(!decoration::edit("Генерация персонажа (Шаг 1 из 3)", this, sizeof(*this), bsmeta<character>::meta,
-//	generate_markup, character_changed))
-//	return false;
 //if(!decoration::edit("Генерация персонажа (Шаг 2 из 3)", this, sizeof(*this), bsmeta<character>::meta,
 //	abilities_markup, character_changed,
 //	commands))
