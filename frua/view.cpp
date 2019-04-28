@@ -474,7 +474,7 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 static void page_header_pages(int page, int page_maximum) {
 }
 
-static void page_header(int& x, int& y, const char* title, int page, int page_maximum, const char* page_title, const char* title_prefix) {
+static void page_header(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page = 0, int page_maximum = 0) {
 	char temp[260]; stringcreator sc(temp);
 	x = metrics::padding;
 	y = metrics::padding;
@@ -1025,13 +1025,15 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	auto current_page = 0;
 	const markup* page_markup_last = 0;
 	auto commands = elements->findcommands(object);
+	auto type_key = type->getkey();
 	while(ismodal()) {
 		auto page_maximum = elements->getpagecount(object);
 		if(current_page < 0)
 			current_page = 0;
 		if(current_page > page_maximum)
 			current_page = page_maximum - 1;
-		auto page_title = name;
+		auto page_name = name;
+		const char* page_title = 0;
 		auto page = elements;
 		auto page_markup = elements->getpage(object, current_page);
 		if(page_markup) {
@@ -1045,8 +1047,13 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 					cmd(page_markup->proc.command, object).execute();
 			}
 		}
+		if(type_key && type_key->istext()) {
+			auto pn = (const char*)type_key->get(type_key->ptr(object));
+			if(pn && pn[0])
+				page_name = pn;
+		}
 		render_background();
-		page_header(x, y, name, current_page, page_maximum, page_title, 0);
+		page_header(x, y, 0, page_name, page_title, current_page, page_maximum);
 		auto width = getwidth() - x * 2;
 		y += draw::field(x, y, width, page, bsval(object, type), 100);
 		page_footer(x, y, true);
@@ -1147,7 +1154,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	int x, y;
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title, 0, 0, 0, "Доступные");
+		page_header(x, y, "Доступные", title, 0);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
 		page_footer(x, y, choose_mode);
 		if(database->count < database->maximum) {
