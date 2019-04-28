@@ -4,9 +4,9 @@ dam_info dam_data[] = {{"Bludgeon", "Ударное"},
 {"Piercing", "Колющее"},
 {"Slashing", "Режущее"},
 {"Acid", "Кислотное"},
-{"Cold", "Холодное"},
+{"Cold", "Холодное", ResistCold},
 {"Electricity", "Электрическое"},
-{"Fire", "Огненное"},
+{"Fire", "Огненное", ResistFire},
 };
 assert_enum(dam, Fire);
 getstr_enum(dam);

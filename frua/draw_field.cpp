@@ -100,6 +100,7 @@ static void execute(callback proc, const anyval& ev) {
 
 void draw::field(const rect& rco, unsigned flags, const anyval& ev, int digits, field_type_s type) {
 	rect rc = rco;
+	draw::rectf(rc, colors::window);
 	draw::rectb(rc, colors::border);
 	auto focused = isfocused(flags);
 	if(type == FieldNumber) {

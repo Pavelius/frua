@@ -137,7 +137,7 @@ static void render_picture(int x, int y) {
 
 static void render_background() {
 	rect rc = {0, 0, getwidth(), getheight()};
-	rectf(rc, colors::window);
+	rectf(rc, colors::form);
 }
 
 static bool need_exclude(const char* text, const char** exclude) {
@@ -1162,10 +1162,12 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 			if(database->count > 0)
 				x += button(x, y, "Скопировать", cmd(table::copy, &e1), F4);
 		}
-		if(database->count > 0)
-			x += button(x, y, "Редактировать", cmd(table::change, &e1), KeyEnter);
-		if(hot.key == F2)
-			cmd(table::change, &e1).execute();
+		if(database->count > 0) {
+			auto pc = cmd(table::change, &e1);
+			x += button(x, y, "Редактировать", pc, KeyEnter);
+			if(hot.key == F2)
+				pc.execute();
+		}
 		domodal();
 	}
 	if(getresult()) {

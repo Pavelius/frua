@@ -26,7 +26,7 @@ enum class_s : unsigned char {
 };
 enum race_s : unsigned char {
 	Human, Dwarf, Elf, Gnome, HalfElf, Halfling,
-	Humanoid, Animal, Insectoid, Demon, Dragon, Undead,
+	Goblinoid, Humanoid, Animal, Insectoid, Demon, Dragon, Undead,
 };
 enum alignment_s : unsigned char {
 	LawfulGood, NeutralGood, ChaoticGood,
@@ -43,6 +43,9 @@ enum skill_s : unsigned char {
 	SaveVsBreathWeapon,
 	SaveVsSpells,
 	FirstSave = SaveVsParalization, LastSave = SaveVsSpells,
+	//
+	ResistCold, ResistFire, ResistCharm,
+	FirstResist = ResistCold, LastResist = ResistCharm,
 	//
 	PickPockets, OpenLocks, FindRemoveTraps, MoveSilently, HideInShadows, DetectNoise, ClimbWalls, ReadLanguages,
 	SystemShockSurvival, LearnSpell, OpenDoor, LiftGate,
@@ -95,6 +98,7 @@ enum feat_s : unsigned char {
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
 	HolyGrace, NoExeptionalStrenght,
+	LightSensivity,
 	UniqueCharacter,
 };
 enum usability_s : unsigned char {
@@ -249,6 +253,7 @@ struct gender_info {
 struct dam_info {
 	const char*				id;
 	const char*				name;
+	skill_s					resist;
 };
 struct feat_info {
 	const char*				id;
@@ -360,7 +365,8 @@ struct attack_info : damage_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
-struct special_info : damage_info {
+struct special_info {
+	damage_info				damage;
 	char					used, use_per_day;
 	unsigned				feats;
 	//
@@ -426,7 +432,8 @@ struct character {
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
-	bool					is(feat_s v) const { return (feats & (1 << v)) != 0; }
+	bool					is(feat_s v) const { return feats.is(v); }
+	bool					is(usability_s v) const { return usability.is(v); }
 	bool					isalive() const { return hp > 0; }
 	static bool				isallow(alignment_s v, class_s type);
 	bool					isallow(alignment_s v) const { return isallow(v, type); }
@@ -442,7 +449,8 @@ struct character {
 	void					reroll();
 	static void				reroll(void* p) { ((character*)p)->reroll(); }
 	void					set(direction_s v) { direction = v; }
-	void					set(feat_s v) { feats |= 1 << v; }
+	void					set(feat_s v) { feats.add(v); }
+	void					set(usability_s v) { usability.add(v); }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
@@ -471,7 +479,8 @@ private:
 	char					abilities[Charisma + 1];
 	short					hp, hp_rolled;
 	char					initiative;
-	unsigned				feats;
+	cflags<feat_s>			feats;
+	cflags<usability_s>		usability;
 	char					strenght_percent;
 	char					movement;
 	short unsigned			index;

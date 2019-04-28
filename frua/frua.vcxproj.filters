@@ -207,10 +207,10 @@
     <ClCompile Include="markup.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
-    <ClCompile Include="character_form.cpp">
+    <ClCompile Include="reaction.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="reaction.cpp">
+    <ClCompile Include="character_markup.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

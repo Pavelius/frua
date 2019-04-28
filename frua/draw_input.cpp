@@ -250,9 +250,9 @@ bool draw::ismodal() {
 void set_dark_theme() {
 	colors::active = color::create(172, 128, 0);
 	colors::border = color::create(73, 73, 80);
-	colors::button = color::create(0x42, 0x42, 0x42);
-	colors::form = color::create(64, 64, 64);
+	colors::button = color::create(62, 62, 66);
 	colors::window = color::create(32, 32, 32);
+	colors::form = color::create(42, 42, 48);
 	colors::text = color::create(255, 255, 255);
 	colors::edit = color::create(38, 79, 120);
 	colors::h1 = colors::text.mix(colors::edit, 64);

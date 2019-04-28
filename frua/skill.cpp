@@ -4,14 +4,18 @@ struct skill_info {
 	const char*		id;
 	const char*		name;
 	cflags<class_s>	allow;
-} skill_data[] = {{"SaveVsParalization", "Защита от парализации"},
-{"SaveVsPoison", "Защита от яда"},
-{"SaveVsDeath", "Защита от смерти"},
-{"SaveVsWands", "Защита от палочек"},
-{"SaveVsPetrification", "Защита от окаменения"},
-{"SaveVsPolymorph", "Защита от превращения"},
-{"SaveVsBreathWeapon", "Защита от дыхания"},
-{"SaveVsSpells", "Защита от магии"},
+} skill_data[] = {{"SaveVsParalization", "Спасение от парализации"},
+{"SaveVsPoison", "Спасение от яда"},
+{"SaveVsDeath", "Спасение от смерти"},
+{"SaveVsWands", "Спасение от палочек"},
+{"SaveVsPetrification", "Спасение от окаменения"},
+{"SaveVsPolymorph", "Спасение от превращения"},
+{"SaveVsBreathWeapon", "Спасение от дыхания"},
+{"SaveVsSpells", "Спасение от магии"},
+//
+{"ResistCold", "Сопротивление холоду"},
+{"ResistFire", "Сопротивление огню"},
+{"ResistCharm", "Сопротивление шарму"},
 //
 {"PickPockets", "Очищать карманы", {Theif}},
 {"OpenLocks", "Открывать замки", {Theif}},
@@ -192,6 +196,16 @@ int	character::get(skill_s id) const {
 			result += maptbl(widow_spell_bonus, get(Wisdow)) * 5;
 			break;
 		}
+	} else if(id >= FirstResist && id <= LastResist) {
+		auto con = get(Constitution);
+		switch(id) {
+		case ResistCharm:
+			if(is(CharmResistance))
+				result += 90;
+			break;
+		}
+		if(result > 99)
+			result = 99;
 	} else if(id >= PickPockets && id <= ReadLanguages) {
 		auto dex = get(Dexterity);
 		result = get_theiv_skill(id, type, levels);

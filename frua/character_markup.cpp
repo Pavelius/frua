@@ -9,6 +9,7 @@ const bsreq bsmeta<character>::meta[] = {
 	BSREQ(size),
 	BSREQ(abilities),
 	BSREQ(feats),
+	BSREQ(usability),
 	BSREQ(hp), BSREQ(hp_rolled),
 	BSREQ(strenght_percent),
 	BSREQ(avatar),
@@ -121,9 +122,22 @@ static markup element_с2[] = {{0, "Боевая картинка", {0, 0, element_avatar}},
 {}};
 static markup element_с3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
 {}};
-static markup element_form[] = {{5, 0, {0, 0, element_с1}},
+static markup element_general[] = {{5, 0, {0, 0, element_с1}},
 {3, 0, {0, 0, element_с2}},
 {4, 0, {0, 0, element_с3}},
+{}};
+static markup element_special_feats[] = {{0, "#checkboxes", {"feats"}}, {}};
+static markup element_special_usability[] = {{0, "#checkboxes", {"usability"}}, {}};
+static markup element_special_с1[] = {{0, "Способности расы или класса", {0, 0, element_special_feats}},
+{}};
+static markup element_special_с2[] = {{0, "Доступность предметов", {0, 0, element_special_usability}},
+{}};
+static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
+{4, 0, {0, 0, element_special_с2}},
+{4, 0, {0, 0, element_с3}},
+{}};
+static markup element_form[] = {{0, "Общие", {"#page", 0, element_general}},
+{0, "Специальные способности", {"#page", 0, element_special}},
 {}};
 markup character::form_element[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::random}},
 {0, 0, {"#element", 0, element_form}},

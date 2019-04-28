@@ -120,6 +120,7 @@ static rect start_group(int& x, int& y, int& width, const char* title) {
 	setposition(x, y, width);
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
 	gradv(rc, colors::border, colors::edit);
+	line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
 	text(rc, title, AlignCenterCenter);
 	y = rc.y2 + metrics::padding * 2;
 	return rc;

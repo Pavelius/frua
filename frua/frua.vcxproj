@@ -128,7 +128,7 @@
     <ClCompile Include="bsreq_bin.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
-    <ClCompile Include="character_form.cpp" />
+    <ClCompile Include="character_markup.cpp" />
     <ClCompile Include="class.cpp" />
     <ClCompile Include="collection.cpp" />
     <ClCompile Include="collection_test.cpp" />

@@ -103,8 +103,8 @@ void character::apply_ability_restriction() {
 }
 
 void character::apply_feats() {
-	feats = bsmeta<race_s>::data[race].feats.data;
-	feats |= bsmeta<class_s>::data[type].feats.data;
+	feats = bsmeta<race_s>::data[race].feats;
+	feats |= bsmeta<class_s>::data[type].feats;
 	movement = bsmeta<race_s>::data[race].movement;
 	size = bsmeta<race_s>::data[race].size;
 }
