@@ -12,7 +12,7 @@ const markup* getmarkup(const bsreq* type) {
 	auto p = decoration::find(type);
 	if(!p)
 		return 0;
-	return p->form_element;
+	return p->markups;
 }
 
 bool decoration::edit(bsdata& source, void* object, void* copy_object) {
@@ -23,6 +23,7 @@ bool decoration::edit(bsdata& source, void* object, void* copy_object) {
 	char copy_buffer[256] = {};
 	auto copy = copy_buffer;
 	auto size = source.size;
+	auto creating = false;
 	if(size > sizeof(copy_buffer))
 		copy = new char[size];
 	if(object)
@@ -31,9 +32,9 @@ bool decoration::edit(bsdata& source, void* object, void* copy_object) {
 		memcpy(copy, copy_object, size);
 	else {
 		memset(copy, 0, size);
-		pd->form_element->action("create", copy);
+		creating = true;
 	}
-	if(edit(pd->name, copy, source.size, source.meta, 0, pd->changed)) {
+	if(edit(pd->name, copy, source.size, source.meta, 0, creating)) {
 		if(!object)
 			object = source.add();
 		if(object)

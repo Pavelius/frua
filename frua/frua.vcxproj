@@ -124,6 +124,7 @@
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="attack.cpp" />
+    <ClCompile Include="attack_type.cpp" />
     <ClCompile Include="bsreq.cpp" />
     <ClCompile Include="bsreq_bin.cpp" />
     <ClCompile Include="bstream.cpp" />
@@ -159,6 +160,8 @@
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="item.cpp" />
+    <ClCompile Include="item_feat.cpp" />
+    <ClCompile Include="item_info_markup.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_util.cpp" />
     <ClCompile Include="mapcore.cpp" />

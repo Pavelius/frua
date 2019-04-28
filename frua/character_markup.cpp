@@ -69,7 +69,8 @@ static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {4, 0, {0, 0, abilities_c2}},
 //{4, 0, {0, 0, generate_c3}},
 {}};
-static markup generate_form[] = {{0, 0, {"#commands", 0, generate_commands}},
+static markup generate_form[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::random}},
+{0, 0, {"#commands", 0, generate_commands}},
 {0, "Раса, класс и мировозрение", {"#page", 0, generate_markup}},
 {0, "Атрибуты", {"#page", 0, abilities_markup}, 0, {0, 0, 0, 0, 0, character::recreate}},
 {0, 0, {"#apply"}, 0, {0, 0, 0, 0, 0, character::apply_avatar}},
@@ -136,10 +137,11 @@ static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},
 {4, 0, {0, 0, element_с3}},
 {}};
-static markup element_form[] = {{0, "Общие", {"#page", 0, element_general}},
+static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, character::changed}},
+{0, "Общие", {"#page", 0, element_general}},
 {0, "Специальные способности", {"#page", 0, element_special}},
 {}};
-markup character::form_element[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::random}},
+markup character::markups[] = {
 {0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};

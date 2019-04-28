@@ -1001,8 +1001,7 @@ static void sub_value() {
 	p--;
 }
 
-bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
-	const markup* elements, changedp changed) {
+bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements, bool creating) {
 	int x, y;
 	if(!elements) {
 		// Получим форму элемента по умолчанию
@@ -1016,6 +1015,8 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	}
 	if(!elements)
 		return false;
+	if(creating)
+		elements->action("create", object);
 	char r2_buffer[256];
 	auto r2 = r2_buffer;
 	if(size > sizeof(r2_buffer))
@@ -1025,6 +1026,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	auto current_page = 0;
 	const markup* page_markup_last = 0;
 	auto commands = elements->findcommands(object);
+	auto updater = elements->find("update", object, 0, false);
 	auto type_key = type->getkey();
 	while(ismodal()) {
 		auto page_maximum = elements->getpagecount(object);
@@ -1069,8 +1071,12 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		}
 		memcpy(r2, object, size);
 		domodal();
-		if(changed && memcmp(object, r2, size) != 0)
-			changed(object, r2);
+		if(updater) {
+			// Если ПОСЛЕ обработки команды менялся оригинальный объект вызываем специальное событие
+			// В нем мы можем проанализировать что именно поменялось и если надо что-то обновить.
+			if(updater->proc.change && memcmp(object, r2, size) != 0)
+				updater->proc.change(object, r2);
+		}
 	}
 	closeform();
 	setfocus(old_focus, true);

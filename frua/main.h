@@ -154,8 +154,6 @@ enum magic_power_s : unsigned char {
 	FreeAction, JumpingPower, MindShielding, Protection,
 	Ram, Regeneration, ShockingGrasp, ShootingStars, SpellStoring, SpellTurning,
 	Sustenance, SwimmingPower, Telekinesis, Truth, Warmth, WaterWalking, Weakness, Wizardry, DarkvisionPower,
-	// Character status non magic
-	Surprised, Blessed, Lighted,
 };
 enum gender_s : unsigned char {
 	Male, Female,
@@ -166,8 +164,14 @@ enum direction_s : unsigned char {
 enum item_state_s : unsigned char {
 	Mundane, Cursed, Magic, Artifact
 };
-enum attack_feat_s : unsigned char {
-	PreviousAttackHit,
+enum item_feat_s : unsigned char {
+	UseWhenHit,
+	BodyPart
+};
+enum condition_s : unsigned char {
+	NoCondition,
+	MeleeAttackRoll, RangeAttackRoll,
+	SkillNegates, SkillHalf,
 };
 enum grade_s : unsigned char {
 	Fair, Good, Excellent,
@@ -200,32 +204,28 @@ typedef race_s				racea[8];
 typedef class_s				classa[3];
 
 struct decoration {
-	typedef void(*changedp)(void* p, const void* pp);
 	typedef void(*commandp)(void* p);
 	const char*				name;
 	bsdata*					database;
 	const bsreq*			meta;
 	markup::proci			proc;
 	point					size;
-	const markup*			form_element;
-	changedp				changed;
+	const markup*			markups;
 	static decoration		data[];
 	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
 		meta(bsmeta<T>::meta), database(&bsmeta<T>::data),
 		proc{T::getname, T::getvalue},
-		form_element(T::form_element),
-		changed(T::changed) {}
+		markups(T::markups) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), database(0),
 		proc{T::getname, T::getvalue},
-		form_element(T::form_element),
-		changed(0) {}
+		markups(T::markups) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type);
 	static bool				choose(void** result, const bsreq* type);
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object);
-	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, changedp changed = 0);
+	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
 	static const decoration* find(const bsreq* type);
 };
 
@@ -256,6 +256,14 @@ struct dam_info {
 	skill_s					resist;
 };
 struct feat_info {
+	const char*				id;
+	const char*				name;
+};
+struct attack_type_info {
+	const char*				id;
+	const char*				name;
+};
+struct item_feat_info {
 	const char*				id;
 	const char*				name;
 };
@@ -332,24 +340,27 @@ struct race_info {
 };
 struct event_info {
 	picture_info			picture;
-	void					edit();
 };
 struct dice_info : dice {
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
-struct damage_info {
+struct harm_info {
 	dam_s					type;
-	char					thac0;
 	char					critical, multiplier;
-	char					attacks; // per two rounds
-	char					range; // in squars.
 	dice_info				damage;
 	dice_info				damage_large;
+};
+struct state_info {
+};
+struct damage_info : harm_info {
+	char					thac0;
+	char					attacks; // per two rounds
+	char					range; // in squars.
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	//
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
@@ -357,7 +368,7 @@ struct armor_info {
 	char					ac, toughness;
 	char					critical;
 	//
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
@@ -370,7 +381,7 @@ struct special_info {
 	char					used, use_per_day;
 	unsigned				feats;
 	//
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
@@ -394,9 +405,7 @@ struct item_info {
 	char					abilities[Charisma + 1];
 	int						cost, weight;
 	// Database engine methods
-	static void				changed(void* object, const void* previous) {}
-	static void				created(void* object) {}
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
 };
@@ -464,7 +473,7 @@ struct character {
 	static void				update_battle();
 	// Database engine methods
 	static void				changed(void* object, const void* previous);
-	static markup			form_element[];
+	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
 private:

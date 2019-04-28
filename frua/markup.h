@@ -10,10 +10,11 @@ struct markup {
 	struct proci {
 		const char* (*getname)(const void* object, char* result, const char* result_maximum, int column);
 		int(*getvalue)(const void* object, int column);
-		bool(*isallow)(const void* object, int index);
-		bool(*isvisible)(const void* object, const markup& e);
-		int(*custom)(int x, int y, int width, const char* id, const void* object);
-		void(*command)(void* object);
+		bool(*isallow)(const void* object, int index); // Is allow special element or command
+		bool(*isvisible)(const void* object, const markup& e); // Is this markup isvisible
+		int(*custom)(int x, int y, int width, const char* id, const void* object); // Custom draw
+		void(*command)(void* object); // Any command of class object
+		void(*change)(void* object, const void* previous_object); // When object changed
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
 	char				width;
