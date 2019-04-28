@@ -445,11 +445,8 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 }
 
 static void choose_avatar() {
-	auto p = (short unsigned*)hot.param;
-	if(!p)
-		return;
 	auto old_focus = getfocus();
-	picture_info::choose(*p, "Какую картинку использовать?", command_mask, 64);
+	//picture_info::choose(*p, "Какую картинку использовать?", command_mask, 64);
 	setfocus(old_focus, true);
 }
 
@@ -620,43 +617,6 @@ static void check_flags() {
 	else
 		v1 |= v2;
 	command_value = (const int)v1;
-}
-
-static int field_picture(int x, int y, int width, int height, short unsigned& ev, const char* title, const char* mask) {
-	auto y0 = y;
-	unsigned flags = 0;
-	rect rgo = start_group(x, y, width, title);
-	rect rc = {x, y, x + width, y + height};
-	focusing((int)&ev, flags, rc);
-	auto focused = isfocused(flags);
-	auto a = area(rc);
-	if(a == AreaHilited || a == AreaHilitedPressed)
-		rectf(rc, colors::edit);
-	rectb(rc, colors::border);
-	if(spr_monsters) {
-		auto dx = width / 4;
-		auto y1 = y + (height / 4) * 3;
-		image(x + dx * 1, y1, spr_monsters, ev * 2 + 0, 0);
-		image(x + dx * 3, y1, spr_monsters, ev * 2 + 1, 0);
-	}
-	auto result = false;
-	if(focused) {
-		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-		button_handle(result);
-	}
-	if(a == AreaHilited || a == AreaHilitedPressed) {
-		if(hot.key == MouseLeft && !hot.pressed)
-			result = true;
-	}
-	if(result) {
-		command_mask[0] = 0;
-		if(mask)
-			zcpy(command_mask, mask);
-		execute(choose_avatar, (int)&ev);
-	}
-	y += rc.height();
-	y += close_group(x, y, rgo);
-	return y - y0;
 }
 
 struct image_info : point {
@@ -889,12 +849,6 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 //	return y - y0;
 //}
 
-static void character_reroll() {
-	auto p = (character*)hot.param;
-	p->reroll();
-	p->set(UniqueCharacter);
-}
-
 //bool character::edit() {
 //	static const char* page_strings[] = {"Базовый", "Особенности", "Заклинания", 0};
 //	int x, y;
@@ -913,7 +867,7 @@ static void character_reroll() {
 //			y = y0;
 //			x += c2 + metrics::padding * 3;
 //			auto c3 = getwidth() - x - metrics::padding * 2;
-//			y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
+//		y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
 //			//y += edit_attacks(x, y, c3);
 //		} else if(page == 1) {
 //			auto c1 = 300;
@@ -1004,6 +958,39 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	return y - y0;
 }
 
+int character::view_avatar(int x, int y, int width, const char* id, const void* object) {
+	auto p = (character*)object;
+	unsigned flags = 0;
+	auto height = 64;
+	draw::setposition(x, y, width);
+	rect rc = {x, y, x + width, y + height};
+	focusing((int)&p->avatar, flags, rc);
+	auto focused = isfocused(flags);
+	auto a = area(rc);
+	switch(a) {
+	case AreaHilited: rectf(rc, colors::edit.mix(colors::window)); break;
+	case AreaHilitedPressed: rectf(rc, colors::edit); break;
+	}
+	if(spr_monsters) {
+		auto dx = width / 4;
+		auto y1 = y + (height / 8) * 7;
+		image(x + dx * 1, y1, spr_monsters, p->avatar * 2 + 0, 0);
+		image(x + dx * 3, y1, spr_monsters, p->avatar * 2 + 1, 0);
+	}
+	auto result = false;
+	if(focused) {
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+		button_handle(result);
+	}
+	if(a == AreaHilited || a == AreaHilitedPressed) {
+		if(hot.key == MouseLeft && !hot.pressed)
+			result = true;
+	}
+	if(result)
+		execute(choose_avatar);
+	return rc.height() + metrics::padding*2;
+}
+
 void character::apply_avatar(void* object) {
 	auto p = (character*)object;
 	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))
@@ -1023,8 +1010,16 @@ static void sub_value() {
 bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type,
 	const markup* elements, changedp changed) {
 	int x, y;
-	if(!elements)
+	if(!elements) {
+		// Получим форму элемента по умолчанию
 		elements = getmarkup(type);
+		auto fm = elements->getform(object, "element");
+		if(fm) {
+			elements = fm->value.child;
+			if(fm->title)
+				name = fm->title;
+		}
+	}
 	if(!elements)
 		return false;
 	char r2_buffer[256];

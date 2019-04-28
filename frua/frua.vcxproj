@@ -128,6 +128,7 @@
     <ClCompile Include="bsreq_bin.cpp" />
     <ClCompile Include="bstream.cpp" />
     <ClCompile Include="character.cpp" />
+    <ClCompile Include="character_form.cpp" />
     <ClCompile Include="class.cpp" />
     <ClCompile Include="collection.cpp" />
     <ClCompile Include="collection_test.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
     <ClCompile Include="race.cpp" />
+    <ClCompile Include="reaction.cpp" />
     <ClCompile Include="screenshoot.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />

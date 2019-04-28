@@ -90,7 +90,7 @@ static void choose_enum() {
 	ev.proc = command.proc;
 	auto i1 = 0;
 	auto i2 = command.data->count - 1;
-	for(unsigned i = i1; i < i2; i++) {
+	for(unsigned i = i1; i <= i2; i++) {
 		if(command.proc.isallow) {
 			if(!command.proc.isallow(command.object, i))
 				continue;
@@ -241,6 +241,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 				command.rc = rc;
 				command.value = ev;
 				command.data = pb;
+				command.object = source.data;
 				if(pri)
 					command.proc = *pri;
 				execute(choose_enum);

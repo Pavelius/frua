@@ -238,6 +238,10 @@ struct alignment_info {
 	const char*				name;
 	adat<class_s, 4>		restricted;
 };
+struct reaction_info {
+	const char*				id;
+	const char*				name;
+};
 struct gender_info {
 	const char*				id;
 	const char*				name;
@@ -442,6 +446,7 @@ struct character {
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
+	static int				view_avatar(int x, int y, int width, const char* id, const void* object);
 	static int				view_ability(int x, int y, int width, const char* id, const void* object);
 	static int				view_levels(int x, int y, int width, const char* id, const void* object);
 	static int				view_personal(int x, int y, int width, const char* id, const void* object);
@@ -523,6 +528,7 @@ DECLENUM(dam);
 DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(race);
+DECLENUM(reaction);
 DECLENUM(size);
 DECLENUM(wear);
 DECLENUM(usability);

@@ -25,6 +25,7 @@ struct markup {
 	bool				action(const char* id, void* object) const;
 	bool				isfield() const { return value.id != 0; }
 	int					getcount(const char* id, const void* object, bool need_child) const;
+	const markup*		getform(const void* object, const char* id) const { return find(id, object, 0, true); }
 	const markup*		getpage(const void* object, int index) const { return find("page", object, index, true); }
 	int					getpagecount(const void* object) const { return getcount("page", object, true); }
 	const markup*		find(const char* id, const void* object, int result, bool need_child) const;

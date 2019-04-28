@@ -68,7 +68,10 @@ bool draw::buttonh(rect rc, bool checked, bool focused, bool disabled, bool bord
 	draw::state push;
 	bool result = false;
 	struct rect rcb = {rc.x1 + 1, rc.y1 + 1, rc.x2, rc.y2};
-	areas a = area(rcb);
+	struct rect rch = {rc.x1 + 1, rc.y1 + 1, rc.x2, rc.y2-1};
+	// „тобы не пересикались области хиттекста эту область делаем немного меньше
+	// “огда, например, выпадающий список не будет иметь проблем с подсветкой
+	areas a = area(rch);
 	if(disabled) {
 		gradv(rcb, value.lighten(), value.darken());
 		if(border)
