@@ -444,12 +444,6 @@ static int field(int x, int y, int width, const char* title, controls::textedit&
 	return rc.y2 - y + metrics::padding;
 }
 
-static void choose_avatar() {
-	auto old_focus = getfocus();
-	//picture_info::choose(*p, "Какую картинку использовать?", command_mask, 64);
-	setfocus(old_focus, true);
-}
-
 static int fieldv(int x, int y, int width, const char* title, const char* value) {
 	char temp[260]; zprint(temp, "%1:", title);
 	x += metrics::padding;
@@ -987,7 +981,7 @@ int character::view_avatar(int x, int y, int width, const char* id, const void* 
 			result = true;
 	}
 	if(result)
-		execute(choose_avatar);
+		cmd(character::choose_avatar, (void*)object).execute();
 	return rc.height() + metrics::padding*2;
 }
 

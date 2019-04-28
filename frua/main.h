@@ -400,6 +400,7 @@ struct character {
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
 	void					apply_feats();
+	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }
 	void					correct();

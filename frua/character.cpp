@@ -350,3 +350,8 @@ const char* character::getname(const void* object, char* result, const char* res
 	default: return "";
 	}
 }
+
+void character::choose_avatar(void* object) {
+	auto p = (character*)object;
+	picture_info::choose(p->avatar, "Какую картинку использовать?", 0, 64);
+}
