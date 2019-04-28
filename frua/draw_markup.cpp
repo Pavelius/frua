@@ -133,14 +133,14 @@ static int close_group(int x, int y, const rect& rc) {
 	return metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2 = 0);
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2, int* title_width_value);
 
 static int group_vertial(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
 	if(!elements)
 		return 0;
 	auto y0 = y;
 	for(auto p = elements; *p; p++)
-		y += element(x, y, width, title_width, *p, source, title_state, title_override);
+		y += element(x, y, width, title_width, *p, source, title_state, title_override, 0, &title_width);
 	return y - y0;
 }
 
@@ -155,7 +155,7 @@ static int group_horizontal(int x, int y, int width, int title_width, const mark
 		auto we = p->width*wi;
 		if(x1 + we > width - 12)
 			we = width - x1;
-		auto yc = element(x, y, we, title_width, *p, source, title_state, title_override);
+		auto yc = element(x, y, we, title_width, *p, source, title_state, title_override, 0, &title_width);
 		if(ym < yc)
 			ym = yc;
 		x += we;
@@ -217,7 +217,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 			*right_x2 = rc.x2;
 		if(child) {
 			for(auto p = child; *p && rc.x2 < xe; p++)
-				element(rc.x2, y0, xe - rc.x2, title_width, *p, source, TitleShort, title_override, &rc.x2);
+				element(rc.x2, y0, xe - rc.x2, title_width, *p, source, TitleShort, title_override, &rc.x2, 0);
 		}
 	} else if(type->is(KindEnum)) {
 		auto pb = bsdata::find(type->type, bsdata::firstenum);
@@ -252,7 +252,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 	return rc.height() + metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2) {
+static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2, int* title_width_value) {
 	if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
 		return 0;
 	else if(e.value.id && e.value.id[0] == '#')
@@ -265,6 +265,11 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 	else if(e.title && e.title[0] == '#') {
 		auto pn = e.title + 1;
 		auto y0 = y;
+		if(strcmp(pn, "title") == 0) {
+			if(title_width_value)
+				*title_width_value = e.param;
+			return 0;
+		}
 		if(e.value.id) {
 			auto bv = getvalue(source, e);
 			if(!bv.data || !bv.type)
@@ -318,6 +323,8 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 					count = bv.type->count;
 				for(unsigned i = 0; i < pb->count; i++) {
 					auto pv = bv.type->ptr(bv.data, i);
+					if(e.proc.isallow && !e.proc.isallow(source.data, i))
+						continue;
 					y += field_main(x, y, width, title_width, source, pv, bv.type,
 						e.param, getpresent(pb->get(i)), title_state, title_override, right_x2, 0, &e.proc);
 				}

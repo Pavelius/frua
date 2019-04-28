@@ -5,6 +5,7 @@ decoration decoration::data[] = {{"Персонажи или монстры", {250, 60}, character(
 {"Броня", armor_info()},
 {"Оружие", damage_info()},
 {"Кубик", dice_info()},
+{"Специальная атака", special_attack_info()},
 };
 
 // Export procedure to find default markup

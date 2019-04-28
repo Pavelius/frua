@@ -147,7 +147,7 @@ enum magic_power_s : unsigned char {
 	AcidResistance, Disenchantment, ElementalInvulnerability,
 	Etherealness, FieryBurning, Fumbling, Impact, Slipperiness,
 	Timelessness, Glibness, Love, Persuasiveness, StammeringAndStuttering,
-	PlantControl, Poison, Polymorph, RainbowHues, Speed, SuperHeroism,
+	PlantControl, Polymorph, RainbowHues, Speed, SuperHeroism,
 	SweetWater, TreasureFinding, UndeadControl, VentriloquismPower, Vitality, WaterBreathing,
 	// Rings
 	Blinking, ChameleonPower, Clumsiness, Contrariness, DjinniSummoning, ElementalControl, FeatherFalling,
@@ -165,13 +165,13 @@ enum item_state_s : unsigned char {
 	Mundane, Cursed, Magic, Artifact
 };
 enum item_feat_s : unsigned char {
-	UseWhenHit,
+	Consumable,
 	BodyPart
 };
-enum condition_s : unsigned char {
-	NoCondition,
-	MeleeAttackRoll, RangeAttackRoll,
-	SkillNegates, SkillHalf,
+enum effect_s : unsigned char {
+	NoEffect,
+	Death, Petrification, AdditionalDamage,
+	WeakPoison, Poison, StrongPoison, DeathPoison,
 };
 enum grade_s : unsigned char {
 	Fair, Good, Excellent,
@@ -203,6 +203,24 @@ typedef alignment_s			alignmenta[8];
 typedef race_s				racea[8];
 typedef class_s				classa[3];
 
+enum variant_s : unsigned char {
+	NoVariant,
+	Races, Classes, Alignments
+};
+struct variant {
+	variant_s				type;
+	union {
+		race_s				race;
+		class_s				clas;
+		alignment_s			alignment;
+		unsigned char		value;
+	};
+	constexpr variant() : type(NoVariant), value(0) {}
+	constexpr variant(race_s v) : type(Races), race(v) {}
+	constexpr variant(class_s v) : type(Classes), clas(v) {}
+	constexpr variant(alignment_s v) : type(Alignments), alignment(v) {}
+	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
+};
 struct decoration {
 	typedef void(*commandp)(void* p);
 	const char*				name;
@@ -259,7 +277,7 @@ struct feat_info {
 	const char*				id;
 	const char*				name;
 };
-struct attack_type_info {
+struct effect_info {
 	const char*				id;
 	const char*				name;
 };
@@ -278,7 +296,6 @@ struct wear_info {
 	wear_s					wear[2];
 	char					use_damage;
 	char					use_armor;
-	char					use_ability;
 };
 struct usability_info {
 	const char*				id;
@@ -286,14 +303,6 @@ struct usability_info {
 };
 struct sprite_name_info {
 	char					name[32];
-};
-struct base_info {
-	bsdata&					source;
-	const char*				name;
-	base_info*				next;
-	base_info(const char* name, bsdata& source) : name(name), source(source), next(0) {
-
-	}
 };
 struct picture_info {
 	const char*				folder;
@@ -346,18 +355,14 @@ struct dice_info : dice {
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
-struct harm_info {
+struct damage_info {
+	char					attacks; // per two rounds
 	dam_s					type;
+	char					thac0;
+	char					range; // in squars (5x5 ft each)
 	char					critical, multiplier;
 	dice_info				damage;
 	dice_info				damage_large;
-};
-struct state_info {
-};
-struct damage_info : harm_info {
-	char					thac0;
-	char					attacks; // per two rounds
-	char					range; // in squars.
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	//
 	static markup			markups[];
@@ -376,15 +381,6 @@ struct attack_info : damage_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
-struct special_info {
-	damage_info				damage;
-	char					used, use_per_day;
-	unsigned				feats;
-	//
-	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
-	static int				getvalue(const void* object, int id) { return 0; }
-};
 struct item {
 	unsigned char			type;
 	item_state_s			state : 2;
@@ -393,16 +389,26 @@ struct item {
 	unsigned char			charges;
 	constexpr operator bool() const { return type != 0; }
 };
+struct special_attack_info {
+	effect_s				effect;
+	dam_s					damage;
+	char					modifier;
+	dice_info				range;
+	static markup			markups[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
+};
 struct item_info {
 	wear_s					type;
 	const char*				name;
 	const char*				power_name;
 	cflags<usability_s>		usability;
+	cflags<item_feat_s>		feat;
 	damage_info				damage;
+	special_attack_info		special_attack;
 	armor_info				armor;
-	char					resistance[Fire + 1];
-	char					threshold[Fire + 1];
 	char					abilities[Charisma + 1];
+	char					skills[LastSkill + 1];
 	int						cost, weight;
 	// Database engine methods
 	static markup			markups[];
@@ -499,7 +505,6 @@ private:
 	item_info				wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
-	special_info			special_attacks[4];
 	friend struct bsmeta<character>;
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
@@ -544,6 +549,8 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 DECLENUM(alignment);
 DECLENUM(class);
 DECLENUM(dam);
+DECLENUM(effect);
+DECLENUM(item_feat);
 DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(race);

@@ -189,9 +189,6 @@
     <ClCompile Include="collection_test.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
-    <ClCompile Include="item.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="wear.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -216,10 +213,22 @@
     <ClCompile Include="item_feat.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="attack_type.cpp">
+    <ClCompile Include="effect.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="item_info_markup.cpp">
+    <ClCompile Include="special_attack.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="damage.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="armor.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="dice_markup.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="item_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

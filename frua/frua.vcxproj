@@ -123,8 +123,11 @@
     <ClCompile Include="alignment.cpp" />
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
+    <ClCompile Include="armor.cpp" />
     <ClCompile Include="attack.cpp" />
-    <ClCompile Include="attack_type.cpp" />
+    <ClCompile Include="damage.cpp" />
+    <ClCompile Include="dice_markup.cpp" />
+    <ClCompile Include="effect.cpp" />
     <ClCompile Include="bsreq.cpp" />
     <ClCompile Include="bsreq_bin.cpp" />
     <ClCompile Include="bstream.cpp" />
@@ -159,9 +162,8 @@
     <ClCompile Include="feat.cpp" />
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
-    <ClCompile Include="item.cpp" />
+    <ClCompile Include="item_info.cpp" />
     <ClCompile Include="item_feat.cpp" />
-    <ClCompile Include="item_info_markup.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_util.cpp" />
     <ClCompile Include="mapcore.cpp" />
@@ -174,6 +176,7 @@
     <ClCompile Include="screenshoot.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
+    <ClCompile Include="special_attack.cpp" />
     <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
     <ClCompile Include="string_value.cpp" />
