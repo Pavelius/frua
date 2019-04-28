@@ -5,17 +5,6 @@
 struct bsdata_bin {
 	io::stream&	file;
 	bool		writemode;
-	void* findobject(bsdata* pb, const bsreq* pk, const char* key) {
-		if(!key)
-			return 0;
-		auto pv = (void*)pb->find(pk, key);
-		// Если ключ не найден попытаемся его создать
-		if(!pv && pb->count < pb->maximum) {
-			pv = pb->add();
-			pk->set(pk->ptr(pv), (int)key);
-		}
-		return pv;
-	}
 	const char* read_string() {
 		unsigned lenght = 0;
 		file.read(&lenght, sizeof(lenght));
@@ -32,16 +21,13 @@ struct bsdata_bin {
 			delete p;
 		return result;
 	}
-	void serial(const char*& v) {
+	void write_string(const char* v) {
 		unsigned lenght = 0;
-		if(writemode) {
-			if(v)
-				lenght = zlen(v);
-			file.write(&lenght, sizeof(lenght));
-			if(lenght)
-				file.write(v, lenght);
-		} else
-			v = read_string();
+		if(v)
+			lenght = zlen(v);
+		file.write(&lenght, sizeof(lenght));
+		if(lenght != 0)
+			file.write(v, lenght);
 	}
 	void serial(void* v, unsigned lenght) {
 		if(writemode)
@@ -49,10 +35,8 @@ struct bsdata_bin {
 		else
 			file.read(v, lenght);
 	}
-	void serial(const void* object, const bsreq* type, const bsreq* skip) {
-		for(auto p = type; *p; p++) {
-			if(p == skip)
-				continue;
+	bool serial(const void* object, const bsreq* records) {
+		for(auto p = records; *p; p++) {
 			// Ссылки на ссылки сразу пропускаем. Их нельзя сохранять.
 			if(p->reference >= 2)
 				continue;
@@ -68,89 +52,125 @@ struct bsdata_bin {
 				// Текст записываем поэлементно
 				for(unsigned i = 0; i < p->count; i++) {
 					auto ps = (const char**)p->ptr(object, i);
-					serial(*ps);
+					if(writemode)
+						write_string(*ps);
+					else
+						*ps = read_string();
 				}
-			} else if(p->isref() || p->subtype==KindEnum) {
-				// Пытаемся найти тип
-				auto pb = bsdata::find(p->type, bsdata::firstenum);
-				if(!pb)
-					pb = bsdata::find(p->type, bsdata::first);
-				if(!pb)
-					continue;
-				// Пытаемся найти ключ
-				auto pk = pb->meta->getkey();
-				if(!pk)
-					continue;
-				// Записываем ключ
+			} else if(p->isref() || p->subtype == KindEnum) {
+				auto isenum = (p->subtype == KindEnum);
+				if(isenum && p->isref())
+					continue; // Пропускаем ссылки на перечисления
 				for(unsigned i = 0; i < p->count; i++) {
-					auto pv = p->ptr(object, i);
+					void* pv = 0;
 					if(writemode) {
-						void* ppv;
-						if(p->subtype == KindEnum) {
-							auto i = p->get(pv);
-							ppv = (void*)pb->get(i);
+						if(isenum) {
+							auto pb = bsdata::find(p->type, bsdata::firstenum);
+							if(!pb)
+								pb = bsdata::find(p->type, bsdata::first);
+							if(!pb)
+								continue;
+							auto index = p->get(p->ptr(object, i));
+							pv = (void*)pb->get(index);
 						} else
-							ppv = (void*)p->get(pv);
-						const char* key = 0;
-						if(ppv)
-							key = (const char*)pk->get(pk->ptr(ppv));
-						serial(key);
+							pv = (void*)p->get(p->ptr(object, i));
+						if(!serial_reference(pv, 0))
+							return false;
 					} else {
-						auto key = read_string();
-						auto ppv = findobject(pb, pk, key);
-						if(!ppv)
-							continue;
-						if(p->subtype == KindEnum)
-							p->set(pv, pb->indexof(ppv));
-						else
-							p->set(pv, (int)ppv);
+						bsdata* pb = 0;
+						if(!serial_reference(pv, &pb))
+							return false;
+						if(!pb)
+							return false;
+						if(isenum) {
+							auto index = pb->indexof(pv);
+							if(index == -1)
+								return false; // Когда это может быть?
+							p->set(p->ptr(object, i), index);
+						} else
+							p->set(p->ptr(object, i), (int)pv);
 					}
 				}
+			} else if(p->subtype == KindCFlags)
+				serial(p->ptr(object), p->lenght); // Флаги переносятся особым образом
+			else
+				serial(p->ptr(object), p->type); // Подчиненный объект, указанный прямо в теле
+		}
+		return true;
+	}
+	bool serial_reference(void*& pv, bsdata** ppb) {
+		char temp[256];
+		// Вначале определим базу данных
+		bsdata* pb = 0;
+		if(writemode) {
+			pb = bsdata::findbyptr(pv, bsdata::firstenum);
+			if(!pb)
+				pb = bsdata::findbyptr(pv, bsdata::first);
+			if(!pb) {
+				file.write(&pb, sizeof(pb));
+				return true;
+			}
+			write_string(pb->id);
+		} else {
+			pv = 0;
+			auto key = read_string();
+			if(!key) // Пустая ссылка
+				return true;
+			pb = bsdata::find(key, bsdata::firstenum);
+			if(!pb)
+				pb = bsdata::find(key, bsdata::first);
+		}
+		if(!pb)
+			return false;
+		if(ppb)
+			*ppb = pb;
+		// Теперь определим ключ ссылки
+		// Ключем может быть только ОДНО первое поле
+		// Оно может быть текстовое или скалярного типа (не ссылочный объект)
+		auto pk = pb->meta;
+		if(!pk->type->istext() && pk->type->isref())
+			return false;
+		if(pk->type->istext() && (pk->type->count > 1 || pk->reference > 1))
+			return false;
+		if(pk->lenght > sizeof(temp))
+			return false;
+		// Запишем ключевое поле
+		if(writemode) {
+			if(pk->istext()) {
+				auto v = (const char*)pk->get(pk->ptr(pv));
+				write_string(v);
+			} else
+				file.write(pk->ptr(pv), pk->lenght);
+		} else {
+			if(pk->istext()) {
+				*((const char**)temp) = read_string();
+				pv = (void*)pb->find(pk, *((const char**)temp));
 			} else {
-				switch(p->subtype) {
-				case KindCFlags:
-					serial(p->ptr(object), p->lenght);
-					break;
-				default:
-					// Подчиненный объект
-					serial(p->ptr(object), p->type, 0);
-					break;
-				}
+				file.read(temp, pk->lenght);
+				pv = (void*)pb->find(pk, temp, pk->lenght);
+			}
+			// Если ключ не найден попытаемся его создать
+			if(!pv && pb->count < pb->maximum) {
+				pv = pb->add();
+				memcpy(pk->ptr(pv), temp, pk->lenght);
 			}
 		}
+		return pv != 0;
 	}
 	bool read_object() {
-		auto object_name = read_string();
-		if(!object_name)
+		bsdata* pb = 0;
+		void* pv = 0;
+		if(!serial_reference(pv, &pb))
 			return false;
-		auto pb = bsdata::find(object_name, bsdata::firstenum);
-		if(!pb)
-			pb = bsdata::find(object_name, bsdata::first);
 		if(!pb)
 			return false;
-		auto pk = pb->meta->getkey();
-		if(!pk)
-			return false;
-		auto key = read_string();
-		if(!key)
-			return false;
-		auto pv = findobject(pb, pk, key);
-		if(!pv)
-			return false;
-		serial(pv, pb->meta, pk);
-		return true;
+		return serial(pv, pb->meta + 1);
 	}
-	bool write_object(bsdata* pb, const void* object) {
-		auto pk = pb->meta->getkey();
-		if(!pk)
+	bool write_object(bsdata* pb, const void* pv) {
+		auto cpv = (void*)pv;
+		if(!serial_reference(cpv, 0))
 			return false;
-		auto key = (const char*)pk->get(pk->ptr(object));
-		if(!key)
-			return false;
-		serial(pb->id);
-		serial(key);
-		serial(object, pb->meta, pk);
-		return true;
+		return serial(pv, pb->meta + 1);
 	}
 	constexpr bsdata_bin(io::stream& file, bool writemode) : file(file), writemode(writemode) {}
 };

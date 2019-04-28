@@ -1,6 +1,7 @@
 #include "bsreq.h"
 
 extern "C" int strcmp(const char* s1, const char* s2);
+extern "C" int memcmp(const void* s1, const void* s2, unsigned size);
 
 bsdata*	bsdata::first;
 bsdata*	bsdata::firstenum;
@@ -141,7 +142,7 @@ bsdata* bsdata::find(const bsreq* v, bsdata* first) {
 	return 0;
 }
 
-bsdata* bsdata::findbyptr(const void* object) {
+bsdata* bsdata::findbyptr(const void* object, bsdata* first) {
 	if(!object)
 		return 0;
 	for(auto p = first; p; p = p->next)
@@ -159,6 +160,8 @@ int	bsdata::indexof(const void* object) const {
 const void* bsdata::find(const bsreq* id, const char* value) const {
 	if(!id || id->type != bsmeta<const char*>::meta)
 		return 0;
+	if(!value)
+		return find(id, &value, sizeof(value));
 	auto ps = (char*)id->ptr(data);
 	auto pe = ps + size*count;
 	for(; ps < pe; ps += size) {
@@ -166,6 +169,22 @@ const void* bsdata::find(const bsreq* id, const char* value) const {
 		if(!ps_value)
 			continue;
 		if(strcmp(ps_value, value) == 0) {
+			auto i = indexof(ps);
+			if(i == -1)
+				return 0;
+			return get(i);
+		}
+	}
+	return 0;
+}
+
+const void* bsdata::find(const bsreq* id, const void* value, unsigned size) const {
+	if(!id)
+		return 0;
+	auto ps = (char*)id->ptr(data);
+	auto pe = ps + size * count;
+	for(; ps < pe; ps += size) {
+		if(memcmp(ps, value, size) == 0) {
 			auto i = indexof(ps);
 			if(i == -1)
 				return 0;

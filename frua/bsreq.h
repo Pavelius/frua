@@ -92,7 +92,8 @@ struct bsdata {
 	static bsdata*		find(const char* id, bsdata* first);
 	static bsdata*		find(const bsreq* id, bsdata* first);
 	const void*			find(const bsreq* id, const char* value) const;
-	static bsdata*		findbyptr(const void* object);
+	const void*			find(const bsreq* id, const void* value, unsigned size) const;
+	static bsdata*		findbyptr(const void* object, bsdata* first);
 	const void*			get(int index) const { return (char*)data + size * index; }
 	bool				has(const void* object) const { return object >= data && object < ((char*)data + maximum * size); }
 	int					indexof(const void* object) const;
