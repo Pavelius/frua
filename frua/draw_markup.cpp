@@ -9,7 +9,7 @@ using namespace draw;
 const markup* getmarkup(const bsreq* type);
 
 namespace {
-enum title_s : unsigned char { NoTitle, TitleNormal, TitleShort };
+enum title_s : unsigned char { TitleNormal, TitleShort, NoTitle };
 struct commandi {
 	void*			object;
 	bsdata*			data;
@@ -58,6 +58,14 @@ private:
 	const void*		source;
 	unsigned		index;
 	const anyval	value;
+};
+struct contexti {
+	int				title;
+	const char*		title_text;
+	title_s			title_state;
+	int*			right;
+	bsval			source;
+	contexti() { memset(this, 0, sizeof(*this)); }
 };
 }
 
@@ -133,29 +141,31 @@ static int close_group(int x, int y, const rect& rc) {
 	return metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2, int* title_width_value);
+static int element(int x, int y, int width, contexti& ctx, const markup& e);
 
-static int group_vertial(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
+static int group_vertial(int x, int y, int width, contexti& ctx_original, const markup* elements) {
 	if(!elements)
 		return 0;
 	auto y0 = y;
+	auto ctx = ctx_original;
 	for(auto p = elements; *p; p++)
-		y += element(x, y, width, title_width, *p, source, title_state, title_override, 0, &title_width);
+		y += element(x, y, width, ctx, *p);
 	return y - y0;
 }
 
-static int group_horizontal(int x, int y, int width, int title_width, const markup* elements, const bsval& source, title_s title_state, const char*& title_override) {
+static int group_horizontal(int x, int y, int width, contexti& ctx_original, const markup* elements) {
 	if(!elements)
 		return 0;
 	auto ym = 0;
 	auto wi = width / 12;
 	auto wp = 0;
+	auto ctx = ctx_original;
 	for(auto p = elements; *p; p++) {
 		auto x1 = x + wp * wi;
 		auto we = p->width*wi;
 		if(x1 + we > width - 12)
 			we = width - x1;
-		auto yc = element(x, y, we, title_width, *p, source, title_state, title_override, 0, &title_width);
+		auto yc = element(x, y, we, ctx, *p);
 		if(ym < yc)
 			ym = yc;
 		x += we;
@@ -163,29 +173,29 @@ static int group_horizontal(int x, int y, int width, int title_width, const mark
 	return ym;
 }
 
-static void header(int& x, int y, int& width, const char* label, int title_width, title_s state, const char*& title_override) {
-	if(title_override && title_override[0]) {
-		label = title_override;
-		title_override = 0;
+static void header(int& x, int y, int& width, contexti& ctx, const char* label) {
+	if(ctx.title_text && ctx.title_text[0]) {
+		label = ctx.title_text;
+		ctx.title_text = 0;
 	}
 	if(!label || !label[0])
 		return;
-	if(state == NoTitle)
+	if(ctx.title_state == NoTitle)
 		return;
-	if(state == TitleShort) {
+	if(ctx.title_state == TitleShort) {
 		auto w = textw(label);
 		titletext(x, y, width, 0, label, w, 0);
 		x += metrics::padding;
 		width -= metrics::padding;
 	} else
-		titletext(x, y, width, 0, label, title_width);
+		titletext(x, y, width, 0, label, ctx.title);
 }
 
-static int error(int x, int y, int width, int title_width, const markup& e, const char* error_text) {
+static int error(int x, int y, int width, contexti& ctx, const markup& e, const char* error_text) {
 	auto old_color = fore;
 	fore = colors::red;
 	setposition(x, y, width);
-	titletext(x, y, width, 0, e.title ? e.title : e.value.id, title_width, ":");
+	titletext(x, y, width, 0, e.title ? e.title : e.value.id, ctx.title, ":");
 	auto h = texth() + 4 * 2;
 	rect rc = {x, y, x + width, y + h};
 	rectb(rc, colors::red);
@@ -194,11 +204,11 @@ static int error(int x, int y, int width, int title_width, const markup& e, cons
 	return rc.height() + metrics::padding * 2;
 }
 
-static int field_main(int x, int y, int width, int title_width, const bsval& source, void* pv, const bsreq* type, int param, const char* title_text, title_s title_state, const char*& title_override, int* right_x2, const markup* child, const markup::proci* pri) {
+static int field_main(int x, int y, int width, contexti& ctx, const char* title_text, void* pv, const bsreq* type, int param, const markup* child, const markup::proci* pri) {
 	auto xe = x + width;
 	auto y0 = y;
 	setposition(x, y, width);
-	header(x, y, width, title_text, title_width, title_state, title_override);
+	header(x, y, width, ctx, title_text);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignLeft;
 	if(type->isnum())
@@ -210,14 +220,18 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 		auto d = param;
 		if(!d)
 			d = 2;
-		auto we = draw::textw("0")*(d + 1) + (draw::texth() + 8) + 4 * 2;
+		auto wn = draw::textw("0");
+		auto we = wn * (d + 1) + (draw::texth() + 8) + 4 * 2;
 		rc.x2 = rc.x1 + we;
 		draw::field(rc, flags, anyval(pv, type->size), d, FieldNumber);
-		if(right_x2)
-			*right_x2 = rc.x2;
+		if(ctx.right)
+			*ctx.right = rc.x2;
 		if(child) {
+			auto ctx1 = ctx;
+			ctx1.right = &rc.x2;
+			ctx1.title_state = TitleShort;
 			for(auto p = child; *p && rc.x2 < xe; p++)
-				element(rc.x2, y0, xe - rc.x2, title_width, *p, source, TitleShort, title_override, &rc.x2, 0);
+				element(rc.x2, y0, xe - rc.x2, ctx1, *p);
 		}
 	} else if(type->is(KindEnum)) {
 		auto pb = bsdata::find(type->type, bsdata::firstenum);
@@ -242,7 +256,7 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 				command.rc = rc;
 				command.value = ev;
 				command.data = pb;
-				command.object = source.data;
+				command.object = ctx.source.data;
 				if(pri)
 					command.proc = *pri;
 				execute(choose_enum);
@@ -252,38 +266,37 @@ static int field_main(int x, int y, int width, int title_width, const bsval& sou
 	return rc.height() + metrics::padding * 2;
 }
 
-static int element(int x, int y, int width, int title_width, const markup& e, const bsval& source, title_s title_state, const char*& title_override, int* right_x2, int* title_width_value) {
-	if(e.proc.isvisible && !e.proc.isvisible(source.data, e))
+static int element(int x, int y, int width, contexti& ctx, const markup& e) {
+	if(e.proc.isvisible && !e.proc.isvisible(ctx.source.data, e))
 		return 0;
 	else if(e.value.id && e.value.id[0] == '#')
 		// Страницы, команды, любые другие управляющие структуры.
 		return 0;
 	else if(e.proc.custom)
-		return e.proc.custom(x, y, width, e.value.id, source.data);
+		return e.proc.custom(x, y, width, e.value.id, ctx.source.data);
 	else if(e.proc.command)
-		return button(x, y, width, 0, cmd(e.proc.command, source.data), e.title);
+		return button(x, y, width, 0, cmd(e.proc.command, ctx.source.data), e.title);
 	else if(e.title && e.title[0] == '#') {
 		auto pn = e.title + 1;
 		auto y0 = y;
 		if(strcmp(pn, "title") == 0) {
-			if(title_width_value)
-				*title_width_value = e.param;
+			ctx.title = e.param;
 			return 0;
 		}
 		if(e.value.id) {
-			auto bv = getvalue(source, e);
+			auto bv = getvalue(ctx.source, e);
 			if(!bv.data || !bv.type)
 				return 0;
 			if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
 				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
 				if(!pb || pb->count == 0)
-					return error(x, y, width, title_width, e, "Не найдена база");
+					return error(x, y, width, ctx, e, "Не найдена база");
 				auto size = bv.type->size;
 				if(bv.type->is(KindCFlags))
 					size = bv.type->lenght;
 				for(unsigned i = 0; i < pb->count; i++) {
 					if(e.proc.isallow) {
-						if(!e.proc.isallow(source.data, i))
+						if(!e.proc.isallow(ctx.source.data, i))
 							continue;
 					}
 					auto p = getpresent(pb->get(i));
@@ -296,11 +309,11 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 			} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
 				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
 				if(!pb || pb->count == 0)
-					return error(x, y, width, title_width, e, "Не найдена база");
+					return error(x, y, width, ctx, e, "Не найдена база");
 				auto size = bv.type->size;
 				for(unsigned i = 0; i < pb->count; i++) {
 					if(e.proc.isallow) {
-						if(!e.proc.isallow(source.data, i))
+						if(!e.proc.isallow(ctx.source.data, i))
 							continue;
 					}
 					auto p = getpresent(pb->get(i));
@@ -312,10 +325,10 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 				}
 			} else {
 				if(!bv.type->isnum())
-					return error(x, y, width, title_width, e, bv.type->id);
+					return error(x, y, width, ctx, e, bv.type->id);
 				auto pb = bsdata::find(pn, bsdata::firstenum);
 				if(!pb)
-					return error(x, y, width, title_width, e, pn);
+					return error(x, y, width, ctx, e, pn);
 				if(pb->count == 0)
 					return 0;
 				auto count = pb->count;
@@ -323,16 +336,15 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 					count = bv.type->count;
 				for(unsigned i = 0; i < pb->count; i++) {
 					auto pv = bv.type->ptr(bv.data, i);
-					if(e.proc.isallow && !e.proc.isallow(source.data, i))
+					if(e.proc.isallow && !e.proc.isallow(ctx.source.data, i))
 						continue;
-					y += field_main(x, y, width, title_width, source, pv, bv.type,
-						e.param, getpresent(pb->get(i)), title_state, title_override, right_x2, 0, &e.proc);
+					y += field_main(x, y, width, ctx, getpresent(pb->get(i)), pv, bv.type, e.param, 0, &e.proc);
 				}
 			}
 		}
 		return y - y0;
 	} else if(e.value.id) {
-		auto bv = getvalue(source, e);
+		auto bv = getvalue(ctx.source, e);
 		if(!bv.data || !bv.type)
 			return 0; // Данные не найдены, но это не ошибка
 		auto pv = bv.type->ptr(bv.data, e.value.index);
@@ -340,13 +352,13 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 		if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
 			auto pm = getmarkup(bv.type->type);
 			if(!pm)
-				return error(x, y, width, title_width, e, "Не найдена разметка");
-			auto new_title = e.title;
-			return group_vertial(x, y, width, title_width, pm, bsval(pv, bv.type->type), title_state, new_title);
+				return error(x, y, width, ctx, e, "Не найдена разметка");
+			auto ctx1 = ctx;
+			ctx1.title_text = e.title;
+			ctx1.source = bsval(pv, bv.type->type);
+			return group_vertial(x, y, width, ctx1, pm);
 		} else {
-			return field_main(x, y, width, title_width, source, pv, bv.type, e.param,
-				e.title, title_state, title_override, right_x2, e.value.child,
-				&e.proc);
+			return field_main(x, y, width, ctx, e.title, pv, bv.type, e.param, e.value.child, &e.proc);
 		}
 	} else if(e.value.child) {
 		rect rgo = {};
@@ -354,9 +366,9 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 		if(e.title)
 			rgo = start_group(x, y, width, e.title);
 		if(e.value.child[0].width)
-			y += group_horizontal(x, y, width, title_width, e.value.child, source, title_state, title_override);
+			y += group_horizontal(x, y, width, ctx, e.value.child);
 		else
-			y += group_vertial(x, y, width, title_width, e.value.child, source, title_state, title_override);
+			y += group_vertial(x, y, width, ctx, e.value.child);
 		y += close_group(x, y, rgo);
 		return y - y0;
 	} else
@@ -366,9 +378,11 @@ static int element(int x, int y, int width, int title_width, const markup& e, co
 int draw::field(int x, int y, int width, const markup* elements, const bsval& source, int title_width) {
 	if(!elements)
 		return 0;
-	const char* title_override = 0;
+	contexti ctx;
+	ctx.title = title_width;
+	ctx.source = source;
 	if(elements->width)
-		return group_horizontal(x, y, width, title_width, elements, source, TitleNormal, title_override);
+		return group_horizontal(x, y, width, ctx, elements);
 	else
-		return group_vertial(x, y, width, title_width, elements, source, TitleNormal, title_override);
+		return group_vertial(x, y, width, ctx, elements);
 }
