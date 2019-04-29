@@ -2,8 +2,8 @@
 
 const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(name),
+	BSREQ(name_unidentified),
 	BSREQ(type),
-	BSREQ(power_name),
 	BSREQ(cost),
 	BSREQ(weight),
 	BSREQ(damage),
@@ -43,7 +43,7 @@ static markup armor_block[] = {{0, 0, {"armor"}}, {}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
 static markup item_feat_block[] = {{0, "#checkboxes", {"feat"}}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
-{0, "Имя силы", {"power_name"}},
+{0, "Неопределено", {"name_unidentified"}},
 {0, "Группа", {"type"}, 0, {wear_getname, 0, allow_item}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
@@ -113,7 +113,7 @@ int item_info::getvalue(const void* object, int id) {
 	switch(id) {
 	case Avatar: return -1;
 	case Grade:
-		if(p->power_name)
+		if(p->name_unidentified)
 			return Good;
 		return Fair;
 	default: return 0;

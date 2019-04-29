@@ -113,6 +113,7 @@ enum effect_s : unsigned char {
 	NoEffect,
 	Bludgeon, Piercing, Slashing,
 	Acid, Cold, Electricity, Fire,
+	FirstDamage = Bludgeon, LastDamage=Fire,
 	Death, Petrification, Paralize,
 	WeakPoison, Poison, StrongPoison, DeathPoison,
 };
@@ -178,6 +179,9 @@ enum grade_s : unsigned char {
 enum decoration_value_s {
 	Name, Description,
 	Avatar, Grade,
+};
+enum damage_feat_s : unsigned char {
+	SaveHalf, NoSave, AttackOnSuccess, AttackOnCritical,
 };
 
 const unsigned CP = 1; // One cooper coin
@@ -288,6 +292,10 @@ struct size_info {
 	const char*				id;
 	const char*				name;
 };
+struct damage_feat_info {
+	const char*				id;
+	const char*				name;
+};
 struct wear_info {
 	const char*				id;
 	const char*				name;
@@ -360,6 +368,8 @@ struct damage_info {
 	char					bonus;
 	char					range; // in squars (5x5 ft each)
 	dice_info				damage;
+	cflags<damage_feat_s>	feats;
+	static markup			body_markups[];
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
@@ -370,6 +380,7 @@ struct weapon_info : damage_info {
 	dice_info				damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	//
+	static bool				isweapon(const void* object, int param);
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
@@ -397,7 +408,7 @@ struct item {
 struct item_info {
 	wear_s					type;
 	const char*				name;
-	const char*				power_name;
+	const char*				name_unidentified;
 	cflags<usability_s>		usability;
 	cflags<item_feat_s>		feat;
 	weapon_info				damage;
@@ -547,6 +558,7 @@ DECLENUM(class);
 DECLENUM(effect);
 DECLENUM(item_feat);
 DECLENUM(feat);
+DECLENUM(damage_feat);
 DECLENUM(gender);
 DECLENUM(race);
 DECLENUM(reaction);
