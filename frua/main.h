@@ -109,9 +109,12 @@ enum usability_s : unsigned char {
 enum reaction_s : unsigned char {
 	Indifferent, Friendly, Flight, Cautions, Threatening, Hostile, Player,
 };
-enum dam_s : unsigned char {
+enum effect_s : unsigned char {
+	NoEffect,
 	Bludgeon, Piercing, Slashing,
 	Acid, Cold, Electricity, Fire,
+	Death, Petrification, Paralize,
+	WeakPoison, Poison, StrongPoison, DeathPoison,
 };
 enum size_s : unsigned char {
 	Small, Medium, Large,
@@ -167,11 +170,6 @@ enum item_state_s : unsigned char {
 enum item_feat_s : unsigned char {
 	Consumable,
 	BodyPart
-};
-enum effect_s : unsigned char {
-	NoEffect,
-	Death, Petrification, AdditionalDamage,
-	WeakPoison, Poison, StrongPoison, DeathPoison,
 };
 enum grade_s : unsigned char {
 	Fair, Good, Excellent,
@@ -280,6 +278,7 @@ struct feat_info {
 struct effect_info {
 	const char*				id;
 	const char*				name;
+	skill_s					save;
 };
 struct item_feat_info {
 	const char*				id;
@@ -357,11 +356,17 @@ struct dice_info : dice {
 };
 struct damage_info {
 	char					attacks; // per two rounds
-	dam_s					type;
-	char					thac0;
+	effect_s				type;
+	char					bonus;
 	char					range; // in squars (5x5 ft each)
-	char					critical, multiplier;
 	dice_info				damage;
+	static markup			markups[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
+	static bool				visible_damage(const void* object, int index);
+};
+struct weapon_info : damage_info {
+	char					critical, multiplier;
 	dice_info				damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	//
@@ -377,7 +382,7 @@ struct armor_info {
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
 };
-struct attack_info : damage_info {
+struct attack_info : weapon_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
@@ -389,23 +394,14 @@ struct item {
 	unsigned char			charges;
 	constexpr operator bool() const { return type != 0; }
 };
-struct special_attack_info {
-	effect_s				effect;
-	dam_s					damage;
-	char					modifier;
-	dice_info				range;
-	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
-	static int				getvalue(const void* object, int id) { return 0; }
-};
 struct item_info {
 	wear_s					type;
 	const char*				name;
 	const char*				power_name;
 	cflags<usability_s>		usability;
 	cflags<item_feat_s>		feat;
-	damage_info				damage;
-	special_attack_info		special_attack;
+	weapon_info				damage;
+	damage_info		special_attack;
 	armor_info				armor;
 	char					abilities[Charisma + 1];
 	char					skills[LastSkill + 1];
@@ -548,7 +544,6 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 };
 DECLENUM(alignment);
 DECLENUM(class);
-DECLENUM(dam);
 DECLENUM(effect);
 DECLENUM(item_feat);
 DECLENUM(feat);

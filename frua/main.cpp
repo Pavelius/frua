@@ -9,7 +9,7 @@ static void add_position(aref<character*> source) {
 bool test_array();
 
 int	main(int argc, char *argv[]) {
-	auto p = bsmeta<damage_info>::meta;
+	auto p = bsmeta<weapon_info>::meta;
 	if(!test_array())
 		return -1;
 	draw::initialize();

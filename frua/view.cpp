@@ -934,7 +934,7 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	attack_info ai = {}; p->get(MeleeWeapon, ai);
 	auto y0 = y;
 	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
-	y += fieldv(x, y, width, "THAC0", ai.thac0);
+	y += fieldv(x, y, width, "THAC0", ai.bonus);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", p->getac());
 	if(p->hp_rolled==0) {

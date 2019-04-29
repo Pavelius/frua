@@ -125,7 +125,7 @@
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="armor.cpp" />
     <ClCompile Include="attack.cpp" />
-    <ClCompile Include="damage.cpp" />
+    <ClCompile Include="weapon.cpp" />
     <ClCompile Include="dice_markup.cpp" />
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="bsreq.cpp" />
@@ -140,7 +140,6 @@
     <ClCompile Include="combat.cpp" />
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="crt.cpp" />
-    <ClCompile Include="dam.cpp" />
     <ClCompile Include="decoration.cpp" />
     <ClCompile Include="dice.cpp" />
     <ClCompile Include="draw.cpp" />
@@ -176,7 +175,7 @@
     <ClCompile Include="screenshoot.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
-    <ClCompile Include="special_attack.cpp" />
+    <ClCompile Include="damage.cpp" />
     <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
     <ClCompile Include="string_value.cpp" />

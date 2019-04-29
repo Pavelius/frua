@@ -274,7 +274,7 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {
-	if(e.proc.isvisible && !e.proc.isvisible(ctx.source.data, e))
+	if(e.proc.isvisible && !e.proc.isvisible(ctx.source.data, e.value.index))
 		return 0;
 	else if(e.value.id && e.value.id[0] == '#')
 		// Страницы, команды, любые другие управляющие структуры.

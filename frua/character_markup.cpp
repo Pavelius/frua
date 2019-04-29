@@ -75,13 +75,13 @@ static markup generate_form[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, characte
 {0, "Атрибуты", {"#page", 0, abilities_markup}, 0, {0, 0, 0, 0, 0, character::recreate}},
 {0, 0, {"#apply"}, 0, {0, 0, 0, 0, 0, character::apply_avatar}},
 {}};
-static bool visible_levels(const void* source, const markup& e) {
-	auto p = (character*)source;
+static bool visible_levels(const void* object, int index) {
+	auto p = (character*)object;
 	auto t = p->getclass();
-	return (unsigned)e.value.index < bsmeta<class_s>::data[t].classes.count;
+	return (unsigned)index < bsmeta<class_s>::data[t].classes.count;
 }
-static bool visible_strenght_percent(const void* source, const markup& e) {
-	auto p = (character*)source;
+static bool visible_strenght_percent(const void* object, int index) {
+	auto p = (character*)object;
 	return !p->is(NoExeptionalStrenght);
 }
 static markup element_levels[] = {{0, "/", {"levels", 1}, 0, {0, 0, 0, visible_levels}},
@@ -142,6 +142,6 @@ static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, charact
 {0, "Специальные способности", {"#page", 0, element_special}},
 {}};
 markup character::markups[] = {
-{0, 0, {"#element", 0, element_form}},
+	{0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};

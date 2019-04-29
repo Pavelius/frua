@@ -19,16 +19,16 @@ BSDATA(item_info, 512);
 static bool allow_item(const void* source, int value) {
 	return bsmeta<wear_s>::data[value].name_type != 0;
 }
-static bool hasdamage(const void* source, const markup& e) {
-	auto p = (item_info*)source;
+static bool hasdamage(const void* object, int index) {
+	auto p = (item_info*)object;
 	return bsmeta<wear_s>::data[p->type].use_damage;
 }
-bool hasarmor(const void* source, const markup& e) {
-	auto p = (item_info*)source;
+bool hasarmor(const void* object, int index) {
+	auto p = (item_info*)object;
 	return bsmeta<wear_s>::data[p->type].use_armor;
 }
-bool hasability(const void* source, const markup& e) {
-	return hasarmor(source, e) && !hasdamage(source, e);
+bool hasability(const void* object, int index) {
+	return hasarmor(object, index) && !hasdamage(object, index);
 }
 static const char* wear_getname(const void* object, char* result, const char* result_max, int column) {
 	switch(column) {

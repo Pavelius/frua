@@ -10,7 +10,7 @@ const markup* markup::find(const char* id, const void* object, int result, bool 
 			return 0;
 		if(need_child && !p->value.child)
 			continue;
-		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
+		if(p->proc.isvisible && !p->proc.isvisible(object, p->value.index))
 			continue;
 		if(strcmp(p->value.id + 1, id) != 0)
 			continue;
@@ -29,7 +29,7 @@ int	markup::getcount(const char* id, const void* object, bool need_child) const 
 			return 0;
 		if(need_child && !p->value.child)
 			continue;
-		if(p->proc.isvisible && !p->proc.isvisible(object, *p))
+		if(p->proc.isvisible && !p->proc.isvisible(object, p->value.index))
 			continue;
 		if(strcmp(p->value.id + 1, id) != 0)
 			continue;

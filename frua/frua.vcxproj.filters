@@ -177,9 +177,6 @@
     <ClCompile Include="feat.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="dam.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="bsreq_bin.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
@@ -216,12 +213,6 @@
     <ClCompile Include="effect.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="special_attack.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
-    <ClCompile Include="damage.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="armor.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -229,6 +220,12 @@
       <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="item_info.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="weapon.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="damage.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

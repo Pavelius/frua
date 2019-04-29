@@ -1,9 +1,16 @@
 #include "main.h"
 
 effect_info effect_data[] = {{"NoEffect", "Не используется"},
+{"Bludgeon", "Ударное"},
+{"Piercing", "Колющее"},
+{"Slashing", "Режущее"},
+{"Acid", "Кислотное"},
+{"Cold", "Холодное", ResistCold},
+{"Electricity", "Электрическое"},
+{"Fire", "Огненное", ResistFire},
 {"Death", "Мгновенная смерть"},
 {"Petrification", "Превращение в камень"},
-{"AdditionalDamage", "Дополнительные повреждения"},
+{"Paralize", "Паралич"},
 {"WeakPoison", "Слабый яд"},
 {"Poison", "Яд"},
 {"StrongPoison", "Сильный яд"},
