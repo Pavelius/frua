@@ -66,6 +66,13 @@ struct contexti {
 	int*			right;
 	bsval			source;
 	contexti() { memset(this, 0, sizeof(*this)); }
+	bool isallow(const markup& e, int index) const {
+		if(e.proc.isallow) {
+			if(!e.proc.isallow(source.data, index))
+				return false;
+		}
+		return true;
+	}
 };
 }
 
@@ -283,63 +290,60 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			ctx.title = e.param;
 			return 0;
 		}
-		if(e.value.id) {
-			auto bv = getvalue(ctx.source, e);
-			if(!bv.data || !bv.type)
+		if(!e.value.id)
+			return 0;
+		// Теперь специальные элементы с заполненными данными
+		auto bv = getvalue(ctx.source, e);
+		if(!bv.data || !bv.type)
+			return 0;
+		if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
+			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+			if(!pb || pb->count == 0)
+				return error(x, y, width, ctx, e, "Не найдена база");
+			auto size = bv.type->size;
+			if(bv.type->is(KindCFlags))
+				size = bv.type->lenght;
+			for(unsigned i = 0; i < pb->count; i++) {
+				if(!ctx.isallow(e, i))
+					continue;
+				auto p = getpresent(pb->get(i));
+				cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
+				unsigned flags = 0;
+				if(ev.ischecked())
+					flags |= Checked;
+				y += checkbox(x, y, width, flags, ev, p, 0) + 2;
+			}
+		} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
+			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
+			if(!pb || pb->count == 0)
+				return error(x, y, width, ctx, e, "Не найдена база");
+			auto size = bv.type->size;
+			for(unsigned i = 0; i < pb->count; i++) {
+				if(!ctx.isallow(e, i))
+					continue;
+				auto p = getpresent(pb->get(i));
+				cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
+				unsigned flags = 0;
+				if(ev.ischecked())
+					flags |= Checked;
+				y += radio(x, y, width, flags, ev, p, 0) + 2;
+			}
+		} else {
+			if(!bv.type->isnum())
+				return error(x, y, width, ctx, e, bv.type->id);
+			auto pb = bsdata::find(pn, bsdata::firstenum);
+			if(!pb)
+				return error(x, y, width, ctx, e, pn);
+			if(pb->count == 0)
 				return 0;
-			if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
-				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-				if(!pb || pb->count == 0)
-					return error(x, y, width, ctx, e, "Не найдена база");
-				auto size = bv.type->size;
-				if(bv.type->is(KindCFlags))
-					size = bv.type->lenght;
-				for(unsigned i = 0; i < pb->count; i++) {
-					if(e.proc.isallow) {
-						if(!e.proc.isallow(ctx.source.data, i))
-							continue;
-					}
-					auto p = getpresent(pb->get(i));
-					cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
-					unsigned flags = 0;
-					if(ev.ischecked())
-						flags |= Checked;
-					y += checkbox(x, y, width, flags, ev, p, 0) + 2;
-				}
-			} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
-				auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-				if(!pb || pb->count == 0)
-					return error(x, y, width, ctx, e, "Не найдена база");
-				auto size = bv.type->size;
-				for(unsigned i = 0; i < pb->count; i++) {
-					if(e.proc.isallow) {
-						if(!e.proc.isallow(ctx.source.data, i))
-							continue;
-					}
-					auto p = getpresent(pb->get(i));
-					cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
-					unsigned flags = 0;
-					if(ev.ischecked())
-						flags |= Checked;
-					y += radio(x, y, width, flags, ev, p, 0) + 2;
-				}
-			} else {
-				if(!bv.type->isnum())
-					return error(x, y, width, ctx, e, bv.type->id);
-				auto pb = bsdata::find(pn, bsdata::firstenum);
-				if(!pb)
-					return error(x, y, width, ctx, e, pn);
-				if(pb->count == 0)
-					return 0;
-				auto count = pb->count;
-				if(count > bv.type->count)
-					count = bv.type->count;
-				for(unsigned i = 0; i < pb->count; i++) {
-					auto pv = bv.type->ptr(bv.data, i);
-					if(e.proc.isallow && !e.proc.isallow(ctx.source.data, i))
-						continue;
-					y += field_main(x, y, width, ctx, getpresent(pb->get(i)), pv, bv.type, e.param, 0, &e.proc);
-				}
+			auto count = pb->count;
+			if(count > bv.type->count)
+				count = bv.type->count;
+			for(unsigned i = 0; i < pb->count; i++) {
+				auto pv = bv.type->ptr(bv.data, i);
+				if(!ctx.isallow(e, i))
+					continue;
+				y += field_main(x, y, width, ctx, getpresent(pb->get(i)), pv, bv.type, e.param, 0, &e.proc);
 			}
 		}
 		return y - y0;
