@@ -303,6 +303,13 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			auto size = bv.type->size;
 			if(bv.type->is(KindCFlags))
 				size = bv.type->lenght;
+			auto columns = e.param;
+			if(!columns)
+				columns = 1;
+			auto wc = width / columns;
+			auto wi = 0;
+			auto x0 = x;
+			auto y1 = y;
 			for(unsigned i = 0; i < pb->count; i++) {
 				if(!ctx.isallow(e, i))
 					continue;
@@ -311,8 +318,17 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				unsigned flags = 0;
 				if(ev.ischecked())
 					flags |= Checked;
-				y += checkbox(x, y, width, flags, ev, p, 0) + 2;
+				auto y0 = y + checkbox(x, y, wc, flags, ev, p, 0) + 2;
+				if(y1 < y0)
+					y1 = y0;
+				if(++wi >= columns) {
+					x = x0;
+					y = y0;
+					wi = 0;
+				} else
+					x += wc;
 			}
+			y = y1;
 		} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
 			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
 			if(!pb || pb->count == 0)

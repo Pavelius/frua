@@ -181,7 +181,8 @@ enum decoration_value_s {
 	Avatar, Grade,
 };
 enum damage_feat_s : unsigned char {
-	SaveHalf, NoSave, AttackOnSuccess, AttackOnCritical,
+	SaveHalf, NoSave,
+	AttackAdditional, AttackOnCritical,
 };
 
 const unsigned CP = 1; // One cooper coin

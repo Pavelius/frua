@@ -55,7 +55,7 @@ static markup ability_block[] = {{0, "Физические", {"abilities", 0, phisycal_add
 {}};
 static markup item_general_с1[] = {{0, "Базовые параметры", {0, 0, basic_markup}},
 {}};
-static markup item_general_с2[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, hasdamage}},
+static markup item_general_с2[] = {/*{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, hasdamage}},*/
 {0, "Броня", {0, 0, armor_block}, 0, {0, 0, 0, hasarmor}},
 {0, "Бонус к характеристикам", {0, 0, ability_block}, 0, {0, 0, 0, hasability}},
 {}};
@@ -93,7 +93,10 @@ static markup item_skills[] = {
 {4, 0, {0, 0, item_skills_c2}},
 {4, 0, {0, 0, item_skills_c3}},
 {}};
+static markup item_weapon[] = {{5, 0, {0, 0, weapon_block}},
+{}};
 markup item_info::markups[] = {{0, "Основные свойства", {"#page", 0, item_general}},
+{0, "Атаки", {"#page", 0, item_weapon}, 0, {0, 0, 0, hasdamage}},
 {0, "Бонусы к навыкам", {"#page", 0, item_skills}},
 {}};
 
