@@ -13,8 +13,8 @@ int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	draw::initialize();
-	//auto index = decoration::choose(bsmeta<character>::meta);
-	auto index = decoration::choose(bsmeta<item_info>::meta);
+	auto index = decoration::choose(bsmeta<character>::meta);
+	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//character ii = {};
 	//ii.edit_generate();
 	//character::choose();

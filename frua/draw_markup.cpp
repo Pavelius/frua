@@ -130,21 +130,23 @@ static bsval getvalue(const bsval& source, const markup& e) {
 	result.data = source.data;
 	return result;
 }
-static rect start_group(int& x, int& y, int& width, const char* title) {
+static rect start_group(int& x, int& y, int& width) {
 	setposition(x, y, width);
 	setposition(x, y, width);
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
-	gradv(rc, colors::border, colors::edit);
-	line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
-	text(rc, title, AlignCenterCenter);
 	y = rc.y2 + metrics::padding * 2;
 	return rc;
 }
 
-static int close_group(int x, int y, const rect& rc) {
+static int close_group(int x, int y, const rect& rc, const char* title) {
 	if(!rc)
 		return 0;
-	rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+	if(title) {
+		gradv(rc, colors::border, colors::edit);
+		line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
+		text(rc, title, AlignCenterCenter);
+		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+	}
 	return metrics::padding * 2;
 }
 
@@ -384,12 +386,15 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		rect rgo = {};
 		auto y0 = y;
 		if(e.title)
-			rgo = start_group(x, y, width, e.title);
+			rgo = start_group(x, y, width);
+		auto y1 = y;
 		if(e.value.child[0].width)
 			y += group_horizontal(x, y, width, ctx, e.value.child);
 		else
 			y += group_vertial(x, y, width, ctx, e.value.child);
-		y += close_group(x, y, rgo);
+		if(y == y1)
+			return 0;
+		y += close_group(x, y, rgo, e.title);
 		return y - y0;
 	} else
 		return 0;
