@@ -291,6 +291,10 @@ struct item_feat_info {
 	const char*				id;
 	const char*				name;
 };
+struct item_state_info {
+	const char*				id;
+	const char*				name;
+};
 struct size_info {
 	const char*				id;
 	const char*				name;
@@ -424,13 +428,16 @@ struct item {
 			item_state_s	state : 2;
 			unsigned char	quality : 2;
 			unsigned char	identify : 1;
+			unsigned char	damaged : 3;
 		};
-		unsigned short		value;
+		unsigned char		value;
 	};
 	constexpr operator bool() const { return type != 0; }
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
+	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_type(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct character {
@@ -566,10 +573,11 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 };
 DECLENUM(alignment);
 DECLENUM(class);
+DECLENUM(damage_feat);
 DECLENUM(effect);
 DECLENUM(feat);
-DECLENUM(damage_feat);
 DECLENUM(gender);
+DECLENUM(item_state);
 DECLENUM(race);
 DECLENUM(reaction);
 DECLENUM(size);

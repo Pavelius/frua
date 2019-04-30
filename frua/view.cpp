@@ -785,6 +785,17 @@ int item::view_type(int x, int y, int width, const void* object, const char* id,
 	return field(x, y, width, anyval(p->type), bsmeta<item_info>::meta, object, 0);
 }
 
+int item::view_state(int x, int y, int width, const void* object, const char* id, int index) {
+	auto p = (item*)object;
+	return field(x, y, width, anyval(&p->value, sizeof(p->value)), bsmeta<item_state_s>::meta, object, 0);
+}
+
+int item::view_check(int x, int y, int width, const void* object, const char* id, int index) {
+	auto p = (item*)object;
+	setposition(x, y, width);
+	return checkbox(x, y + 4, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding*2;
+}
+
 void character::apply_avatar(void* object) {
 	auto p = (character*)object;
 	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))

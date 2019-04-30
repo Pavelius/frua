@@ -262,9 +262,11 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 		auto d = param;
 		if(!d)
 			d = 2;
-		auto wn = draw::textw("0");
-		auto we = wn * (d + 1) + (draw::texth() + 8) + 4 * 2;
-		rc.x2 = rc.x1 + we;
+		if(d != -1) {
+			auto wn = draw::textw("0");
+			auto we = wn * (d + 1) + (draw::texth() + 8) + 4 * 2;
+			rc.x2 = rc.x1 + we;
+		}
 		draw::field(rc, flags, anyval(pv, type->size), d, FieldNumber);
 		if(ctx.right)
 			*ctx.right = rc.x2;
