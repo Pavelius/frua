@@ -405,7 +405,7 @@ static int field(int x, int y, int width, const anyval& ev, const bsreq* type, c
 	unsigned flags = AlignLeft;
 	draw::focusing((int)ev.ptr(), flags, rc);
 	field_enum(rc, flags, ev, type, object, pri);
-	return rc.height() + metrics::padding;
+	return rc.height() + metrics::padding*2;
 }
 
 static int fieldv(int x, int y, int width, const char* title, const char* value) {

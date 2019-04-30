@@ -446,7 +446,8 @@ struct item {
 	};
 	constexpr operator bool() const { return type != 0; }
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	void					getname(stringcreator& sc) const;
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);

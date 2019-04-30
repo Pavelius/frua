@@ -101,10 +101,7 @@ markup item_info::markups[] = {{0, "Основные свойства", {"#page", 0, item_genera
 const char* item_info::getname(const void* object, char* result, const char* result_max, int id) {
 	auto p = (item_info*)object;
 	switch(id) {
-	case Name:
-		if(!p->name)
-			return "Нет предмета";
-		return p->name;
+	case Name: return p->name;
 	default: return "";
 	}
 }
