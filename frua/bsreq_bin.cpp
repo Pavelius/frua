@@ -91,10 +91,14 @@ struct bsdata_bin {
 							p->set(p->ptr(object, i), (int)pv);
 					}
 				}
-			} else if(p->subtype == KindCFlags)
-				serial(p->ptr(object), p->lenght); // Флаги переносятся особым образом
-			else
-				serial(p->ptr(object), p->type); // Подчиненный объект, указанный прямо в теле
+			} else if(p->subtype == KindCFlags) {
+				for(unsigned i = 0; i < p->count; i++)
+					serial(p->ptr(object, i), p->lenght); // Флаги переносятся особым образом
+			}
+			else {
+				for(unsigned i = 0; i < p->count; i++)
+					serial(p->ptr(object, i), p->type); // Подчиненный объект, указанный прямо в теле
+			}
 		}
 		return true;
 	}
