@@ -129,7 +129,7 @@
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="weapon.cpp" />
-    <ClCompile Include="dice_markup.cpp" />
+    <ClCompile Include="dice_info.cpp" />
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="bsreq.cpp" />
     <ClCompile Include="bsreq_bin.cpp" />

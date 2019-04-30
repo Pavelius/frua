@@ -279,7 +279,7 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 		}
 	} else if(type->is(KindEnum))
 		field_enum(rc, flags, anyval(pv, type->size), type->type, ctx.source.data, pri);
-	return rc.height() + metrics::padding;
+	return rc.height() + metrics::padding*2;
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {

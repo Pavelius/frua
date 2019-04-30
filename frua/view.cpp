@@ -107,13 +107,13 @@ static int button(int x, int y, const char* string, const runable& ev, unsigned 
 int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips, int key) {
 	setposition(x, y, width);
 	rect rc = {x, y, x + width, y + texth() + metrics::padding * 2};
-	addelement(cmd.getid(), rc);
+	focusing((int)cmd.getid(), flags, rc);
 	auto focused = (getfocus() == cmd.getid());
 	if(draw::buttonh(rc, false, focused, false, true, label, key, false))
 		cmd.execute();
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-	return rc.height();
+	return rc.height() + metrics::padding*2;
 }
 
 static void render_picture(int x, int y) {
@@ -796,6 +796,30 @@ int item::view_check(int x, int y, int width, const void* object, const char* id
 	return checkbox(x, y + 3, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding*2;
 }
 
+void damage_info::edit(void* p) {
+	decoration::edit((damage_info*)p);
+}
+
+int item_info::view_special(int x, int y, int width, const void* object, const char* id, int index) {
+	char temp[260]; stringcreator sc(temp);
+	auto p = (item_info*)object;
+	p->special_attack.getname(sc);
+	szupper(sc, 1);
+	return button(x, y, width, 0, cmdv(damage_info::edit, (void*)&p->special_attack), temp, 0);
+}
+
+void weapon_info::edit(void* p) {
+	decoration::edit((weapon_info*)p);
+}
+
+int item_info::view_weapon(int x, int y, int width, const void* object, const char* id, int index) {
+	char temp[260]; stringcreator sc(temp);
+	auto p = (item_info*)object;
+	p->damage.getname(sc);
+	szupper(sc, 1);
+	return button(x, y, width, 0, cmdv(weapon_info::edit, (void*)&p->damage), temp, 0);
+}
+
 void character::apply_avatar(void* object) {
 	auto p = (character*)object;
 	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))
@@ -826,6 +850,13 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	}
 	if(!elements)
 		return false;
+	if(!name) {
+		auto pd = decoration::find(type);
+		if(pd)
+			name = pd->name;
+	}
+	if(!name)
+		name = "Форма редактирования";
 	if(creating)
 		elements->action("create", object);
 	char r2_buffer[256];

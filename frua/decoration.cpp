@@ -1,7 +1,7 @@
 #include "main.h"
 
 decoration decoration::data[] = {{"Персонажи или монстры", {250, 60}, character()},
-{"Описания предетов", {200, 18 + 4 * 2}, item_info()},
+{"Описания предетов", {200, 18 + 4 * 2}, item_info(), "Нет предмета"},
 {"Предметы", item()},
 {"Броня", armor_info()},
 {"Оружие", weapon_info()},
@@ -80,4 +80,17 @@ bool decoration::choose(void** result, const bsreq* type) {
 		return true;
 	}
 	return false;
+}
+
+void decoration::initialize() {
+	for(auto& e : data) {
+		if(!e.database)
+			continue;
+		if(e.zero_element && e.database->count==0) {
+			auto p = e.database->add();
+			auto pf = e.meta->find("name");
+			if(pf)
+				pf->set(pf->ptr(p), (int)e.zero_element);
+		}
+	}
 }

@@ -213,9 +213,6 @@
     <ClCompile Include="armor.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="dice_markup.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="item_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -232,6 +229,9 @@
       <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="item_state.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="dice_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

@@ -35,8 +35,8 @@ static const char* wear_getname(const void* object, char* result, const char* re
 	}
 	return "";
 }
-static markup weapon_block[] = {{0, 0, {"damage"}},
-{0, 0, {"special_attack"}},
+static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, 0, 0, item_info::view_weapon}},
+{0, 0, {"special_attack"}, 0, {0, 0, 0, 0, item_info::view_special}},
 {}};
 static markup armor_block[] = {{0, 0, {"armor"}}, {}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
@@ -54,7 +54,7 @@ static markup ability_block[] = {{0, "Физические", {"abilities", 0, phisycal_add
 {}};
 static markup item_general_с1[] = {{0, "Базовые параметры", {0, 0, basic_markup}},
 {}};
-static markup item_general_с2[] = {/*{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, hasdamage}},*/
+static markup item_general_с2[] = {{0, "Оружие", {0, 0, weapon_block}, 0, {0, 0, 0, hasdamage}},
 {0, "Броня", {0, 0, armor_block}, 0, {0, 0, 0, hasarmor}},
 {0, "Бонус к характеристикам", {0, 0, ability_block}, 0, {0, 0, 0, hasability}},
 {}};
@@ -95,7 +95,6 @@ static markup item_skills[] = {
 static markup item_weapon[] = {{5, 0, {0, 0, weapon_block}},
 {}};
 markup item_info::markups[] = {{0, "Основные свойства", {"#page", 0, item_general}},
-{0, "Атаки", {"#page", 0, item_weapon}, 0, {0, 0, 0, hasdamage}},
 {0, "Бонусы к навыкам", {"#page", 0, item_skills}},
 {}};
 

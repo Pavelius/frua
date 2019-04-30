@@ -233,21 +233,24 @@ struct decoration {
 	markup::proci			proc;
 	point					size;
 	const markup*			markups;
+	const char*				zero_element;
 	static decoration		data[];
-	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
+	template<class T> decoration(const char* name, point size, const T& object, const char* zero_element = 0) : name(name), size(size),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(&bsmeta<T>::data),
 		proc{T::getname, T::getvalue},
-		markups(T::markups) {}
+		markups(T::markups), zero_element(zero_element) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
 		proc{T::getname, T::getvalue},
-		markups(T::markups) {}
+		markups(T::markups), zero_element(0) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
+	static void				initialize();
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
 	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
+	template<class T> static bool edit(T* p) { return edit(0, p, sizeof(T), bsmeta<T>::meta); }
 	static void				editlist(const bsreq* type) { choose(type, false); }
 	static const decoration* find(const bsreq* type);
 };
@@ -367,7 +370,8 @@ struct event_info {
 };
 struct dice_info : dice {
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	void					getname(stringcreator& sc) const;
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct damage_info {
@@ -377,9 +381,13 @@ struct damage_info {
 	char					range; // in squars (5x5 ft each)
 	dice_info				damage;
 	cflags<damage_feat_s>	feats;
-	static markup			body_markups[];
+	//
+	static markup			body_markup[], body_full_markup[];
+	static void				edit(void* p);
+	void					getname(stringcreator& sc) const;
+	//
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 	static bool				visible_damage(const void* object, int index);
 };
@@ -387,10 +395,13 @@ struct weapon_info : damage_info {
 	char					critical, multiplier;
 	dice_info				damage_large;
 	explicit constexpr operator bool() const { return damage.d != 0; }
-	//
+	static markup			body_markup[];
+	static void				edit(void* p);
+	void					getname(stringcreator& sc);
 	static bool				isweapon(const void* object, int param);
+	//
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct armor_info {
@@ -415,11 +426,12 @@ struct item_info : name_info {
 	char					abilities[Charisma + 1];
 	char					skills[LastSkill + 1];
 	int						cost, weight;
+	static int				view_special(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_weapon(int x, int y, int width, const void* object, const char* id, int index);
 	// Database engine methods
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
-	static int				view(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct item {
 	unsigned short			type;
