@@ -2,13 +2,13 @@
 
 #pragma once
 
-#define	BSREQ(fn) {#fn, (unsigned)&((type*)0)->fn,\
-sizeof(bsreq::btype<decltype(type::fn)>::value),\
-sizeof(type::fn),\
-bsreq::icount<decltype(type::fn)>::value,\
-bsmeta<bsreq::btype<decltype(type::fn)>::value>::meta,\
-bsreq::iref<decltype(type::fn)>::value,\
-bsreq::isubtype<decltype(type::fn)>::value}
+#define	BSREQ(fn) {#fn, (unsigned)&((data_type*)0)->fn,\
+sizeof(bsreq::btype<decltype(data_type::fn)>::value),\
+sizeof(data_type::fn),\
+bsreq::icount<decltype(data_type::fn)>::value,\
+bsmeta<bsreq::btype<decltype(data_type::fn)>::value>::meta,\
+bsreq::iref<decltype(data_type::fn)>::value,\
+bsreq::isubtype<decltype(data_type::fn)>::value}
 #define BSDATA(c, i) static c c##_data_array[i];\
 bsdatat<c> bsmeta<c>::data(#c, c##_data_array, KindScalar);
 #define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
@@ -110,7 +110,7 @@ template<typename T> struct bsdatat : bsdata {
 	constexpr const T*	end() const { return (T*)data + count; }
 };
 template<typename T> struct bsmeta {
-	typedef T			type;
+	typedef T			data_type;
 	static const bsreq	meta[];
 	static bsdatat<T>	data;
 };

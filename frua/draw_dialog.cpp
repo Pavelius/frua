@@ -4,12 +4,6 @@
 using namespace draw;
 
 static void* cmd_p;
-void cmd::execute() const {
-	(this->*call)();
-}
-int cmd::getid() const {
-	return (int)p;
-}
 void cmd::call0() const {
 	draw::execute(p, v);
 }

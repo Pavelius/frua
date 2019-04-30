@@ -14,7 +14,7 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(abilities),
 	BSREQ(skills),
 {}};
-BSDATA(item_info, 512);
+BSDATA(item_info, 256);
 
 static bool allow_item(const void* source, int value) {
 	return bsmeta<wear_s>::data[value].name_type != 0;

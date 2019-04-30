@@ -12,7 +12,7 @@ struct markup {
 		int(*getvalue)(const void* object, int column);
 		bool(*isallow)(const void* object, int index); // Is allow special element or command
 		bool(*isvisible)(const void* object, int index); // Is this markup isvisible
-		int(*custom)(int x, int y, int width, const char* id, const void* object); // Custom draw
+		int(*custom)(int x, int y, int width, const void* object, const char* id, int index); // Custom draw
 		void(*command)(void* object); // Any command of class object
 		void(*change)(void* object, const void* previous_object); // When object changed
 	};

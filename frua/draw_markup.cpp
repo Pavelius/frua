@@ -65,6 +65,7 @@ struct contexti {
 	title_s			title_state;
 	int*			right;
 	bsval			source;
+	bool			show_missed_requisit;
 	contexti() { memset(this, 0, sizeof(*this)); }
 	bool isallow(const markup& e, int index) const {
 		if(e.proc.isallow) {
@@ -281,8 +282,17 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 	else if(e.value.id && e.value.id[0] == '#')
 		// Страницы, команды, любые другие управляющие структуры.
 		return 0;
-	else if(e.proc.custom)
-		return e.proc.custom(x, y, width, e.value.id, ctx.source.data);
+	else if(e.proc.custom) {
+		if(e.title) {
+			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, ctx.source.data, e.value.id, e.value.index);
+			if(dy) {
+				setposition(x, y, width);
+				header(x, y, width, ctx, e.title);
+			}
+			return dy;
+		}
+		return e.proc.custom(x, y, width, ctx.source.data, e.value.id, e.value.index);
+	}
 	else if(e.proc.command)
 		return button(x, y, width, 0, cmd(e.proc.command, ctx.source.data), e.title);
 	else if(e.title && e.title[0] == '#') {
@@ -367,8 +377,11 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		return y - y0;
 	} else if(e.value.id) {
 		auto bv = getvalue(ctx.source, e);
-		if(!bv.data || !bv.type)
+		if(!bv.data || !bv.type) {
+			if(ctx.show_missed_requisit)
+				return error(x, y, width, ctx, e, "Не найден реквизит");
 			return 0; // Данные не найдены, но это не ошибка
+		}
 		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
 		if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
@@ -406,6 +419,7 @@ int draw::field(int x, int y, int width, const markup* elements, const bsval& so
 	contexti ctx;
 	ctx.title = title_width;
 	ctx.source = source;
+	ctx.show_missed_requisit = true;
 	if(elements->width)
 		return group_horizontal(x, y, width, ctx, elements);
 	else

@@ -17,6 +17,7 @@ const bsreq bsmeta<character>::meta[] = {
 	BSREQ(base_ac),
 	BSREQ(movement),
 	BSREQ(reaction),
+	BSREQ(wears),
 {}};
 BSDATA(character, 512);
 
@@ -137,11 +138,19 @@ static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},
 {4, 0, {0, 0, element_с3}},
 {}};
+static markup items_c1[] = {{0, "Голова", {"wears", Head}},
+{0, "Шея", {"wears", Neck}},
+{0, "Броня", {"wears", Armor}},
+{0, "Главное оружие", {"wears", MeleeWeapon}},
+{0, "Второстерепное", {"wears", OffhandWeapon}},
+{}};
+static markup items_page[] = {{5, 0, {0, 0, items_c1}},
+{}};
 static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, character::changed}},
 {0, "Общие", {"#page", 0, element_general}},
+{0, "Предметы", {"#page", 0, items_page}},
 {0, "Специальные способности", {"#page", 0, element_special}},
 {}};
-markup character::markups[] = {
-	{0, 0, {"#element", 0, element_form}},
+markup character::markups[] = {{0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};

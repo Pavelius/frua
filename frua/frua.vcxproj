@@ -126,6 +126,7 @@
     <ClCompile Include="armor.cpp" />
     <ClCompile Include="attack.cpp" />
     <ClCompile Include="damage_feat.cpp" />
+    <ClCompile Include="item.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="dice_markup.cpp" />
     <ClCompile Include="effect.cpp" />

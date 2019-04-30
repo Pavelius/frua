@@ -25,19 +25,25 @@ struct runable {
 	virtual void			execute() const = 0;
 	virtual int				getid() const = 0;
 };
+// Standart command
 struct cmd : runable {
 	typedef void(*p0)();
 	typedef void(*p1)(void* v);
 	constexpr cmd(p0 p, int v = 0) : p(p), v(v), call(&cmd::call0) {}
 	template<typename T> constexpr cmd(void(*p)(T*), T* v) : p((p0)p), v((int)v), call(&cmd::call1) {}
-	void					execute() const override;
-	int						getid() const override;
-private:
+	void					execute() const override { (this->*call)(); }
+	int						getid() const override { return (int)p; }
+protected:
 	void					call0() const;
 	void					call1() const;
 	void					(cmd::*call)() const;
 	p0						p;
 	int						v;
+};
+// Command with focus on value rather that procedure
+struct cmdv : cmd {
+	int getid() const override { return v; }
+	template<typename T> constexpr cmdv(void(*p)(T*), T* v) : cmd(p, v) {}
 };
 namespace controls {
 struct control {

@@ -229,23 +229,24 @@ struct decoration {
 	const char*				name;
 	bsdata*					database;
 	const bsreq*			meta;
+	unsigned				type_size;
 	markup::proci			proc;
 	point					size;
 	const markup*			markups;
 	static decoration		data[];
 	template<class T> decoration(const char* name, point size, const T& object) : name(name), size(size),
-		meta(bsmeta<T>::meta), database(&bsmeta<T>::data),
+		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(&bsmeta<T>::data),
 		proc{T::getname, T::getvalue},
 		markups(T::markups) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
-		meta(bsmeta<T>::meta), database(0),
+		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
 		proc{T::getname, T::getvalue},
 		markups(T::markups) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type);
 	static bool				choose(void** result, const bsreq* type);
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
-	static bool				edit(bsdata& source, void* object, void* copy_object);
+	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
 	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
 	static const decoration* find(const bsreq* type);
 };
@@ -398,14 +399,6 @@ struct attack_info : weapon_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
-struct item {
-	unsigned char			type;
-	item_state_s			state : 2;
-	unsigned char			quality : 2;
-	unsigned char			identify : 1;
-	unsigned char			charges;
-	constexpr operator bool() const { return type != 0; }
-};
 struct item_info {
 	wear_s					type;
 	const char*				name;
@@ -422,6 +415,19 @@ struct item_info {
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
+	static int				view(int x, int y, int width, const void* object, const char* id, int index);
+};
+struct item {
+	unsigned char			type;
+	item_state_s			state : 2;
+	unsigned char			quality : 2;
+	unsigned char			identify : 1;
+	unsigned char			charges;
+	constexpr operator bool() const { return type != 0; }
+	static markup			markups[];
+	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
+	static int				getvalue(const void* object, int id) { return 0; }
+	static int				type_view(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -478,12 +484,12 @@ struct character {
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
-	static int				view_avatar(int x, int y, int width, const char* id, const void* object);
-	static int				view_ability(int x, int y, int width, const char* id, const void* object);
-	static int				view_levels(int x, int y, int width, const char* id, const void* object);
-	static int				view_personal(int x, int y, int width, const char* id, const void* object);
-	static int				view_skills(int x, int y, int width, const char* id, const void* object);
-	static int				view_statistic(int x, int y, int width, const char* id, const void* object);
+	static int				view_avatar(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_ability(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_levels(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_personal(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_skills(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_statistic(int x, int y, int width, const void* object, const char* id, int index);
 	static void				update_battle();
 	// Database engine methods
 	static void				changed(void* object, const void* previous);
@@ -510,7 +516,7 @@ private:
 	short unsigned			avatar;
 	char					levels[3];
 	char					base_ac;
-	item_info				wears[Legs + 1];
+	item					wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
 	friend struct bsmeta<character>;

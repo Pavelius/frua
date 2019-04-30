@@ -1,7 +1,8 @@
 #include "main.h"
 
 decoration decoration::data[] = {{"Персонажи или монстры", {250, 60}, character()},
-{"Предметы", {200, 18 + 4 * 2}, item_info()},
+{"Описания предетов", {200, 18 + 4 * 2}, item_info()},
+{"Предметы", item()},
 {"Броня", armor_info()},
 {"Оружие", weapon_info()},
 {"Кубик", dice_info()},
@@ -16,7 +17,7 @@ const markup* getmarkup(const bsreq* type) {
 	return p->markups;
 }
 
-bool decoration::edit(bsdata& source, void* object, void* copy_object) {
+bool decoration::edit(bsdata& source, void* object, void* copy_object, const char* form_name) {
 	auto result = true;
 	auto pd = find(source.meta);
 	if(!pd)
@@ -67,7 +68,7 @@ int decoration::choose(const bsreq* type) {
 	auto y = p->size.y;
 	if(!y)
 		y = 18 + 4 * 2;
-	return p->choose(p->name, x, y, false);
+	return p->choose(p->name, x, y, true);
 }
 
 bool decoration::choose(void** result, const bsreq* type) {

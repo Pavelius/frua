@@ -798,43 +798,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	return false;
 }
 
-//int character::edit_basic(int x, int y, int width, draw_events* pev) {
-//	const int nw = 58;
-//	const int tw = 12;
-//	auto y0 = y;
-//	auto x0 = x;
-//	auto& col = bsmeta<class_s>::data;
-//	auto rga = start_group(x, y, width, "Базовые значения");
-//	y += field(x, y, width, "Имя", name, title_width);
-//	y += field(x, y, width, "Мировозрение", alignment, pev);
-//	y += field(x, y, width, "Раса", race, pev);
-//	y += field(x, y, width, "Пол", gender);
-//	y += field(x, y, width, "Размер", size);
-//	y += field(x, y, width, "Классы", type, pev);
-//	auto d = field(x, y, title_width + nw, "Уровень", levels[0], title_width, 2); x += title_width + nw;
-//	if(col[type].classes.count >= 2) {
-//		field(x, y, tw + nw, ":/", levels[1], tw, 2);
-//		x += tw + nw;
-//	}
-//	if(col[type].classes.count >= 3) {
-//		field(x, y, tw + nw, ":/", levels[2], tw, 2);
-//		x += tw + nw;
-//	}
-//	x = x0; y += d;
-//	y += field(x, y, title_width + nw * 2, "Опыт", experience, title_width, 8);
-//	d = field(x, y, title_width + nw, "Хиты", hp, title_width, 3); x += title_width + nw;
-//	field(x, y, tw + nw, ":/", hp_rolled, tw, 3);
-//	x = x0; y += d;
-//	y += field(x, y, title_width + nw, "Класс брони", base_ac, title_width, 2);
-//	if(!is(NoExeptionalStrenght))
-//		y += field(x, y, title_width + nw, "Сила (%)", strenght_percent, title_width, 3);
-//	y += field(x, y, title_width + nw, "Движение", movement, title_width, 2);
-//	y += metrics::padding;
-//	y += close_group(x, y, rga);
-//	return y - y0;
-//}
-
-//int	character::edit_attacks(int x, int y, int width) {
+//int character::edit_attacks(int x, int y, int width) {
 //	auto x0 = x, y0 = y;
 //	auto rga = start_group(x, y, width, "Специальные атаки");
 //	for(auto& e : special_attacks)
@@ -843,39 +807,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 //	return y - y0;
 //}
 
-//bool character::edit() {
-//	static const char* page_strings[] = {"Базовый", "Особенности", "Заклинания", 0};
-//	int x, y;
-//	setfocus(0, true);
-//	int page = 0;
-//	while(ismodal()) {
-//		render_background();
-//		page_header(x, y, "Монстр/Персонаж");
-//		if(page == 0) {
-//			auto y0 = y;
-//			auto c1 = 300, c2 = 160;
-//			y += edit_basic(x, y, c1, &pev);
-//			y = y0;
-//			x += c1 + metrics::padding * 3;
-//			y += edit_abilities(x, y, c2);
-//			y = y0;
-//			x += c2 + metrics::padding * 3;
-//			auto c3 = getwidth() - x - metrics::padding * 2;
-//		y += field_picture(x, y, c3, 120, avatar, "Боевые картинки", 0);
-//			//y += edit_attacks(x, y, c3);
-//		} else if(page == 1) {
-//			auto c1 = 300;
-//			y += edit_feats(x, y, c1);
-//		}
-//		page_footer(x, y, true);
-//		x += button(x, y, "Перебросить", cmd(character_reroll, (int)this), Ctrl + Alpha + 'R');
-//		x += page_tabs(x, y, page_strings, page);
-//		domodal();
-//	}
-//	return getresult() != 0;
-//}
-
-int character::view_personal(int x, int y, int width, const char* id, const void* object) {
+int character::view_personal(int x, int y, int width, const void* object, const char* id, int index) {
 	auto y0 = y;
 	auto p = (character*)object;
 	char temp[260]; zprint(temp, "%+2 %-1", getstr(p->gender), getstr(p->race));
@@ -886,7 +818,7 @@ int character::view_personal(int x, int y, int width, const char* id, const void
 	return y - y0;
 }
 
-int character::view_levels(int x, int y, int width, const char* id, const void* object) {
+int character::view_levels(int x, int y, int width, const void* object, const char* id, int index) {
 	auto y0 = y;
 	auto p = (character*)object;
 	auto& col = bsmeta<class_s>::data;
@@ -902,7 +834,7 @@ int character::view_levels(int x, int y, int width, const char* id, const void* 
 	return y - y0;
 }
 
-int character::view_skills(int x, int y, int width, const char* id, const void* object) {
+int character::view_skills(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
@@ -914,7 +846,7 @@ int character::view_skills(int x, int y, int width, const char* id, const void* 
 	return y - y0;
 }
 
-int character::view_ability(int x, int y, int width, const char* id, const void* object) {
+int character::view_ability(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -927,7 +859,7 @@ int character::view_ability(int x, int y, int width, const char* id, const void*
 	return y - y0;
 }
 
-int character::view_statistic(int x, int y, int width, const char* id, const void* object) {
+int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260];
 	auto p = (character*)object;
 	auto& col = bsmeta<class_s>::data;
@@ -952,7 +884,7 @@ int character::view_statistic(int x, int y, int width, const char* id, const voi
 	return y - y0;
 }
 
-int character::view_avatar(int x, int y, int width, const char* id, const void* object) {
+int character::view_avatar(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (character*)object;
 	unsigned flags = 0;
 	auto height = 64;
@@ -983,6 +915,22 @@ int character::view_avatar(int x, int y, int width, const char* id, const void* 
 	if(result)
 		cmd(character::choose_avatar, (void*)object).execute();
 	return rc.height() + metrics::padding*2;
+}
+
+static void item_type_press(unsigned char* p) {
+	auto result = decoration::choose(bsmeta<item_info>::meta);
+	if(result == -1)
+		return;
+	*p = result;
+}
+
+int item::type_view(int x, int y, int width, const void* object, const char* id, int index) {
+	auto y0 = y;
+	auto p = (item*)object;
+	y += draw::button(x, y, width, 0,
+		cmdv(item_type_press, &p->type),
+		bsmeta<item_info>::data[p->type].name);
+	return y - y0 + metrics::padding;
 }
 
 void character::apply_avatar(void* object) {
@@ -1178,10 +1126,9 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		domodal();
 	}
 	if(getresult()) {
-		auto result = e1.getcurrent();
-		if(!choose_mode)
-			save_campaign();
-		return result;
+		// DEBUG: сохраним модуль автоматически
+		save_campaign();
+		return e1.getcurrent();
 	}
 	return -1;
 }
