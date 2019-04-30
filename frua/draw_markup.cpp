@@ -228,7 +228,7 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 	auto pn = "";
 	auto pv = pb->get(ev);
 	if(pri && pri->getname)
-		pn = pri->getname(object, temp, zendof(temp), 0);
+		pn = pri->getname(pv, temp, zendof(temp), 0);
 	else
 		pn = getpresent(pb->get(ev));
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);

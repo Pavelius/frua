@@ -29,7 +29,7 @@ bool hasarmor(const void* object, int index) {
 bool hasability(const void* object, int index) {
 	return hasarmor(object, index) && !hasdamage(object, index);
 }
-static const char* wear_getname(const void* object, char* result, const char* result_max, int column) {
+static const char* wear_info_name_type(const void* object, char* result, const char* result_max, int column) {
 	switch(column) {
 	case 0:return ((wear_info*)object)->name_type;
 	}
@@ -43,7 +43,7 @@ static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
 static markup item_feat_block[] = {{0, "#checkboxes", {"feat"}}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
 {0, "Неопределено", {"name_unidentified"}},
-{0, "Группа", {"type"}, 0, {wear_getname, 0, allow_item}},
+{0, "Группа", {"type"}, 0, {wear_info_name_type, 0, allow_item}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
 {}};
