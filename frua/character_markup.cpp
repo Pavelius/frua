@@ -159,6 +159,7 @@ static markup items_page[] = {{6, "Одето", {0, 0, items_c1}},
 {0, 0, {"#commands", 0, items_commands}},
 {}};
 static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, character::changed}},
+{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::clear}},
 {0, "Общие", {"#page", 0, element_general}},
 {0, "Предметы", {"#page", 0, items_page}},
 {0, "Специальные способности", {"#page", 0, element_special}},

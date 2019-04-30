@@ -58,6 +58,8 @@ void character::clear() {
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1))
 		abilities[i] = 10;
 	base_ac = 10;
+	movement = 12;
+	levels[0] = 1;
 	apply_feats();
 }
 

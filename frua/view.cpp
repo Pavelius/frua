@@ -966,7 +966,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	e1.show_border = false;
 	e1.pixels_per_line = height;
 	e1.pixels_per_column = width;
-	e1.show_grid_lines = true;
+	//e1.show_grid_lines = true;
 	e1.hilite_odd_lines = false;
 	setfocus(0, true);
 	int x, y;
