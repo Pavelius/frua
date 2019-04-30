@@ -7,7 +7,7 @@ const markup* markup::find(const char* id, const void* object, int result, bool 
 		return 0;
 	for(auto p = this; *p; p++) {
 		if(!p->value.id || p->value.id[0] != '#')
-			return 0;
+			continue;
 		if(need_child && !p->value.child)
 			continue;
 		if(p->proc.isvisible && !p->proc.isvisible(object, p->value.index))

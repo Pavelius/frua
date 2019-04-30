@@ -143,8 +143,19 @@ static markup items_c1[] = {{0, "Голова", {"wears", Head}},
 {0, "Броня", {"wears", Armor}},
 {0, "Главное оружие", {"wears", MeleeWeapon}},
 {0, "Второстерепное", {"wears", OffhandWeapon}},
+{0, "Дистанционное", {"wears", RangedWeapon}},
+{0, "Пояс", {"wears", GridleWear}},
+{0, "Ноги", {"wears", Legs}},
 {}};
-static markup items_page[] = {{5, 0, {0, 0, items_c1}},
+static markup items_c2[] = {{0, "Кольцо", {"wears", LeftRing}},
+{0, "Кольцо", {"wears", RightRing}},
+{}};
+static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
+static markup items_commands[] = {{0, "Редактировать", {}, 0, {0, 0, 0, 0, 0, edit_items}},
+{}};
+static markup items_page[] = {{6, 0, {0, 0, items_c1}},
+{6, 0, {0, 0, items_c2}},
+{0, 0, {"#commands", 0, items_commands}},
 {}};
 static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, character::changed}},
 {0, "Общие", {"#page", 0, element_general}},

@@ -56,7 +56,7 @@ const decoration* decoration::find(const bsreq* type) {
 	return 0;
 }
 
-int decoration::choose(const bsreq* type) {
+int decoration::choose(const bsreq* type, bool choose_mode) {
 	auto p = find(type);
 	if(!p)
 		return -1;
@@ -68,7 +68,7 @@ int decoration::choose(const bsreq* type) {
 	auto y = p->size.y;
 	if(!y)
 		y = 18 + 4 * 2;
-	return p->choose(p->name, x, y, true);
+	return p->choose(p->name, x, y, choose_mode);
 }
 
 bool decoration::choose(void** result, const bsreq* type) {

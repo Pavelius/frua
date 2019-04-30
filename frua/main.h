@@ -168,9 +168,9 @@ enum direction_s : unsigned char {
 enum item_state_s : unsigned char {
 	Mundane, Cursed, Magic, Artifact
 };
-enum item_feat_s : unsigned char {
-	Consumable,
-	BodyPart
+enum wear_type_s : unsigned char {
+	StandartItem,
+	ConsumableItem, ChargeableItem
 };
 enum grade_s : unsigned char {
 	Fair, Good, Excellent,
@@ -243,11 +243,12 @@ struct decoration {
 		proc{T::getname, T::getvalue},
 		markups(T::markups) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
-	static int				choose(const bsreq* type);
+	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
 	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
+	static void				editlist(const bsreq* type) { choose(type, false); }
 	static const decoration* find(const bsreq* type);
 };
 
@@ -303,6 +304,7 @@ struct wear_info {
 	const char*				name;
 	const char*				name_type;
 	wear_s					wear[2];
+	wear_type_s				item_type;
 	char					use_damage;
 	char					use_armor;
 };
@@ -399,14 +401,12 @@ struct attack_info : weapon_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
-struct item_info {
-	wear_s					type;
-	const char*				name;
+struct item_info : name_info {
 	const char*				name_unidentified;
+	wear_s					type;
 	cflags<usability_s>		usability;
-	cflags<item_feat_s>		feat;
 	weapon_info				damage;
-	damage_info		special_attack;
+	damage_info				special_attack;
 	armor_info				armor;
 	char					abilities[Charisma + 1];
 	char					skills[LastSkill + 1];
@@ -418,16 +418,20 @@ struct item_info {
 	static int				view(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct item {
-	unsigned char			type;
-	item_state_s			state : 2;
-	unsigned char			quality : 2;
-	unsigned char			identify : 1;
-	unsigned char			charges;
+	unsigned short			type;
+	union {
+		struct {
+			item_state_s	state : 2;
+			unsigned char	quality : 2;
+			unsigned char	identify : 1;
+		};
+		unsigned short		value;
+	};
 	constexpr operator bool() const { return type != 0; }
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
 	static int				getvalue(const void* object, int id) { return 0; }
-	static int				type_view(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_type(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -563,7 +567,6 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 DECLENUM(alignment);
 DECLENUM(class);
 DECLENUM(effect);
-DECLENUM(item_feat);
 DECLENUM(feat);
 DECLENUM(damage_feat);
 DECLENUM(gender);

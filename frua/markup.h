@@ -2,19 +2,25 @@
 
 // Standart markup
 struct markup {
+	typedef const char* (*text_type)(const void* object, char* result, const char* result_maximum, int column);
+	typedef int(*num_type)(const void* object, int column);
+	typedef bool(*allow_type)(const void* object, int index);
+	typedef int(*custom_type)(int x, int y, int width, const void* object, const char* id, int index); // Custom draw
+	typedef void(*command_type)(void* object);
+	typedef void(*change_type)(void* object, const void* previous_object);
 	struct element {
 		const char*		id; // Field identificator (0 for group)
 		int				index; // Array index
 		const markup*	child; // Group or next field
 	};
 	struct proci {
-		const char* (*getname)(const void* object, char* result, const char* result_maximum, int column);
-		int(*getvalue)(const void* object, int column);
-		bool(*isallow)(const void* object, int index); // Is allow special element or command
-		bool(*isvisible)(const void* object, int index); // Is this markup isvisible
-		int(*custom)(int x, int y, int width, const void* object, const char* id, int index); // Custom draw
-		void(*command)(void* object); // Any command of class object
-		void(*change)(void* object, const void* previous_object); // When object changed
+		text_type		getname;
+		num_type		getvalue;
+		allow_type		isallow; // Is allow special element or command
+		allow_type		isvisible; // Is element visible
+		custom_type		custom;
+		command_type	command; // Any command of class object
+		change_type		change; // When object changed
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
 	char				width;

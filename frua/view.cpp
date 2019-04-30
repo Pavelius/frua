@@ -13,6 +13,7 @@ const int y_buttons = 600 - buttons_height;
 const int combat_moverate = 3;
 
 const markup* getmarkup(const bsreq* type);
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri);
 
 static anyval					command_value;
 static bsdata*					command_data;
@@ -398,50 +399,13 @@ static int field(int x, int y, int width, const char* title, picture_info& v) {
 	return button(x, y, width, choose_picture, &v, temp, AlignLeftCenter);
 }
 
-static int get_field_width(int digits) {
-	return 12 * (digits + 1) + 4 * 2 + 16;;
-}
-
-static int field(int x, int y, const char* title, const anyval& v, int digits) {
-	return draw::field(x, y, title_width + get_field_width(digits), title, v, title_width, digits);
-}
-
-static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2, const anyval& v2) {
-	auto w = get_field_width(digits);
-	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
-	x += title_width + w - 4;
-	auto tw = textw(t2);
-	draw::field(x, y, tw + w, t2, v2, tw, digits);
-	return d;
-}
-
-static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2) {
-	auto w = get_field_width(digits);
-	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
-	x += title_width + w - 4;
-	auto tw = textw(t2);
-	text(x + 2 + metrics::padding, y + metrics::padding + 4, t2);
-	return d;
-}
-
-static int field(int x, int y, const char* t1, const anyval& v1, int digits, const char* t2, const anyval& v2, const char* t3, const anyval& v3) {
-	int tw;
-	auto w = get_field_width(digits);
-	auto d = draw::field(x, y, title_width + w, t1, v1, title_width, digits);
-	x += title_width + w - 4;
-	tw = textw(t2);
-	draw::field(x, y, tw + w, t2, v2, tw, digits);
-	x += tw + w - 4;
-	tw = textw(t3);
-	draw::field(x, y, tw + w, t3, v3, tw, digits);
-	return d;
-}
-
-static int field(int x, int y, int width, const char* title, controls::textedit& v) {
+static int field(int x, int y, int width, const anyval& ev, const bsreq* type, const void* object, const markup::proci* pri) {
 	setposition(x, y, width);
-	rect rc = {x, y, x + width, y + texth() * 4 + 4 * 2};
-	v.view(rc);
-	return rc.y2 - y + metrics::padding;
+	rect rc = {x, y, x + width, y + draw::texth() + 8};
+	unsigned flags = AlignLeft;
+	draw::focusing((int)ev.ptr(), flags, rc);
+	field_enum(rc, flags, ev, type, object, pri);
+	return rc.height() + metrics::padding;
 }
 
 static int fieldv(int x, int y, int width, const char* title, const char* value) {
@@ -469,9 +433,6 @@ static int fieldp(int x, int y, int width, const char* title, int value) {
 static int fieldv(int x, int y, int width, const char* title, int value, int value_maximum, const char* format = "%1i/%2i") {
 	char temp[32]; zprint(temp, format, value, value_maximum);
 	return fieldv(x, y, width, title, temp);
-}
-
-static void page_header_pages(int page, int page_maximum) {
 }
 
 static void page_header(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page = 0, int page_maximum = 0) {
@@ -506,111 +467,6 @@ static void page_footer(int& x, int& y, bool allow_cancel = false) {
 		x += button(x, y, "Отмена", cmd(buttoncancel), KeyEscape);
 	} else
 		x += button(x, y, "Готово", cmd(buttonok), KeyEscape);
-}
-
-static void set_page() {
-	command_value = (const int)hot.param;
-	setfocus((int)command_value.ptr(), true);
-}
-
-static int page_tabs(int x, int y, const char** source, int& current_page) {
-	if(!source)
-		return 0;
-	x += 2;
-	auto focused = false;
-	auto id = (int)&current_page;
-	if(!getfocus())
-		setfocus(id, true);
-	if(getfocus() == id)
-		focused = true;
-	auto x0 = x;
-	for(unsigned i = 0; source[i]; i++) {
-		auto string = source[i];
-		auto dx = textw(string);
-		rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
-		auto checked = (current_page == i);
-		if(draw::buttonh(rc, checked, (focused && checked), false, true, string, Ctrl + (Alpha + '1' + i), false)) {
-			command_value = anyval(current_page);
-			execute(set_page, i);
-		}
-		if(focused && checked)
-			rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-		if(focused) {
-			switch(hot.key) {
-			case KeyLeft:
-				if(current_page > 0) {
-					command_value = anyval(current_page);
-					execute(set_page, current_page - 1);
-				}
-				break;
-			case KeyRight:
-				if(source[current_page + 1] != 0) {
-					command_value = anyval(current_page);
-					execute(set_page, current_page + 1);
-				}
-				break;
-			}
-		}
-		x += rc.width();
-	}
-	addelement(id, {x0, y, x, y + texth() + metrics::padding * 2});
-	return x - x0;
-}
-
-static rect start_group(int x, int& y, int width, const char* title, unsigned flags = AlignCenterCenter) {
-	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
-	gradv(rc, colors::border, colors::edit);
-	text(rc, title, flags);
-	y = rc.y2 + metrics::padding * 2;
-	return rc;
-}
-
-static int close_group(int x, int y, const rect& rc) {
-	rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
-	return metrics::padding * 2;
-}
-
-static int group(int x, int y, int width, const char* title, bsdata& source, const anyval& value) {
-	struct cmd : runable {
-		constexpr cmd(const anyval& value, const name_info* source, unsigned index)
-			: source(source), index(index), value(value) {}
-		virtual int	getid() const { return (int)source; }
-		virtual void execute() const { command_value = value; draw::execute(set_command_value, index); }
-		virtual bool isdisabled() const { return false; }
-		bool ischecked() const { return (int)value == index; }
-	private:
-		const name_info*	source;
-		unsigned			index;
-		const anyval		value;
-	};
-	auto y1 = y;
-	if(!source.count)
-		return 0;
-	auto rc = start_group(x, y, width, title);
-	for(unsigned i = 0; i <= source.count; i++) {
-		auto p = (name_info*)source.get(i);
-		cmd ev(value, p, i);
-		unsigned flags = 0;
-		if(ev.ischecked())
-			flags |= Checked;
-		y += radio(x, y, width, flags, ev, p->name, 0);
-	}
-	y += close_group(x, y, rc);
-	return y - y1 + metrics::padding;
-}
-
-template<class T> static int group(int x, int y, int width, const char* title, T& value) {
-	return group(x, y, width, title, bsmeta<bsreq::btype<T>::value>::data, value);
-}
-
-static void check_flags() {
-	unsigned v1 = command_value;
-	unsigned v2 = 1 << hot.param;
-	if(v1&v2)
-		v1 &= ~v2;
-	else
-		v1 |= v2;
-	command_value = (const int)v1;
 }
 
 struct image_info : point {
@@ -917,20 +773,16 @@ int character::view_avatar(int x, int y, int width, const void* object, const ch
 	return rc.height() + metrics::padding*2;
 }
 
-static void item_type_press(unsigned char* p) {
+static void item_type_press(unsigned short* p) {
 	auto result = decoration::choose(bsmeta<item_info>::meta);
 	if(result == -1)
 		return;
 	*p = result;
 }
 
-int item::type_view(int x, int y, int width, const void* object, const char* id, int index) {
-	auto y0 = y;
+int item::view_type(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (item*)object;
-	y += draw::button(x, y, width, 0,
-		cmdv(item_type_press, &p->type),
-		bsmeta<item_info>::data[p->type].name);
-	return y - y0 + metrics::padding;
+	return field(x, y, width, anyval(p->type), bsmeta<item_info>::meta, object, 0);
 }
 
 void character::apply_avatar(void* object) {
@@ -973,7 +825,6 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	openform();
 	auto current_page = 0;
 	const markup* page_markup_last = 0;
-	auto commands = elements->findcommands(object);
 	auto updater = elements->find("update", object, 0, false);
 	auto type_key = type->getkey();
 	while(ismodal()) {
@@ -1013,6 +864,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 			if(current_page>0)
 				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
 		}
+		auto commands = page->findcommands(object);
 		if(commands && commands->value.child) {
 			for(auto p = commands->value.child; *p; p++)
 				x += button(x, y, p->title, cmd(p->proc.command, object), 0);

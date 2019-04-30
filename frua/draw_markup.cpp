@@ -135,7 +135,7 @@ static rect start_group(int& x, int& y, int& width) {
 	setposition(x, y, width);
 	setposition(x, y, width);
 	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
-	y = rc.y2 + metrics::padding * 2;
+	y = rc.y2 + metrics::padding;
 	return rc;
 }
 
@@ -146,9 +146,9 @@ static int close_group(int x, int y, const rect& rc, const char* title) {
 		gradv(rc, colors::border, colors::edit);
 		line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
 		text(rc, title, AlignCenterCenter);
-		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding*2}, colors::border);
 	}
-	return metrics::padding * 2;
+	return metrics::padding * 3;
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e);
@@ -214,6 +214,38 @@ static int error(int x, int y, int width, contexti& ctx, const markup& e, const 
 	return rc.height() + metrics::padding * 2;
 }
 
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri) {
+	auto pb = bsdata::find(meta_type, bsdata::firstenum);
+	if(!pb)
+		pb = bsdata::find(meta_type, bsdata::first);
+	if(!pb)
+		return;
+	char temp[128];
+	auto focused = isfocused(flags);
+	auto result = focused && (hot.key == KeyEnter || hot.key == F2);
+	if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
+		result = true;
+	auto pn = "";
+	auto pv = pb->get(ev);
+	if(pri && pri->getname)
+		pn = pri->getname(pv, temp, zendof(temp), 0);
+	else
+		pn = getpresent(pb->get(ev));
+	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
+	if(focused)
+		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
+	if(result) {
+		command.clear();
+		command.rc = rc;
+		command.value = ev;
+		command.data = pb;
+		command.object = (void*)object;
+		if(pri)
+			command.proc = *pri;
+		execute(choose_enum);
+	}
+}
+
 static int field_main(int x, int y, int width, contexti& ctx, const char* title_text, void* pv, const bsreq* type, int param, const markup* child, const markup::proci* pri) {
 	auto xe = x + width;
 	auto y0 = y;
@@ -243,37 +275,9 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 			for(auto p = child; *p && rc.x2 < xe; p++)
 				element(rc.x2, y0, xe - rc.x2, ctx1, *p);
 		}
-	} else if(type->is(KindEnum)) {
-		auto pb = bsdata::find(type->type, bsdata::firstenum);
-		if(pb) {
-			char temp[128];
-			auto focused = isfocused(flags);
-			auto result = focused && (hot.key == KeyEnter || hot.key == F2);
-			anyval ev(pv, type->size);
-			if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
-				result = true;
-			auto pn = "";
-			auto pv = pb->get(ev);
-			if(pri && pri->getname)
-				pn = pri->getname(pv, temp, zendof(temp), 0);
-			else
-				pn = getpresent(pb->get(ev));
-			textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
-			if(focused)
-				rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-			if(result) {
-				command.clear();
-				command.rc = rc;
-				command.value = ev;
-				command.data = pb;
-				command.object = ctx.source.data;
-				if(pri)
-					command.proc = *pri;
-				execute(choose_enum);
-			}
-		}
-	}
-	return rc.height() + metrics::padding * 2;
+	} else if(type->is(KindEnum))
+		field_enum(rc, flags, anyval(pv, type->size), type->type, ctx.source.data, pri);
+	return rc.height() + metrics::padding;
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {
@@ -310,8 +314,10 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			return 0;
 		if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
 			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-			if(!pb || pb->count == 0)
+			if(!pb)
 				return error(x, y, width, ctx, e, "Не найдена база");
+			if(pb->count == 0)
+				return 0;
 			auto size = bv.type->size;
 			if(bv.type->is(KindCFlags))
 				size = bv.type->lenght;
@@ -343,8 +349,10 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			y = y1;
 		} else if(strcmp(pn, "radiobuttons") == 0 && bv.type->is(KindEnum)) {
 			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
-			if(!pb || pb->count == 0)
+			if(!pb)
 				return error(x, y, width, ctx, e, "Не найдена база");
+			if(pb->count == 0)
+				return 0;
 			auto size = bv.type->size;
 			for(unsigned i = 0; i < pb->count; i++) {
 				if(!ctx.isallow(e, i))
@@ -392,9 +400,8 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			ctx1.title_text = e.title;
 			ctx1.source = bsval(pv, bv.type->type);
 			return group_vertial(x, y, width, ctx1, pm);
-		} else {
+		} else
 			return field_main(x, y, width, ctx, e.title, pv, bv.type, e.param, e.value.child, &e.proc);
-		}
 	} else if(e.value.child) {
 		rect rgo = {};
 		auto y0 = y;

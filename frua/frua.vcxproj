@@ -164,7 +164,6 @@
     <ClCompile Include="gender.cpp" />
     <ClCompile Include="io.cpp" />
     <ClCompile Include="item_info.cpp" />
-    <ClCompile Include="item_feat.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="main_util.cpp" />
     <ClCompile Include="mapcore.cpp" />

@@ -10,7 +10,6 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(special_attack),
 	BSREQ(armor),
 	BSREQ(usability),
-	BSREQ(feat),
 	BSREQ(abilities),
 	BSREQ(skills),
 {}};
@@ -121,4 +120,9 @@ int item_info::getvalue(const void* object, int id) {
 		return Fair;
 	default: return 0;
 	}
+}
+
+void item_initialize() {
+	auto p = bsmeta<item_info>::data.add();
+	p->name = "Нет предмета";
 }
