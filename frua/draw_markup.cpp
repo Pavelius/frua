@@ -133,9 +133,9 @@ static bsval getvalue(const bsval& source, const markup& e) {
 }
 static rect start_group(int& x, int& y, int& width) {
 	setposition(x, y, width);
+	rect rc = {x, y, x + width, y + texth() + 4 * 2};
+	y += rc.height();
 	setposition(x, y, width);
-	rect rc = {x - metrics::padding, y, x + width + metrics::padding, y + texth() + 4 * 2};
-	y = rc.y2 + metrics::padding;
 	return rc;
 }
 
@@ -144,11 +144,11 @@ static int close_group(int x, int y, const rect& rc, const char* title) {
 		return 0;
 	if(title) {
 		gradv(rc, colors::border, colors::edit);
-		line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
 		text(rc, title, AlignCenterCenter);
-		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding*2}, colors::border);
+		rectb({rc.x1, rc.y1, rc.x2, y + metrics::padding}, colors::border);
+		line(rc.x1, rc.y2, rc.x2, rc.y2, colors::border);
 	}
-	return metrics::padding * 3;
+	return metrics::padding * 2;
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e);
@@ -298,8 +298,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			return dy;
 		}
 		return e.proc.custom(x, y, width, ctx.source.data, e.value.id, e.value.index);
-	}
-	else if(e.proc.command)
+	} else if(e.proc.command)
 		return button(x, y, width, 0, cmd(e.proc.command, ctx.source.data), e.title);
 	else if(e.title && e.title[0] == '#') {
 		auto pn = e.title + 1;

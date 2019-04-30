@@ -22,10 +22,9 @@ static markup standart_item_c1[] = {{0, "Качество", {"value"}},
 static markup standart_item_c2[] = {{0, 0, {"value"}, 0, {0, 0, 0, 0, item::view_state}},{}};
 static markup standart_item_c3[] = {{0, 0, {"value"}, 0, {0, 0, 0, 0, item::view_check}}, {}};
 static markup standart_item[] = {{5, 0, {0,0,standart_item_c1}},
-{3, 0, {0, 0, standart_item_c2}},
-{4, 0, {0, 0, standart_item_c3}},
+{7, 0, {0, 0, standart_item_c2}},
 {}};
 markup item::markups[] = {{0, "Тип", {"type"}, 0, {0, 0, 0, 0, item::view_type}},
-{0, "Зарядов", {"value", ChargeableItem}, 0, {0, 0, 0, allow_type}},
-{0, 0, {0, StandartItem, standart_item}, 0, {0, 0, 0, allow_type}},
+//{0, "Зарядов", {"value", ChargeableItem}, 0, {0, 0, 0, allow_type}},
+//{0, 0, {0, StandartItem, standart_item}, 0, {0, 0, 0, allow_type}},
 {}};

@@ -793,7 +793,7 @@ int item::view_state(int x, int y, int width, const void* object, const char* id
 int item::view_check(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (item*)object;
 	setposition(x, y, width);
-	return checkbox(x, y + 4, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding*2;
+	return checkbox(x, y + 3, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding*2;
 }
 
 void character::apply_avatar(void* object) {
