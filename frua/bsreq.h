@@ -2,13 +2,15 @@
 
 #pragma once
 
-#define	BSREQ(fn) {#fn, (unsigned)&((data_type*)0)->fn,\
+#define	BSHIN(fn,hint) {#fn, (unsigned)&((data_type*)0)->fn,\
 sizeof(bsreq::btype<decltype(data_type::fn)>::value),\
 sizeof(data_type::fn),\
 bsreq::icount<decltype(data_type::fn)>::value,\
 bsmeta<bsreq::btype<decltype(data_type::fn)>::value>::meta,\
 bsreq::iref<decltype(data_type::fn)>::value,\
-bsreq::isubtype<decltype(data_type::fn)>::value}
+bsreq::isubtype<decltype(data_type::fn)>::value,\
+hint}
+#define	BSREQ(fn) BSHIN(fn,0)
 #define BSDATA(c, i) static c c##_data_array[i];\
 bsdatat<c> bsmeta<c>::data(#c, c##_data_array, KindScalar);
 #define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
@@ -54,6 +56,7 @@ struct bsreq {
 	const bsreq*		type; // metadata of element
 	unsigned char		reference; // 1+ if reference
 	bstype_s			subtype;
+	const bsreq*		hint_type; // type for user defined algoritm
 	//
 	operator bool() const { return id != 0; }
 	//

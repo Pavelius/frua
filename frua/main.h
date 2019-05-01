@@ -10,7 +10,7 @@
 #pragma once
 
 const int combat_grid = 32;
-const int combat_map_x = 16;
+const int combat_map_x = 24;
 const int combat_map_y = 16;
 
 #define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
@@ -416,7 +416,8 @@ struct attack_info : weapon_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
-struct item_info : name_info {
+struct item_info {
+	const char*				name;
 	const char*				name_unidentified;
 	wear_s					type;
 	cflags<usability_s>		usability;
@@ -451,7 +452,6 @@ struct item {
 	static int				getvalue(const void* object, int id) { return 0; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_type(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct character {
 	operator bool() const { return name != 0; }

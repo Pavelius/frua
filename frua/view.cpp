@@ -478,7 +478,7 @@ struct image_info : point {
 static adat<image_info, 1024> scene_images;
 
 static void draw_grid(int x0, int y0) {
-	color c = colors::form;
+	color c = colors::window;
 	for(auto y = 0; y <= combat_map_y; y++) {
 		auto y1 = y0 + y * combat_grid;
 		auto x2 = x0 + combat_map_x * combat_grid;
@@ -507,7 +507,7 @@ static void draw_active_player(int x0, int y0) {
 
 static void draw_cost(int x0, int y0) {
 	auto old_fore = fore;
-	fore = colors::form;
+	fore = colors::window;
 	for(auto y = 0; y < combat_map_y; y++) {
 		for(auto x = 0; x < combat_map_x; x++) {
 			auto i = combat_info::m2i(x, y);
@@ -771,18 +771,6 @@ int character::view_avatar(int x, int y, int width, const void* object, const ch
 	if(result)
 		cmd(character::choose_avatar, (void*)object).execute();
 	return rc.height() + metrics::padding*2;
-}
-
-static void item_type_press(unsigned short* p) {
-	auto result = decoration::choose(bsmeta<item_info>::meta);
-	if(result == -1)
-		return;
-	*p = result;
-}
-
-int item::view_type(int x, int y, int width, const void* object, const char* id, int index) {
-	auto p = (item*)object;
-	return field(x, y, width, anyval(p->type), bsmeta<item_info>::meta, object, 0);
 }
 
 int item::view_state(int x, int y, int width, const void* object, const char* id, int index) {

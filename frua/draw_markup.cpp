@@ -77,8 +77,15 @@ struct contexti {
 };
 }
 
-static const char* getpresent(const void* p) {
-	return ((const char**)p)[1];
+static const char* getpresent(const void* p, const bsreq* type) {
+	auto pf = type->find("name");
+	if(!pf)
+		pf = type->find("id");
+	if(!pf)
+		pf = type->find("text");
+	if(!pf || !pf->istext())
+		return "";
+	return (const char*)pf->get(pf->ptr(p));
 }
 
 static void choose_enum() {
@@ -89,7 +96,7 @@ static void choose_enum() {
 			if(proc.getname)
 				return proc.getname(source.get(data[line]), result, result_max, column);
 			switch(column) {
-			case 0: return getpresent(source.get(data[line]));
+			case 0: return getpresent(source.get(data[line]), source.meta);
 			}
 			return "";
 		}
@@ -230,7 +237,7 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 	if(pri && pri->getname)
 		pn = pri->getname(pv, temp, zendof(temp), 0);
 	else
-		pn = getpresent(pb->get(ev));
+		pn = getpresent(pb->get(ev), pb->meta);
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
@@ -258,7 +265,12 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	draw::focusing((int)pv, flags, rc);
 	if(type->istext())
 		draw::field(rc, flags, anyval(pv, type->size), -1, FieldText);
-	else if(type->isnum()) {
+	else if(type->is(KindEnum) || (type->isnum() && type->hint_type)) {
+		auto hint = type->type;
+		if(type->hint_type)
+			hint = type->hint_type;
+		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri);
+	} else if(type->isnum()) {
 		auto d = param;
 		if(!d)
 			d = 2;
@@ -277,9 +289,11 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 			for(auto p = child; *p && rc.x2 < xe; p++)
 				element(rc.x2, y0, xe - rc.x2, ctx1, *p);
 		}
-	} else if(type->is(KindEnum))
-		field_enum(rc, flags, anyval(pv, type->size), type->type, ctx.source.data, pri);
+	}
 	return rc.height() + metrics::padding*2;
+}
+
+static int field_button(int x, int y, int width, contexti& ctx, const markup& e) {
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {
@@ -332,7 +346,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			for(unsigned i = 0; i < pb->count; i++) {
 				if(!ctx.isallow(e, i))
 					continue;
-				auto p = getpresent(pb->get(i));
+				auto p = getpresent(pb->get(i), pb->meta);
 				cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
 				unsigned flags = 0;
 				if(ev.ischecked())
@@ -358,7 +372,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			for(unsigned i = 0; i < pb->count; i++) {
 				if(!ctx.isallow(e, i))
 					continue;
-				auto p = getpresent(pb->get(i));
+				auto p = getpresent(pb->get(i), pb->meta);
 				cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
 				unsigned flags = 0;
 				if(ev.ischecked())
@@ -380,7 +394,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				auto pv = bv.type->ptr(bv.data, i);
 				if(!ctx.isallow(e, i))
 					continue;
-				y += field_main(x, y, width, ctx, getpresent(pb->get(i)), pv, bv.type, e.param, 0, &e.proc);
+				y += field_main(x, y, width, ctx, getpresent(pb->get(i), pb->meta), pv, bv.type, e.param, 0, &e.proc);
 			}
 		}
 		return y - y0;
@@ -393,13 +407,16 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		}
 		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
-		if(bv.type->is(KindScalar) && !bv.type->isnum() && !bv.type->istext() && !bv.type->isref()) {
-			auto pm = getmarkup(bv.type->type);
+		if(bv.type->is(KindScalar) && !bv.type->istext() && !bv.type->isref() && !bv.type->isnum()) {
+			auto hint_type = bv.type->type;
+			if(bv.type->hint_type)
+				hint_type = bv.type->hint_type;
+			auto pm = getmarkup(hint_type);
 			if(!pm)
 				return error(x, y, width, ctx, e, "Не найдена разметка");
 			auto ctx1 = ctx;
 			ctx1.title_text = e.title;
-			ctx1.source = bsval(pv, bv.type->type);
+			ctx1.source = bsval(pv, hint_type);
 			return group_vertial(x, y, width, ctx1, pm);
 		} else
 			return field_main(x, y, width, ctx, e.title, pv, bv.type, e.param, e.value.child, &e.proc);

@@ -1,11 +1,11 @@
 #include "main.h"
 
 const bsreq bsmeta<item>::meta[] = {
-	BSREQ(type),
+	BSHIN(type, bsmeta<item_info>::meta),
 	BSREQ(value),
 {}};
 
-markup item::markups[] = {{0, "“ип", {"type"}, 0, {0, 0, 0, 0, item::view_type}},
+markup item::markups[] = {{0, "“ип", {"type"}},
 {}};
 
 void item::getname(stringcreator& sc) const {
