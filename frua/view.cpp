@@ -10,7 +10,6 @@ const int picture_height = 300;
 const int title_width = 100;
 const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
-const int combat_moverate = 3;
 
 const markup* getmarkup(const bsreq* type);
 void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri);
@@ -560,7 +559,6 @@ static void move_direction(direction_s d) {
 	if(!p)
 		return;
 	current_combat->move(p, d);
-	current_combat->movement -= combat_moverate;
 }
 static void move_up() { move_direction(Up); }
 static void move_down() { move_direction(Down); }
@@ -590,11 +588,17 @@ void combat_info::visualize() {
 	draw_images(x, y);
 }
 
+void combat_info::splash(unsigned seconds) {
+	render_background();
+	visualize();
+	sysredraw();
+	sleep(100);
+}
+
 void combat_info::move(character* player) {
 	current_combat = this;
 	player->setactive();
 	setfocus(0, true);
-	movement = player->getmovement();
 	makewave(player->getposition());
 	while(ismodal() && movement > 0) {
 		render_background();

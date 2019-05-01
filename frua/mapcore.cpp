@@ -74,22 +74,31 @@ short unsigned mapcore::getcost(short unsigned index) {
 	return map_block[index];
 }
 
-short unsigned mapcore::step(short unsigned index, short xm, short ym) {
+direction_s mapcore::step(short unsigned index, short xm, short ym) {
 	if(index == Blocked)
-		return Blocked;
-	auto i = index;
+		return Center;
+	auto d = Center;
 	auto c = map_block[index];
-	for(auto d : all_directions) {
-		auto i1 = to(index, d, xm, ym);
+	for(auto e : all_directions) {
+		auto i1 = to(index, e, xm, ym);
 		if(i1 == Blocked)
 			continue;
 		auto c1 = map_block[i1];
 		if(c1 == Blocked)
 			continue;
-		if(c1>c)
+		if(c1 >= c)
 			continue;
 		c = c1;
-		i = i1;
+		d = e;
 	}
-	return i;
+	return d;
+}
+
+direction_s mapcore::getdirection(short unsigned i1, short unsigned i2, short xm, short ym) {
+	for(auto e : all_directions) {
+		auto i = to(i1, e, xm, ym);
+		if(i == i2)
+			return e;
+	}
+	return Center;
 }

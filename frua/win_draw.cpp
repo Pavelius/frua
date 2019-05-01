@@ -312,3 +312,7 @@ int draw::rawinput() {
 void draw::setcaption(const char* string) {
 	SetWindowTextA(hwnd, string);
 }
+
+extern "C" void sleep(unsigned tm) {
+	Sleep(tm);
+}

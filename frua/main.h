@@ -109,7 +109,7 @@ enum effect_s : unsigned char {
 	NoEffect,
 	Bludgeon, Piercing, Slashing,
 	Acid, Cold, Electricity, Fire,
-	FirstDamage = Bludgeon, LastDamage=Fire,
+	FirstDamage = Bludgeon, LastDamage = Fire,
 	Death, Petrification, Paralize,
 	WeakPoison, Poison, StrongPoison, DeathPoison,
 };
@@ -160,6 +160,7 @@ enum gender_s : unsigned char {
 };
 enum direction_s : unsigned char {
 	Up, Right, Down, Left,
+	Center,
 };
 enum item_state_s : unsigned char {
 	Mundane, Cursed, Magic, Artifact
@@ -560,21 +561,23 @@ struct mapcore {
 	static const short unsigned Blocked = 0xFFFF;
 	static const short unsigned DefaultCost = 0xFFFE;
 	static short unsigned	getcost(short unsigned index);
+	static direction_s		getdirection(short unsigned i1, short unsigned i2, short xm, short ym);
 	static void				makewave(short unsigned start_index, short xm, short ym);
 	static void				setblock();
 	static void				setblock(short unsigned index, short unsigned v);
-	static short unsigned	step(short unsigned i, short xm, short ym);
+	static direction_s		step(short unsigned i, short xm, short ym);
 	static short unsigned	to(short unsigned i, direction_s d, short xm, short ym);
 };
 template<short XM, short YM> struct map_info : mapcore {
 	static const short		xmax = XM, ymax = YM;
 	unsigned char			data[XM*YM];
+	static direction_s		getdirection(short unsigned i1, short unsigned i2) { return mapcore::getdirection(i1, i2, XM, YM); }
 	static point			i2m(short unsigned i) { return {i % XM, i / XM}; }
 	static short unsigned	m2i(short x, short y) { return y * XM + x; };
 	static short unsigned	m2i(const point pt) { return pt.y * XM + pt.x; };
 	static short unsigned	to(short unsigned i, direction_s d) { return mapcore::to(i, d, XM, YM); }
 	static short unsigned	random() { return m2i(xrand(0, XM - 1), xrand(0, YM - 1)); }
-	static short unsigned	step(short unsigned i) { return mapcore::step(i, XM, YM); }
+	static direction_s		step(short unsigned i) { return mapcore::step(i, XM, YM); }
 };
 struct combat_info : map_info<combat_map_x, combat_map_y> {
 	int						round;
@@ -586,7 +589,8 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					addenemies();
 	void					addparty();
 	void					automove(character* player);
-	short unsigned			getmovecost(short unsigned index);
+	character*				getenemy(const character* player) const;
+	short unsigned			getmovecost(short unsigned index) const;
 	bool					isenemy() const;
 	void					makewave(short unsigned index);
 	void					move(character* player);
@@ -594,6 +598,7 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	bool					moveto(character* player, short unsigned index);
 	void					play();
 	void					playround();
+	void					splash(unsigned seconds = 100);
 	void					update();
 	void					visualize();
 };

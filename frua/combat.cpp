@@ -1,5 +1,7 @@
 #include "main.h"
 
+const int combat_moverate = 3;
+
 character* combat_info::create(const char* name, reaction_s reaction) {
 	auto pc = bsmeta<character>::data.find(bsmeta<character>::meta->find("name"), name);
 	if(!pc)
@@ -30,7 +32,7 @@ static void get_lesser_cost(short unsigned index, short unsigned& cost) {
 		cost = v;
 }
 
-short unsigned combat_info::getmovecost(short unsigned index) {
+short unsigned combat_info::getmovecost(short unsigned index) const {
 	auto cost = getcost(index);
 	if(cost == 0 || cost==Blocked) {
 		for(auto e : std::initializer_list<direction_s>{Left, Right, Up, Down})
@@ -42,15 +44,11 @@ short unsigned combat_info::getmovecost(short unsigned index) {
 bool combat_info::moveto(character* player, short unsigned index) {
 	makewave(index);
 	auto current_index = player->getposition();
-	auto next_index = step(current_index);
-	if(next_index == index || next_index == Blocked)
-		return false;
-	player->setposition(next_index);
-	return true;
+	auto d = step(current_index);
+	return move(player, d);
 }
 
-void combat_info::automove(character* player) {
-	makewave(player->getposition());
+character* combat_info::getenemy(const character* player) const {
 	character* target = 0;
 	short unsigned target_cost = 0;
 	for(auto enemy : parcipants) {
@@ -66,13 +64,26 @@ void combat_info::automove(character* player) {
 		target_cost = c;
 		target = enemy;
 	}
-	moveto(player, target->getposition());
+	return target;
+}
+
+void combat_info::automove(character* player) {
+	makewave(player->getposition());
+	auto enemy = getenemy(player);
+	if(enemy) {
+		while(movement > 0) {
+			if(!moveto(player, enemy->getposition()))
+				break;
+			splash();
+		}
+	}
 }
 
 void combat_info::playround() {
 	for(auto p : parcipants) {
 		if(!isenemy())
 			return;
+		movement = p->getmovement();
 		if(p->isplayable())
 			move(p);
 		else
@@ -114,6 +125,8 @@ void combat_info::makewave(short unsigned index) {
 bool combat_info::move(character* player, direction_s d) {
 	if(!player)
 		return false;
+	if(d == Center)
+		return false;
 	auto i1 = to(player->getposition(), d);
 	if(i1 == Blocked)
 		return false;
@@ -126,5 +139,6 @@ bool combat_info::move(character* player, direction_s d) {
 		player->set(d);
 		break;
 	}
+	movement -= combat_moverate;
 	return true;
 }
