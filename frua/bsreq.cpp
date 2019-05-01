@@ -193,3 +193,13 @@ const void* bsdata::find(const bsreq* id, const void* value, unsigned size) cons
 	}
 	return 0;
 }
+
+const char*	bsdata::getstring(const void* object, const bsreq* type, const char* id) {
+	auto pf = type->find(id);
+	if(!pf)
+		return "";
+	auto ps = (const char*)pf->get(pf->ptr(object));
+	if(!ps)
+		ps = "";
+	return ps;
+}

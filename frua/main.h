@@ -11,11 +11,7 @@
 
 const int combat_grid = 32;
 const int combat_map_x = 24;
-const int combat_map_y = 16;
-
-#define assert_enum(e, last) static_assert(sizeof(e##_data) / sizeof(e##_data[0]) == last + 1, "Invalid count of " #e " elements");\
-const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
-bsdatat<e##_info> bsmeta<e##_info>::data(#e, e##_data, KindEnum);
+const int combat_map_y = 15;
 
 enum class_s : unsigned char {
 	Monster,
@@ -258,6 +254,11 @@ struct decoration {
 struct name_info {
 	const char*				id;
 	const char*				name;
+};
+struct skill_info {
+	const char*				id;
+	const char*				name;
+	cflags<class_s>			allow;
 };
 struct ability_info {
 	const char*				id;
@@ -588,6 +589,7 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					visualize();
 };
 DECLENUM(alignment);
+DECLENUM(ability);
 DECLENUM(class);
 DECLENUM(damage_feat);
 DECLENUM(effect);
@@ -597,6 +599,7 @@ DECLENUM(item_state);
 DECLENUM(race);
 DECLENUM(reaction);
 DECLENUM(size);
+DECLENUM(skill);
 DECLENUM(wear);
 DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;

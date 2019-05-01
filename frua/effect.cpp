@@ -1,6 +1,6 @@
 #include "main.h"
 
-effect_info effect_data[] = {{"NoEffect", "Не используется"},
+BSENUMB(effect) = {{"NoEffect", "Не используется"},
 {"Bludgeon", "Ударное"},
 {"Piercing", "Колющее"},
 {"Slashing", "Режущее"},
@@ -17,5 +17,4 @@ effect_info effect_data[] = {{"NoEffect", "Не используется"},
 {"DeathPoison", "Смертельный яд"},
 };
 assert_enum(effect, DeathPoison);
-getstr_enum(effect);
 

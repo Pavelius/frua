@@ -1,6 +1,6 @@
 #include "main.h"
 
-usability_info usability_data[] = {{"UseLeatherArmor", "Кожанные доспехи"},
+usability_info bsmeta<usability_info>::elements[] = {{"UseLeatherArmor", "Кожанные доспехи"},
 {"UseMetalArmor", "Металические доспехи"},
 {"UseShield", "Щит"},
 {"UseTheifWeapon", "Оружие воров"},
@@ -10,4 +10,3 @@ usability_info usability_data[] = {{"UseLeatherArmor", "Кожанные доспехи"},
 {"UseScrolls", "Свиток"},
 };
 assert_enum(usability, UseScrolls);
-getstr_enum(usability);

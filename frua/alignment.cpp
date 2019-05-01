@@ -1,6 +1,6 @@
 #include "main.h"
 
-alignment_info alignment_data[] = {{"Lawful Good", "Законопослушный добрый", {Theif}},
+alignment_info bsmeta<alignment_info>::elements[] = {{"Lawful Good", "Законопослушный добрый", {Theif}},
 {"Neutral Good", "Нейтрально добрый", {Paladin}},
 {"Chaotic Good", "Хаотично добрый", {Paladin}},
 {"Lawful Neutral", "Законопослушный нейтральный", {Theif, Ranger, Paladin}},
@@ -11,4 +11,3 @@ alignment_info alignment_data[] = {{"Lawful Good", "Законопослушный добрый", {Th
 {"Chaotic Evil", "Хаотично злой", {Ranger, Paladin}},
 };
 assert_enum(alignment, ChaoticEvil);
-getstr_enum(alignment);

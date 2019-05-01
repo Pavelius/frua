@@ -11,14 +11,20 @@ bsreq::iref<decltype(data_type::fn)>::value,\
 bsreq::isubtype<decltype(data_type::fn)>::value,\
 hint}
 #define	BSREQ(fn) BSHIN(fn,0)
-#define BSDATA(c, i) static c c##_data_array[i];\
-bsdatat<c> bsmeta<c>::data(#c, c##_data_array, KindScalar);
+#define BSENUMB(e) e##_info bsmeta<e##_info>::elements[]
+#define BSDATA(c, i) c bsmeta<c>::elements[i];\
+bsdatat<c> bsmeta<c>::data(#c, bsmeta<c>::elements, KindScalar);
 #define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
+#define assert_enum(e, last) static_assert(sizeof(bsmeta<e##_info>::elements) / sizeof(bsmeta<e##_info>::elements[0]) == last + 1, "Invalid count of " #e " elements");\
+const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
+bsdatat<e##_info> bsmeta<e##_info>::data(#e, bsmeta<e##_info>::elements, KindEnum);
 
 enum bstype_s : unsigned char { KindScalar, KindEnum, KindADat, KindARef, KindARem, KindCFlags };
 
 // Metadata field descriptor
 struct bsreq {
+	typedef const char* (*proc_text)(const void* object, char* result, const char* result_max);
+	typedef int (*proc_num)(const void* object);
 	// Get count of reference
 	template<class T> struct iref : static_int<0> {};
 	template<class T> struct iref<T*> : static_int<1 + iref<T>::value> {};
@@ -98,6 +104,7 @@ struct bsdata {
 	const void*			find(const bsreq* id, const void* value, unsigned size) const;
 	static bsdata*		findbyptr(const void* object, bsdata* first);
 	const void*			get(int index) const { return (char*)data + size * index; }
+	static const char*	getstring(const void* object, const bsreq* type, const char* id);
 	bool				has(const void* object) const { return object >= data && object < ((char*)data + maximum * size); }
 	int					indexof(const void* object) const;
 	static int			read(const char* url);
@@ -105,7 +112,8 @@ struct bsdata {
 };
 template<typename T> struct bsdatat : bsdata {
 	template<unsigned N> constexpr bsdatat(const char* id, T(&source)[N], bstype_s subtype) :
-		bsdata(id, bsmeta<T>::meta, source, sizeof(T), (subtype == KindEnum) ? N : 0, N, subtype) {}
+		bsdata(id, bsmeta<T>::meta, source, sizeof(T),
+		((subtype == KindEnum) ? N : 0), N, subtype) {}
 	T& operator[](int index) { return ((T*)data)[index]; }
 	T*					add() { return (T*)bsdata::add(); }
 	constexpr const T*	begin() const { return (T*)data; }
@@ -114,6 +122,7 @@ template<typename T> struct bsdatat : bsdata {
 };
 template<typename T> struct bsmeta {
 	typedef T			data_type;
+	static T			elements[];
 	static const bsreq	meta[];
 	static bsdatat<T>	data;
 };
@@ -134,6 +143,7 @@ struct bsval {
 	int					get() const { return type->get(type->ptr(data)); }
 	void				set(int value) const { type->set(type->ptr(data), value); }
 };
+template<class T> const char* getstr(const T e) { return bsmeta<T>::data[e].name; }
 template<> struct bsmeta<unsigned char> : bsmeta<int> {};
 template<> struct bsmeta<char> : bsmeta<int> {};
 template<> struct bsmeta<unsigned short> : bsmeta<int> {};

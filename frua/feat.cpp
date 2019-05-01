@@ -1,6 +1,6 @@
 #include "main.h"
 
-feat_info feat_data[] = {{"Darkvision", "Видит в темноте"},
+BSENUMB(feat) = {{"Darkvision", "Видит в темноте"},
 {"BonusSaveVsPoison", "Бонус к спасению от яда"},
 {"BonusSaveVsWands", "Бонус к спасению от палочек"},
 {"BonusSaveVsSpells", "Бонус к спасению от заклинаний"},
@@ -18,4 +18,3 @@ feat_info feat_data[] = {{"Darkvision", "Видит в темноте"},
 {"UniqueCharacter", "Уникальный персонаж"},
 };
 assert_enum(feat, UniqueCharacter);
-getstr_enum(feat);

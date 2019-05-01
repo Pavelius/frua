@@ -1,10 +1,6 @@
 #include "main.h"
 
-struct skill_info {
-	const char*		id;
-	const char*		name;
-	cflags<class_s>	allow;
-} skill_data[] = {{"SaveVsParalization", "Спасение от парализации"},
+skill_info bsmeta<skill_info>::elements[] = {{"SaveVsParalization", "Спасение от парализации"},
 {"SaveVsPoison", "Спасение от яда"},
 {"SaveVsDeath", "Спасение от смерти"},
 {"SaveVsWands", "Спасение от палочек"},
@@ -31,7 +27,6 @@ struct skill_info {
 {"OpenDoors", "Открывать двери"},
 {"LiftGate", "Поднимать ворота"},
 };
-getstr_enum(skill);
 assert_enum(skill, LastSkill);
 
 static char savevs_data[4][5][22] = {
@@ -153,7 +148,7 @@ static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 		if(n < 1)
 			continue;
 		auto e = bsmeta<class_s>::data[type].classes.data[i];
-		if(skill_data[id].allow && !skill_data[id].allow.is(e))
+		if(bsmeta<skill_info>::elements[id].allow && !bsmeta<skill_info>::elements[id].allow.is(e))
 			continue;
 		if(n > 17)
 			n = 17;
@@ -164,10 +159,10 @@ static int get_theiv_skill(skill_s id, class_s type, const char* levels) {
 }
 
 static bool allow_skill(skill_s id, class_s type) {
-	if(!skill_data[id].allow)
+	if(!bsmeta<skill_info>::elements[id].allow)
 		return true;
 	for(auto e : bsmeta<class_s>::data[type].classes) {
-		if(skill_data[id].allow.is(e))
+		if(bsmeta<skill_info>::elements[id].allow.is(e))
 			return true;
 	}
 	return false;

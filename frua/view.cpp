@@ -113,7 +113,7 @@ int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, co
 		cmd.execute();
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-	return rc.height() + metrics::padding*2;
+	return rc.height() + metrics::padding * 2;
 }
 
 static void render_picture(int x, int y) {
@@ -405,7 +405,7 @@ static int field(int x, int y, int width, const anyval& ev, const bsreq* type, c
 	unsigned flags = AlignLeft;
 	draw::focusing((int)ev.ptr(), flags, rc);
 	field_enum(rc, flags, ev, type, object, pri);
-	return rc.height() + metrics::padding*2;
+	return rc.height() + metrics::padding * 2;
 }
 
 static int fieldv(int x, int y, int width, const char* title, const char* value) {
@@ -535,7 +535,7 @@ void character::addbattle() {
 	if(index == mapcore::Blocked)
 		return;
 	auto x = (index%combat_map_x)*combat_grid + combat_grid / 2;
-	auto y = (index / combat_map_y)*combat_grid + combat_grid / 2;
+	auto y = (index / combat_map_x)*combat_grid + combat_grid / 2;
 	auto pi = scene_images.add();
 	pi->frame = getavatar() * 2;
 	pi->flags = 0;
@@ -555,14 +555,17 @@ void combat_info::update() {
 
 static combat_info* current_combat;
 
-static void move_direction() {
-	auto d = (direction_s)hot.param;
+static void move_direction(direction_s d) {
 	auto p = character::getactive();
 	if(!p)
 		return;
 	//p->move(d);
 	current_combat->movement -= combat_moverate;
 }
+static void move_up() { move_direction(Up); }
+static void move_down() { move_direction(Down); }
+static void move_left() { move_direction(Left); }
+static void move_right() { move_direction(Right); }
 
 static void set_defend() {
 	auto p = character::getactive();
@@ -578,9 +581,11 @@ static void draw_images(int x, int y) {
 
 void combat_info::visualize() {
 	render_background();
-	auto x = metrics::padding, y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y;
+	auto x = (getwidth() - combat_grid * combat_map_x) / 2;
+	auto y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y - texth() - 2;
 	update();
 	draw_grid(x, y);
+	draw_cost(x, y);
 	draw_active_player(x, y);
 	draw_images(x, y);
 }
@@ -594,21 +599,16 @@ void combat_info::move(character* player) {
 	while(ismodal() && movement > 0) {
 		render_background();
 		auto x = metrics::padding, y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y;
-		// Нарисуем все объекты, которые просчитали ранее
-		update();
-		draw_grid(x, y);
-		draw_cost(x, y);
-		draw_active_player(x, y);
-		draw_images(x, y);
+		visualize();
 		y = y_buttons;
 		x += button(x, y, "Атаковать", cmd(buttonok), Alpha + 'A');
-		x += button(x, y, "Стрелять", cmd(buttonok), Alpha + 'S');
-		x += button(x, y, "Метать", cmd(buttonok), Alpha + 'T');
-		x += button(x, y, "Заклинание", cmd(buttonok), Alpha + 'C');
-		x += button(x, y, "Вверх", cmd(move_direction, Up), KeyUp);
-		x += button(x, y, "Вниз", cmd(move_direction, Down), KeyDown);
-		x += button(x, y, "Вправо", cmd(move_direction, Right), KeyRight);
-		x += button(x, y, "Влево", cmd(move_direction, Left), KeyLeft);
+		//x += button(x, y, "Стрелять", cmd(buttonok), Alpha + 'S');
+		//x += button(x, y, "Метать", cmd(buttonok), Alpha + 'T');
+		//x += button(x, y, "Заклинание", cmd(buttonok), Alpha + 'C');
+		x += button(x, y, "Вверх", cmd(move_up), KeyUp);
+		x += button(x, y, "Вниз", cmd(move_down), KeyDown);
+		x += button(x, y, "Вправо", cmd(move_right), KeyRight);
+		x += button(x, y, "Влево", cmd(move_left), KeyLeft);
 		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
 		domodal();
 	}
@@ -653,15 +653,6 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	}
 	return false;
 }
-
-//int character::edit_attacks(int x, int y, int width) {
-//	auto x0 = x, y0 = y;
-//	auto rga = start_group(x, y, width, "Специальные атаки");
-//	for(auto& e : special_attacks)
-//		y += button(x, y, width, choose_attack, &e, "Нет");
-//	y += close_group(x, y, rga);
-//	return y - y0;
-//}
 
 int character::view_personal(int x, int y, int width, const void* object, const char* id, int index) {
 	auto y0 = y;
@@ -733,11 +724,11 @@ int character::view_statistic(int x, int y, int width, const void* object, const
 	y += fieldv(x, y, width, "THAC0", ai.bonus);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", p->getac());
-	if(p->hp_rolled==0) {
+	if(p->hp_rolled == 0) {
 		auto min = p->gethpmax(0);
 		auto max = p->gethpmax(p->gethprollmax());
 		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
-	} else if(p->hp==0)
+	} else if(p->hp == 0)
 		y += fieldv(x, y, width, "Хиты", p->gethpmax());
 	else
 		y += fieldv(x, y, width, "Хиты", p->gethp(), p->gethpmax(), "%1i/%2i");
@@ -774,7 +765,7 @@ int character::view_avatar(int x, int y, int width, const void* object, const ch
 	}
 	if(result)
 		cmd(character::choose_avatar, (void*)object).execute();
-	return rc.height() + metrics::padding*2;
+	return rc.height() + metrics::padding * 2;
 }
 
 int item::view_state(int x, int y, int width, const void* object, const char* id, int index) {
@@ -785,7 +776,7 @@ int item::view_state(int x, int y, int width, const void* object, const char* id
 int item::view_check(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (item*)object;
 	setposition(x, y, width);
-	return checkbox(x, y + 3, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding*2;
+	return checkbox(x, y + 3, width, 0, cmd(buttonok), "Опознан", 0) + metrics::padding * 2;
 }
 
 void damage_info::edit(void* p) {
@@ -893,9 +884,9 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		y += draw::field(x, y, width, page, bsval(object, type), 100);
 		page_footer(x, y, true);
 		if(page_maximum > 0) {
-			if(current_page<page_maximum-1)
+			if(current_page < page_maximum - 1)
 				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
-			if(current_page>0)
+			if(current_page > 0)
 				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
 		}
 		auto commands = page->findcommands(object);

@@ -1,6 +1,6 @@
 #include "main.h"
 
-static wear_info wear_data[] = {{"Head", "Голова", "Головные уборы", {Head, Backpack}, StandartItem, 0, 1},
+wear_info bsmeta<wear_info>::elements[] = {{"Head", "Голова", "Головные уборы", {Head, Backpack}, StandartItem, 0, 1},
 {"Neck", "Шея", "Амулеты", {Neck, Backpack}, StandartItem, 0, 1},
 {"Armor", "Броня", "Доспехи", {Armor, Backpack}, StandartItem, 0, 1},
 {"MeleeWeapon", "Оружие ближнего боя", "Оружие ближнего боя", {MeleeWeapon, Backpack}, StandartItem, 1, 1},
@@ -19,4 +19,3 @@ static wear_info wear_data[] = {{"Head", "Голова", "Головные уборы", {Head, Back
 {"Gem", "Драгоценность", "Драгоценности", {Backpack, Backpack}},
 };
 assert_enum(wear, LastWear);
-getstr_enum(wear);

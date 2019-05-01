@@ -1,6 +1,6 @@
 #include "main.h"
 
-class_info class_data[] = {{"Monster", "Монстр", 0, 8, Strenght, {Monster},
+BSENUMB(class) = {{"Monster", "Монстр", 0, 8, Strenght, {Monster},
 {BonusHits}, {}, {0, 0, 0, 0, 0, 0},
 {Human, Dwarf, Elf, Gnome, HalfElf, Goblinoid, Humanoid, Animal, Insectoid}},
 {"Cleric", "Священник", 1, 8, Wisdow, {Cleric},
@@ -45,4 +45,3 @@ class_info class_data[] = {{"Monster", "Монстр", 0, 8, Strenght, {Monster},
 {Elf, HalfElf}},
 };
 assert_enum(class, FighterMageTheif);
-getstr_enum(class);

@@ -8,11 +8,7 @@ static void add_position(aref<character*> source) {
 
 bool test_array();
 
-int	main(int argc, char *argv[]) {
-	if(!test_array())
-		return -1;
-	decoration::initialize();
-	draw::initialize();
+static void test_combat() {
 	combat_info ci;
 	character p1; p1.create(Human, Male, Fighter, LawfulGood, Player);
 	p1.setposition(ci.random());
@@ -22,7 +18,14 @@ int	main(int argc, char *argv[]) {
 	ci.addenemies();
 	ci.addparty();
 	ci.play();
-	//auto index = decoration::choose(bsmeta<character>::meta);
+}
+
+int	main(int argc, char *argv[]) {
+	if(!test_array())
+		return -1;
+	decoration::initialize();
+	draw::initialize();
+	auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	return 0;
 }
