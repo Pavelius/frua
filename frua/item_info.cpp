@@ -36,6 +36,7 @@ static const char* wear_info_name_type(const void* object, char* result, const c
 	return "";
 }
 static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, 0, 0, item_info::view_weapon}},
+//{0, 0, {"damage"}, 0, {damage_info::getname, 0, 0, 0, 0, weapon_info::edit}},
 {0, 0, {"special_attack"}, 0, {0, 0, 0, 0, item_info::view_special}},
 {}};
 static markup armor_block[] = {{0, 0, {"armor"}}, {}};

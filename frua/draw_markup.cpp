@@ -247,8 +247,13 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 		command.value = ev;
 		command.data = pb;
 		command.object = (void*)object;
-		if(pri)
+		if(pri) {
+			//if(pri->command) {
+			//	cmd(pri->command, (void*)pv).execute();
+			//	return;
+			//}
 			command.proc = *pri;
+		}
 		execute(choose_enum);
 	}
 }
