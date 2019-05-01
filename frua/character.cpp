@@ -364,3 +364,26 @@ void character::rollhp() {
 		hp = gethpmax();
 	}
 }
+
+result_s character::attack(wear_s id, character* enemy) {
+	attack_info ai = {};
+	get(MeleeWeapon, ai);
+	auto chance_hit = (20 - ai.bonus) * 5 + enemy->getac() * 5;
+	auto chance_crit = 20 - ai.critical * 5;
+	auto result_value = d100();
+	if(result_value > chance_hit) {
+		act("%герой промазал%а");
+		return Fail;
+	}
+	result_s result = Success;
+	if(result_value < chance_crit)
+		result = CriticalSuccess;
+	act("%герой попал%а.");
+	enemy->damage(ai.type, ai.damage.roll());
+	return result;
+}
+
+void character::damage(effect_s type, int v) {
+	if(v < 0)
+		return;
+}

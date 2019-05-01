@@ -1,6 +1,7 @@
 #include "main.h"
 
 static short unsigned map_block[64 * 64];
+static direction_s all_directions[] = {Left, Right, Up, Down};
 
 short unsigned mapcore::to(short unsigned i, direction_s d, short xm, short ym) {
 	if(i == Blocked)
@@ -71,4 +72,24 @@ short unsigned mapcore::getcost(short unsigned index) {
 	if(index == Blocked)
 		return 0;
 	return map_block[index];
+}
+
+short unsigned mapcore::step(short unsigned index, short xm, short ym) {
+	if(index == Blocked)
+		return Blocked;
+	auto i = index;
+	auto c = map_block[index];
+	for(auto d : all_directions) {
+		auto i1 = to(index, d, xm, ym);
+		if(i1 == Blocked)
+			continue;
+		auto c1 = map_block[i1];
+		if(c1 == Blocked)
+			continue;
+		if(c1>c)
+			continue;
+		c = c1;
+		i = i1;
+	}
+	return i;
 }

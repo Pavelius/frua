@@ -22,8 +22,51 @@ void combat_info::addparty() {
 		parcipants.add(p);
 }
 
+static void get_lesser_cost(short unsigned index, short unsigned& cost) {
+	auto v = mapcore::getcost(index);
+	if(v == 0)
+		return;
+	if(v < cost)
+		cost = v;
+}
+
+short unsigned combat_info::getmovecost(short unsigned index) {
+	auto cost = getcost(index);
+	if(cost == 0 || cost==Blocked) {
+		for(auto e : std::initializer_list<direction_s>{Left, Right, Up, Down})
+			get_lesser_cost(to(index, e), cost);
+	}
+	return cost;
+}
+
+bool combat_info::moveto(character* player, short unsigned index) {
+	makewave(index);
+	auto current_index = player->getposition();
+	auto next_index = step(current_index);
+	if(next_index == index || next_index == Blocked)
+		return false;
+	player->setposition(next_index);
+	return true;
+}
+
 void combat_info::automove(character* player) {
 	makewave(player->getposition());
+	character* target = 0;
+	short unsigned target_cost = 0;
+	for(auto enemy : parcipants) {
+		if(!enemy->isalive())
+			continue;
+		if(enemy == player)
+			continue;
+		if(!player->isenemy(enemy))
+			continue;
+		auto c = getmovecost(enemy->getposition());
+		if(c == 0 || (target_cost>0 && c>target_cost))
+			continue;
+		target_cost = c;
+		target = enemy;
+	}
+	moveto(player, target->getposition());
 }
 
 void combat_info::playround() {

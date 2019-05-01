@@ -559,7 +559,7 @@ static void move_direction(direction_s d) {
 	auto p = character::getactive();
 	if(!p)
 		return;
-	//p->move(d);
+	current_combat->move(p, d);
 	current_combat->movement -= combat_moverate;
 }
 static void move_up() { move_direction(Up); }

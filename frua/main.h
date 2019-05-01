@@ -172,6 +172,9 @@ enum grade_s : unsigned char {
 	Fair, Good, Excellent,
 	Bad,
 };
+enum result_s : unsigned char {
+	Fail, Success, CriticalSuccess,
+};
 enum decoration_value_s {
 	Name, Description,
 	Avatar, Grade,
@@ -456,15 +459,18 @@ struct item {
 };
 struct character {
 	operator bool() const { return name != 0; }
+	void					act(const char* text, ...) const {}
 	void					addbattle();
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
 	void					apply_feats();
+	result_s				attack(wear_s id, character * enemy);
 	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
+	void					damage(effect_s type, int v);
 	void					get(wear_s id, attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
@@ -518,7 +524,6 @@ struct character {
 	static int				view_personal(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_skills(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_statistic(int x, int y, int width, const void* object, const char* id, int index);
-	static void				update_battle();
 	// Database engine methods
 	static void				changed(void* object, const void* previous);
 	static markup			markups[];
@@ -558,6 +563,7 @@ struct mapcore {
 	static void				makewave(short unsigned start_index, short xm, short ym);
 	static void				setblock();
 	static void				setblock(short unsigned index, short unsigned v);
+	static short unsigned	step(short unsigned i, short xm, short ym);
 	static short unsigned	to(short unsigned i, direction_s d, short xm, short ym);
 };
 template<short XM, short YM> struct map_info : mapcore {
@@ -568,6 +574,7 @@ template<short XM, short YM> struct map_info : mapcore {
 	static short unsigned	m2i(const point pt) { return pt.y * XM + pt.x; };
 	static short unsigned	to(short unsigned i, direction_s d) { return mapcore::to(i, d, XM, YM); }
 	static short unsigned	random() { return m2i(xrand(0, XM - 1), xrand(0, YM - 1)); }
+	static short unsigned	step(short unsigned i) { return mapcore::step(i, XM, YM); }
 };
 struct combat_info : map_info<combat_map_x, combat_map_y> {
 	int						round;
@@ -579,10 +586,12 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					addenemies();
 	void					addparty();
 	void					automove(character* player);
+	short unsigned			getmovecost(short unsigned index);
 	bool					isenemy() const;
 	void					makewave(short unsigned index);
 	void					move(character* player);
 	bool					move(character* player, direction_s d);
+	bool					moveto(character* player, short unsigned index);
 	void					play();
 	void					playround();
 	void					update();
