@@ -715,10 +715,18 @@ int character::view_ability(int x, int y, int width, const void* object, const c
 	return y - y0;
 }
 
+int character::gethprollmax() const {
+	auto& col = bsmeta<class_s>::data;
+	auto type = getclass();
+	auto rolled = 0;
+	for(unsigned i = 0; i < col[type].classes.count; i++)
+		rolled += col[col[type].classes[i]].hd * getlevel(i);
+	return rolled;
+}
+
 int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260];
 	auto p = (character*)object;
-	auto& col = bsmeta<class_s>::data;
 	attack_info ai = {}; p->get(MeleeWeapon, ai);
 	auto y0 = y;
 	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
@@ -726,12 +734,8 @@ int character::view_statistic(int x, int y, int width, const void* object, const
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", p->getac());
 	if(p->hp_rolled==0) {
-		auto type = p->getclass();
-		auto rolled = 0;
-		for(unsigned i = 0; i < col[type].classes.count; i++)
-			rolled += col[col[type].classes[i]].hd * p->getlevel(i);
 		auto min = p->gethpmax(0);
-		auto max = p->gethpmax(rolled);
+		auto max = p->gethpmax(p->gethprollmax());
 		y += fieldv(x, y, width, "Хиты", min, max, "%1i-%2i");
 	} else if(p->hp==0)
 		y += fieldv(x, y, width, "Хиты", p->gethpmax());

@@ -477,6 +477,7 @@ struct character {
 	int						gethp() const { return hp; }
 	int						gethpmax(int v) const;
 	int						gethpmax() const { return gethpmax(hp_rolled); }
+	int						gethprollmax() const;
 	int						getlevel() const { return levels[0]; }
 	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
@@ -501,9 +502,11 @@ struct character {
 	static void				recreate(void* p) { ((character*)p)->recreate(); }
 	void					reroll();
 	static void				reroll(void* p) { ((character*)p)->reroll(); }
+	void					rollhp();
 	void					set(direction_s v) { direction = v; }
 	void					set(feat_s v) { feats.add(v); }
 	void					set(usability_s v) { usability.add(v); }
+	void					set(reaction_s v) { reaction = v; }
 	void					setactive();
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
@@ -571,7 +574,7 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	adat<character, 32>		enemies;
 	adat<character*, 64>	parcipants;
 	constexpr combat_info() : round(1), movement(0), enemies(), parcipants() {}
-	character*				add(race_s race, gender_s gender, class_s type, int level = 1, reaction_s reaction = Hostile);
+	character*				create(const char* name, reaction_s reaction = Hostile);
 	void					addenemies();
 	void					addparty();
 	void					automove(character* player);

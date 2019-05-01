@@ -13,17 +13,16 @@ int	main(int argc, char *argv[]) {
 		return -1;
 	decoration::initialize();
 	draw::initialize();
-	//combat_info ci;
-	//character p1; p1.create(Human, Male, Fighter, LawfulGood, Player);
-	//p1.setposition(ci.random());
-	//party.add(&p1);
-	//ci.play();
-	//ci.add(Human, Male, Fighter, 1, Hostile);
-	//ci.add(Human, Male, Fighter, 1, Hostile);
-	//ci.addenemies();
-	//ci.addparty();
-	//ci.play();
-	auto index = decoration::choose(bsmeta<character>::meta);
+	combat_info ci;
+	character p1; p1.create(Human, Male, Fighter, LawfulGood, Player);
+	p1.setposition(ci.random());
+	party.add(&p1);
+	ci.create("Бандит");
+	ci.create("Бандит");
+	ci.addenemies();
+	ci.addparty();
+	ci.play();
+	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	return 0;
 }

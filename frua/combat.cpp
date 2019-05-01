@@ -1,10 +1,14 @@
 #include "main.h"
 
-character* combat_info::add(race_s race, gender_s gender, class_s type, int level, reaction_s reaction) {
+character* combat_info::create(const char* name, reaction_s reaction) {
+	auto pc = bsmeta<character>::data.find(bsmeta<character>::meta->find("name"), name);
+	if(!pc)
+		return 0;
 	auto p = enemies.add();
-	p->create(race, gender, type, ChaoticEvil, reaction);
+	memcpy(p, pc, bsmeta<character>::data.size);
+	p->rollhp();
+	p->set(reaction);
 	p->setposition(random());
-	p->setavatar(2);
 	return p;
 }
 

@@ -225,7 +225,7 @@ int	character::gethpmax(int v) const {
 	if(!bsmeta<class_s>::data[type].classes.count)
 		return 0;
 	int result = v / bsmeta<class_s>::data[type].classes.count;
-	int level = levels[0];
+	int level = imin(1, (int)levels[0]);
 	int con = get(Constitution);
 	if(is(BonusHits))
 		result += maptbl(hit_points_adjustment_warriors, con)*level;
@@ -356,4 +356,11 @@ const char* character::getname(const void* object, char* result, const char* res
 void character::choose_avatar(void* object) {
 	auto p = (character*)object;
 	picture_info::choose(p->avatar, "Какую картинку использовать?", 0, 64);
+}
+
+void character::rollhp() {
+	if(!hp_rolled) {
+		hp_rolled = xrand(1, gethprollmax());
+		hp = gethpmax();
+	}
 }
