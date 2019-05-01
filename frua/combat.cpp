@@ -41,13 +41,6 @@ short unsigned combat_info::getmovecost(short unsigned index) const {
 	return cost;
 }
 
-bool combat_info::moveto(character* player, short unsigned index) {
-	makewave(index);
-	auto current_index = player->getposition();
-	auto d = step(current_index);
-	return move(player, d);
-}
-
 character* combat_info::getenemy(const character* player) const {
 	character* target = 0;
 	short unsigned target_cost = 0;
@@ -70,9 +63,18 @@ character* combat_info::getenemy(const character* player) const {
 void combat_info::automove(character* player) {
 	makewave(player->getposition());
 	auto enemy = getenemy(player);
+	auto weapon = player->get(MeleeWeapon);
+	auto reach = weapon->getreach();
 	if(enemy) {
 		while(movement > 0) {
-			if(!moveto(player, enemy->getposition()))
+			auto i1 = player->getposition();
+			auto i2 = enemy->getposition();
+			makewave(i2);
+			auto d = step(i1);
+			auto i3 = to(i1, d);
+			if(getcost(i3) < reach)
+				break;
+			if(!move(player, d))
 				break;
 			splash();
 		}

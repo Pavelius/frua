@@ -454,6 +454,7 @@ struct item {
 	static markup			markups[];
 	void					getname(stringcreator& sc) const;
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	int						getreach() const;
 	static int				getvalue(const void* object, int id) { return 0; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
@@ -476,6 +477,7 @@ struct character {
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
+	item*					get(wear_s v) const { return (item*)wears + v; }
 	int						getac() const;
 	static character*		getactive();
 	alignment_s				getalignment() const { return alignment; }
@@ -595,7 +597,6 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					makewave(short unsigned index);
 	void					move(character* player);
 	bool					move(character* player, direction_s d);
-	bool					moveto(character* player, short unsigned index);
 	void					play();
 	void					playround();
 	void					splash(unsigned seconds = 100);
