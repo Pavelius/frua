@@ -138,16 +138,7 @@ static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},
 {4, 0, {0, 0, element_с3}},
 {}};
-static markup items_c1[] = {{0, "Голова", {"wears", Head}},
-{0, "Шея", {"wears", Neck}},
-{0, "Броня", {"wears", Armor}},
-{0, "Главное оружие", {"wears", MeleeWeapon}},
-{0, "Второстерепное", {"wears", OffhandWeapon}},
-{0, "Дистанционное", {"wears", RangedWeapon}},
-{0, "Кольцо", {"wears", LeftRing}},
-{0, "Кольцо", {"wears", RightRing}},
-{0, "Пояс", {"wears", GridleWear}},
-{0, "Ноги", {"wears", Legs}},
+static markup items_c1[] = {
 {}};
 static markup items_c2[] = {
 {}};

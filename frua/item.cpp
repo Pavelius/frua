@@ -27,3 +27,17 @@ int	item::getreach() const {
 	auto ei = (item_info&)bsmeta<item_info>::data[type];
 	return 1 + ei.damage.range;
 }
+
+int item::getquaility() const {
+	switch(state) {
+	case Cursed: return -(quality + 1);
+	case Magic: return quality + 1;
+	case Artifact: return quality + 2;
+	default: return quality;
+	}
+}
+
+bool item::iswearable() const {
+	auto& e = bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type];
+	return e.use_damage != 0 || e.use_armor != 0;
+}

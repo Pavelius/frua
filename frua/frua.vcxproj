@@ -128,6 +128,7 @@
     <ClCompile Include="damage_feat.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
+    <ClCompile Include="item_type.cpp" />
     <ClCompile Include="weapon.cpp" />
     <ClCompile Include="dice_info.cpp" />
     <ClCompile Include="effect.cpp" />
@@ -185,7 +186,9 @@
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="use.cpp" />
     <ClCompile Include="view.cpp" />
-    <ClCompile Include="wear.cpp" />
+    <ClCompile Include="wear.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="win_clipboard.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_io_file.cpp" />

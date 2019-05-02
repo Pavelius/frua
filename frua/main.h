@@ -57,11 +57,6 @@ enum group_s : unsigned char {
 enum landscape_s : unsigned  char {
 	Plain, Brush, Forest, Desert, Hills, Mountains, Swamp, Jungle, Ocean, Arctic,
 };
-enum wear_s : unsigned char {
-	Head, Neck, Armor, MeleeWeapon, OffhandWeapon, RangedWeapon, GridleWear, LeftRing, RightRing, Legs,
-	Backpack, Book, Wand, Scroll, Potion, Edible, Gem,
-	FirstWear = Head, LastWear = Gem,
-};
 enum school_s : unsigned char {
 	NoSchool,
 	Abjuration, Alteration, Charm, Conjuration, Divination, Enchantment,
@@ -119,12 +114,10 @@ enum size_s : unsigned char {
 enum timezone_s : unsigned char {
 	Morning, Noon, Afternoon, Evening, Midnight, Night,
 };
-enum magic_item_s : unsigned char {
-	Any,
-	Potions, Oils, Scrolls, Armors, Shields, Weapons, Rings, Rods, Staves, Wands,
-	Books, Tomes, Jewels, Jewelry, Cloacks, Robes, Boots, Gloves,
-	Gridles, Helms, Bags, Bottles, Dusts, Stones, Tools,
-	MusicalInstruments, WeirdStuffs,
+enum item_type_s : unsigned char {
+	Weapon, Armor, Shield, Helm, Gridle,
+	Potion, Oil, Scroll, Ring, Rod, Wand,
+	Book, Jewelry, Cloack, Robe, Boots, Gloves,
 };
 enum spell_s : unsigned char {
 	NoSpell,
@@ -197,9 +190,9 @@ const unsigned RDay = 24 * RHour;
 const unsigned RMonth = 30 * RDay;
 const unsigned RYear = 12 * 30 * RDay;
 
+class item;
 struct character;
 struct draw_events;
-struct item;
 struct sprite;
 
 typedef alignment_s			alignmenta[8];
@@ -303,6 +296,12 @@ struct item_state_info {
 	const char*				id;
 	const char*				name;
 };
+struct item_type_info {
+	const char*				id;
+	const char*				name;
+	char					use_damage;
+	char					use_armor;
+};
 struct size_info {
 	const char*				id;
 	const char*				name;
@@ -310,15 +309,6 @@ struct size_info {
 struct damage_feat_info {
 	const char*				id;
 	const char*				name;
-};
-struct wear_info {
-	const char*				id;
-	const char*				name;
-	const char*				name_type;
-	wear_s					wear[2];
-	wear_type_s				item_type;
-	char					use_damage;
-	char					use_armor;
 };
 struct usability_info {
 	const char*				id;
@@ -399,6 +389,7 @@ struct damage_info {
 struct weapon_info : damage_info {
 	char					critical, multiplier;
 	dice_info				damage_large;
+	damage_info				special;
 	explicit constexpr operator bool() const { return damage.d != 0; }
 	static markup			body_markup[];
 	static void				edit(void* p);
@@ -424,10 +415,9 @@ struct attack_info : weapon_info {
 struct item_info {
 	const char*				name;
 	const char*				name_unidentified;
-	wear_s					type;
+	item_type_s				type;
 	cflags<usability_s>		usability;
 	weapon_info				damage;
-	damage_info				special_attack;
 	armor_info				armor;
 	char					abilities[Charisma + 1];
 	char					skills[LastSkill + 1];
@@ -439,45 +429,59 @@ struct item_info {
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
 };
-struct item {
+class item {
 	unsigned short			type;
 	union {
 		struct {
 			item_state_s	state : 2;
 			unsigned char	quality : 2;
 			unsigned char	identify : 1;
-			unsigned char	damaged : 3;
+			unsigned char	ready : 1; // Ready to use
+			unsigned char	damaged : 2;
 		};
 		unsigned char		value;
 	};
+	friend struct bsmeta<item>;
+public:
 	constexpr operator bool() const { return type != 0; }
 	static markup			markups[];
+	void					get(weapon_info& wi) const;
+	item_type_s				getkind() const { return bsmeta<item_info>::elements[type].type; }
 	void					getname(stringcreator& sc) const;
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	int						getdamaged() const { return damaged; }
+	int						getquaility() const;
 	int						getreach() const;
 	static int				getvalue(const void* object, int id) { return 0; }
+	bool					is(item_state_s v) const { return state == v; }
+	bool					isidentified() const { return identify != 0; }
+	bool					isready() const { return ready != 0; }
+	bool					iswearable() const;
+	void					set(item_state_s v) { state = v; }
+	void					setidentify(unsigned char v) { identify = v; }
+	void					setquality(unsigned char v) { quality = v; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct character {
+	item					wears[16];
 	operator bool() const { return name != 0; }
 	void					act(const char* text, ...) const {}
 	void					addbattle();
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
 	void					apply_feats();
-	result_s				attack(wear_s id, character * enemy);
+	result_s				attack(character * enemy);
 	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					damage(effect_s type, int v);
-	void					get(wear_s id, attack_info& ai) const;
+	void					get(attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
 	int						get(skill_s v) const;
-	item*					get(wear_s v) const { return (item*)wears + v; }
 	int						getac() const;
 	static character*		getactive();
 	alignment_s				getalignment() const { return alignment; }
@@ -552,7 +556,6 @@ private:
 	short unsigned			avatar;
 	char					levels[3];
 	char					base_ac;
-	item					wears[Legs + 1];
 	unsigned				coopers;
 	unsigned				experience;
 	friend struct bsmeta<character>;
@@ -611,11 +614,11 @@ DECLENUM(effect);
 DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(item_state);
+DECLENUM(item_type);
 DECLENUM(race);
 DECLENUM(reaction);
 DECLENUM(size);
 DECLENUM(skill);
-DECLENUM(wear);
 DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;

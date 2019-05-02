@@ -722,7 +722,7 @@ int character::gethprollmax() const {
 int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260];
 	auto p = (character*)object;
-	attack_info ai = {}; p->get(MeleeWeapon, ai);
+	attack_info ai = {};
 	auto y0 = y;
 	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
 	y += fieldv(x, y, width, "THAC0", ai.bonus);
@@ -790,9 +790,9 @@ void damage_info::edit(void* p) {
 int item_info::view_special(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260]; stringcreator sc(temp);
 	auto p = (item_info*)object;
-	p->special_attack.getname(sc);
+	p->damage.special.getname(sc);
 	szupper(sc, 1);
-	return button(x, y, width, 0, cmdv(damage_info::edit, (void*)&p->special_attack), temp, 0);
+	return button(x, y, width, 0, cmdv(damage_info::edit, (void*)&p->damage.special), temp, 0);
 }
 
 void weapon_info::edit(void* p) {

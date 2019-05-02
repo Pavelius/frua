@@ -63,8 +63,7 @@ character* combat_info::getenemy(const character* player) const {
 void combat_info::automove(character* player) {
 	makewave(player->getposition());
 	auto enemy = getenemy(player);
-	auto weapon = player->get(MeleeWeapon);
-	auto reach = weapon->getreach();
+	auto reach = 1;
 	if(enemy) {
 		while(movement > 0) {
 			auto i1 = player->getposition();

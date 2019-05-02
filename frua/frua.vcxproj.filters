@@ -234,6 +234,9 @@
     <ClCompile Include="dice_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="item_type.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

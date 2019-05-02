@@ -9,6 +9,7 @@ const bsreq bsmeta<weapon_info>::meta[] = {
 	BSREQ(range),
 	BSREQ(damage),
 	BSREQ(damage_large),
+	BSREQ(special),
 {}};
 bool weapon_info::isweapon(const void* object, int param) {
 	return param >= FirstDamage && param <= LastDamage;
@@ -18,6 +19,7 @@ markup weapon_info::body_markup[] = {{0, 0, {"type"}, 0, {0, 0, isweapon}},
 {0, 0, {0, 0, damage_info::body_markup}},
 {0, "Урон (большим)", {"damage_large"}, 0, {0, 0, 0, damage_info::visible_damage}},
 {0, "Критический", {"critical", 0, multiplier_right}, 0, {0, 0, 0, damage_info::visible_damage}},
+{0, 0, {"special"}, 0, {0, 0, 0, damage_info::visible_damage}},
 {}};
 markup weapon_info::markups[] = {{6, 0, {0, 0, body_markup}},
 {}};

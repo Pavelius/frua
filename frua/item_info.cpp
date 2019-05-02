@@ -7,7 +7,6 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(cost),
 	BSREQ(weight),
 	BSREQ(damage),
-	BSREQ(special_attack),
 	BSREQ(armor),
 	BSREQ(usability),
 	BSREQ(abilities),
@@ -15,36 +14,25 @@ const bsreq bsmeta<item_info>::meta[] = {
 {}};
 BSDATA(item_info, 256);
 
-static bool allow_item(const void* source, int value) {
-	return bsmeta<wear_s>::data[value].name_type != 0;
-}
 static bool hasdamage(const void* object, int index) {
 	auto p = (item_info*)object;
-	return bsmeta<wear_s>::data[p->type].use_damage;
+	return bsmeta<item_type_s>::data[p->type].use_damage;
 }
 bool hasarmor(const void* object, int index) {
 	auto p = (item_info*)object;
-	return bsmeta<wear_s>::data[p->type].use_armor;
+	return bsmeta<item_type_s>::data[p->type].use_armor;
 }
 bool hasability(const void* object, int index) {
 	return hasarmor(object, index) && !hasdamage(object, index);
 }
-static const char* wear_info_name_type(const void* object, char* result, const char* result_max, int column) {
-	switch(column) {
-	case 0:return ((wear_info*)object)->name_type;
-	}
-	return "";
-}
 static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, 0, 0, item_info::view_weapon}},
-//{0, 0, {"damage"}, 0, {damage_info::getname, 0, 0, 0, 0, weapon_info::edit}},
-{0, 0, {"special_attack"}, 0, {0, 0, 0, 0, item_info::view_special}},
 {}};
 static markup armor_block[] = {{0, 0, {"armor"}}, {}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
 static markup item_feat_block[] = {{0, "#checkboxes", {"feat"}}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
 {0, "Неопределено", {"name_unidentified"}},
-{0, "Группа", {"type"}, 0, {wear_info_name_type, 0, allow_item}},
+{0, "Группа", {"type"}},
 {0, "Цена (серебра)", {"cost"}, 6},
 {0, "Вес (фунтов)", {"weight"}, 4},
 {}};

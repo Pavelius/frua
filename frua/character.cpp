@@ -236,12 +236,12 @@ int	character::gethpmax(int v) const {
 	return result;
 }
 
-void character::get(wear_s id, attack_info& ai) const {
+void character::get(attack_info& ai) const {
 	ai.attacks = 2;
 	ai.bonus = 20;
 	ai.damage.c = 1;
 	ai.damage.d = 2;
-	if(id == MeleeWeapon || id == OffhandWeapon) {
+	if(true) {
 		auto str = getstrex();
 		ai.bonus += maptbl(hit_probability, str);
 		ai.damage.b += maptbl(damage_adjustment, str);
@@ -365,9 +365,10 @@ void character::rollhp() {
 	}
 }
 
-result_s character::attack(wear_s id, character* enemy) {
-	attack_info ai = {};
-	get(MeleeWeapon, ai);
+result_s character::attack(character* enemy) {
+	attack_info ai = {}; get(ai);
+	if(enemy->race == Goblinoid && is(BonusToHitOrcs))
+		ai.bonus++;
 	auto chance_hit = (20 - ai.bonus) * 5 + enemy->getac() * 5;
 	auto chance_crit = 20 - ai.critical * 5;
 	auto result_value = d100();
