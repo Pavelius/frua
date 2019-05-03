@@ -873,8 +873,8 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 			if(page_markup_last != page_markup) {
 				page_markup_last = page_markup;
 				setfocus(0, true);
-				if(page_markup->proc.command)
-					cmd(page_markup->proc.command, object).execute();
+				if(page_markup->cmd.execute)
+					cmd(page_markup->cmd.execute, object).execute();
 			}
 		}
 		if(type_key && type_key->istext()) {
@@ -896,15 +896,15 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 		auto commands = page->findcommands(object);
 		if(commands && commands->value.child) {
 			for(auto p = commands->value.child; *p; p++)
-				x += button(x, y, p->title, cmd(p->proc.command, object), 0);
+				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
 		}
 		memcpy(r2, object, size);
 		domodal();
 		if(updater) {
 			// Если ПОСЛЕ обработки команды менялся оригинальный объект вызываем специальное событие
 			// В нем мы можем проанализировать что именно поменялось и если надо что-то обновить.
-			if(updater->proc.change && memcmp(object, r2, size) != 0)
-				updater->proc.change(object, r2);
+			if(updater->cmd.change && memcmp(object, r2, size) != 0)
+				updater->cmd.change(object, r2);
 		}
 	}
 	closeform();
@@ -919,7 +919,8 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 
 int decoration::choose(const char* title, int width, int height, bool choose_mode) const {
 	struct table : controls::picker {
-		bsdata&				source;
+		adat<int, 512>		source;
+		bsdata&				database;
 		const decoration&	manager;
 		int getmaximum() const override { return source.count; }
 		void rowhilite(const rect& rc, int index) const override {
@@ -928,7 +929,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 				colors::window.mix(color::create(97, 189, 79), 224),
 				colors::window.mix(color::create(242, 214, 0), 192),
 			};
-			auto pv = source.get(index);
+			auto pv = database.get(source.data[index]);
 			auto g = (grade_s)manager.proc.getvalue(pv, Grade);
 			auto f = grade_colors[g];
 			if(g != Fair)
@@ -943,7 +944,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		}
 		void row(const rect& rcorigin, int index) override {
 			char temp[260]; temp[0] = 0;
-			auto pv = source.get(index);
+			auto pv = database.get(source.data[index]);
 			rect rc = rcorigin;
 			rowhilite(rc, index);
 			auto avatar = manager.proc.getvalue(pv, Avatar);
@@ -971,12 +972,32 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		int getcurrent() const {
 			if(!source.count)
 				return -1;
-			return current;
+			return source[current];
 		}
-		static void add(table* p) { p->manager.edit(p->source, 0, 0); }
-		static void copy(table* p) { p->manager.edit(p->source, 0, (void*)p->source.get(p->getcurrent())); }
-		static void change(table* p) { p->manager.edit(p->source, (void*)p->source.get(p->getcurrent()), 0); }
-		constexpr table(bsdata& source, const decoration& manager) : source(source), manager(manager) {}
+		void update() {
+			source.clear();
+			unsigned index = 0;
+			if(manager.zero_element != 0)
+				index++;
+			auto index_max = database.count;
+			for(; index < index_max; index++)
+				source.add(index);
+		}
+		static void add(table* p) {
+			if(p->manager.edit(p->database, 0, 0))
+				p->update();
+		}
+		static void copy(table* p) {
+			if(p->manager.edit(p->database, 0, (void*)p->database.get(p->getcurrent())))
+				p->update();
+		}
+		static void change(table* p) {
+			if(p->manager.edit(p->database, (void*)p->database.get(p->getcurrent()), 0))
+				p->update();
+		}
+		table(bsdata& database, const decoration& manager) : database(database), manager(manager) {
+			update();
+		}
 	};
 	if(!database || !proc.getvalue || !proc.getname)
 		return -1;
@@ -998,7 +1019,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 			if(database->count > 0)
 				x += button(x, y, "Скопировать", cmd(table::copy, &e1), F4);
 		}
-		if(database->count > 0) {
+		if(e1.getmaximum() > 0) {
 			auto pc = cmd(table::change, &e1);
 			x += button(x, y, "Редактировать", pc, KeyEnter);
 			if(hot.key == F2)

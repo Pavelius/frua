@@ -26,8 +26,6 @@ struct markup {
 		allow_type		isallow; // Is allow special element or command
 		allow_type		isvisible; // Is element visible
 		custom_type		custom;
-		command_type	command; // Any command of class object
-		change_type		change; // When object changed
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
 	char				width;

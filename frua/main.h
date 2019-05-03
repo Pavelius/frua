@@ -424,7 +424,9 @@ struct item_info {
 	char					abilities[Charisma + 1];
 	char					skills[LastSkill + 1];
 	int						cost, weight;
-	static void				apply(item_info* p) {}
+	//
+	static void				create(item_info* p);
+	static void				apply(item_info* p);
 	static int				view_special(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_weapon(int x, int y, int width, const void* object, const char* id, int index);
 	// Database engine methods

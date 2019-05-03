@@ -107,6 +107,8 @@ void character::apply_ability_restriction() {
 void character::apply_feats() {
 	feats = bsmeta<race_s>::data[race].feats;
 	feats |= bsmeta<class_s>::data[type].feats;
+	usability = bsmeta<race_s>::data[race].usability;
+	usability |= bsmeta<class_s>::data[type].usability;
 	movement = bsmeta<race_s>::data[race].movement;
 	size = bsmeta<race_s>::data[race].size;
 }
@@ -165,7 +167,7 @@ void character::raise(class_s v) {
 	if(index == -1)
 		return;
 	levels[index]++;
-	// Случайным образом определим хиты
+	// Случайным обраом определим хиты
 	if(bsmeta<class_s>::data[v].hd) {
 		int r = 0;
 		if(levels[index] == 1) {

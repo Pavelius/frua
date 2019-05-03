@@ -42,7 +42,7 @@ bool markup::action(const char* id, void* object) const {
 	auto p = find(id, object, 0, false);
 	if(!p)
 		return false;
-	if(p->proc.command)
-		p->proc.command(object);
+	if(p->cmd.execute)
+		p->cmd.execute(object);
 	return true;
 }

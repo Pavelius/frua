@@ -50,7 +50,7 @@ static markup generate_markup[] = {{2, 0, {0, 0, generate_c1}},
 {3, 0, {0, 0, generate_c2}},
 {4, 0, {0, 0, generate_c3}},
 {}};
-static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0, character::recreate}},
+static markup generate_commands[] = {{0, "Перебросить", {}, 0, {0, 0, 0, 0, 0}, character::recreate},
 {}};
 static markup abilities_personal_group[] = {{0, 0, {"name"}},
 {0, 0, {"personal"}, 0, {0, 0, 0, 0, character::view_personal}},
@@ -70,11 +70,11 @@ static markup abilities_markup[] = {{3, 0, {0, 0, abilities_c1}},
 {4, 0, {0, 0, abilities_c2}},
 //{4, 0, {0, 0, generate_c3}},
 {}};
-static markup generate_form[] = {{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::random}},
+static markup generate_form[] = {{0, 0, {"#create"}, 0, {}, character::random},
 {0, 0, {"#commands", 0, generate_commands}},
 {0, "Раса, класс и мировозрение", {"#page", 0, generate_markup}},
-{0, "Атрибуты", {"#page", 0, abilities_markup}, 0, {0, 0, 0, 0, 0, character::recreate}},
-{0, 0, {"#apply"}, 0, {0, 0, 0, 0, 0, character::apply_avatar}},
+{0, "Атрибуты", {"#page", 0, abilities_markup}, 0, {}, character::recreate},
+{0, 0, {"#apply"}, 0, {}, character::apply_avatar},
 {}};
 static bool visible_levels(const void* object, int index) {
 	auto p = (character*)object;
@@ -143,14 +143,14 @@ static markup items_c1[] = {
 static markup items_c2[] = {
 {}};
 static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
-static markup items_commands[] = {{0, "Редактировать", {}, 0, {0, 0, 0, 0, 0, edit_items}},
+static markup items_commands[] = {{0, "Редактировать", {}, 0, {}, edit_items},
 {}};
 static markup items_page[] = {{6, "Одето", {0, 0, items_c1}},
 {6, "Рюкзак", {0, 0, items_c2}},
 {0, 0, {"#commands", 0, items_commands}},
 {}};
-static markup element_form[] = {{0, 0, {"#udate"}, 0, {0, 0, 0, 0, 0, 0, character::changed}},
-{0, 0, {"#create"}, 0, {0, 0, 0, 0, 0, character::clear}},
+static markup element_form[] = {{0, 0, {"#update"}, 0, {}, character::changed},
+{0, 0, {"#create"}, 0, {}, character::clear},
 {0, "Общие", {"#page", 0, element_general}},
 {0, "Предметы", {"#page", 0, items_page}},
 {0, "Специальные способности", {"#page", 0, element_special}},

@@ -84,6 +84,7 @@ static markup item_skills[] = {
 static markup item_weapon[] = {{5, 0, {0, 0, weapon_block}},
 {}};
 markup item_info::markups[] = {{0, 0, {"#apply"}, 0, {}, item_info::apply},
+{0, 0, {"#create"}, 0, {}, item_info::create},
 {0, "Основные свойства", {"#page", 0, item_general}},
 {0, "Бонусы к навыкам", {"#page", 0, item_skills}},
 {}};
@@ -111,4 +112,20 @@ int item_info::getvalue(const void* object, int id) {
 void item_initialize() {
 	auto p = bsmeta<item_info>::data.add();
 	p->name = "Нет предмета";
+}
+
+void item_info::apply(item_info* p) {
+	auto& wi = bsmeta<item_type_s>::elements[p->type];
+	if(!wi.use_damage)
+		memset(&p->damage, 0, sizeof(p->damage));
+	if(!wi.use_armor)
+		memset(&p->armor, 0, sizeof(p->armor));
+}
+
+void item_info::create(item_info* p) {
+	p->type = Weapon;
+	p->damage.type = Bludgeon;
+	p->damage.attacks = 1;
+	p->damage.damage.c = 1;
+	p->damage.damage.d = 3;
 }
