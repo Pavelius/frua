@@ -13,6 +13,13 @@ struct markup {
 		int				index; // Array index
 		const markup*	child; // Group or next field
 	};
+	struct cmdi {
+		command_type	execute;
+		change_type		change;
+		constexpr cmdi() : execute(0), change(0) {}
+		template<class T> constexpr cmdi(void(*v)(T*)) : execute((command_type)v), change(0) {}
+		template<class T> constexpr cmdi(void(*v)(T*, const T*)) : execute(0), change((change_type)v) {}
+	};
 	struct proci {
 		text_type		getname;
 		num_type		getvalue;
@@ -28,6 +35,7 @@ struct markup {
 	element				value;
 	int					param;
 	proci				proc;
+	cmdi				cmd;
 	//
 	bool				action(const char* id, void* object) const;
 	bool				isfield() const { return value.id != 0; }

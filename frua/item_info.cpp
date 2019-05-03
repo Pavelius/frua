@@ -83,7 +83,8 @@ static markup item_skills[] = {
 {}};
 static markup item_weapon[] = {{5, 0, {0, 0, weapon_block}},
 {}};
-markup item_info::markups[] = {{0, "Основные свойства", {"#page", 0, item_general}},
+markup item_info::markups[] = {{0, 0, {"#apply"}, 0, {}, item_info::apply},
+{0, "Основные свойства", {"#page", 0, item_general}},
 {0, "Бонусы к навыкам", {"#page", 0, item_skills}},
 {}};
 
