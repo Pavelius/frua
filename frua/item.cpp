@@ -37,7 +37,10 @@ int item::getquaility() const {
 	}
 }
 
-bool item::iswearable() const {
-	auto& e = bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type];
-	return e.use_damage != 0 || e.use_armor != 0;
+const armor_info& item::getarmor() const {
+	return bsmeta<item_info>::elements[type].armor;
+}
+
+const weapon_info& item::getweapon() const {
+	return bsmeta<item_info>::elements[type].damage;
 }

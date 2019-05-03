@@ -237,14 +237,22 @@ int	character::gethpmax(int v) const {
 }
 
 void character::get(attack_info& ai) const {
-	ai.attacks = 2;
-	ai.bonus = 20;
-	ai.damage.c = 1;
-	ai.damage.d = 2;
-	if(true) {
+	ai.weapon = get(Weapon);
+	if(ai.weapon)
+		*static_cast<weapon_info*>(&ai) = ai.weapon->getweapon();
+	else {
+		ai.attacks = 1;
+		ai.damage.c = 1;
+		ai.damage.d = 2;
+	}
+	if(ai.ismelee()) {
 		auto str = getstrex();
 		ai.bonus += maptbl(hit_probability, str);
 		ai.damage.b += maptbl(damage_adjustment, str);
+	}
+	if(ai.isranged()) {
+		auto dex = get(Dexterity);
+		ai.bonus += maptbl(reaction_adjustment, dex);
 	}
 }
 
@@ -387,4 +395,14 @@ result_s character::attack(character* enemy) {
 void character::damage(effect_s type, int v) {
 	if(v < 0)
 		return;
+}
+
+item* character::get(item_type_s v) const {
+	for(auto& e : wears) {
+		if(!e.is(v))
+			continue;
+		if(e.isready())
+			return const_cast<item*>(&e);
+	}
+	return 0;
 }

@@ -394,6 +394,8 @@ struct weapon_info : damage_info {
 	static markup			body_markup[];
 	static void				edit(void* p);
 	void					getname(stringcreator& sc);
+	bool					ismelee() const { return range <= 2; }
+	bool					isranged() const { return range >= 3; }
 	static bool				isweapon(const void* object, int param);
 	//
 	static markup			markups[];
@@ -444,27 +446,31 @@ class item {
 	friend struct bsmeta<item>;
 public:
 	constexpr operator bool() const { return type != 0; }
-	static markup			markups[];
-	void					get(weapon_info& wi) const;
+	const armor_info&		getarmor() const;
 	item_type_s				getkind() const { return bsmeta<item_info>::elements[type].type; }
 	void					getname(stringcreator& sc) const;
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	int						getdamaged() const { return damaged; }
 	int						getquaility() const;
 	int						getreach() const;
-	static int				getvalue(const void* object, int id) { return 0; }
+	const weapon_info&		getweapon() const;
 	bool					is(item_state_s v) const { return state == v; }
+	bool					is(item_type_s v) const { return bsmeta<item_info>::elements[type].type==v; }
+	bool					isarmor() const { return bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type].use_armor != 0; }
 	bool					isidentified() const { return identify != 0; }
 	bool					isready() const { return ready != 0; }
-	bool					iswearable() const;
+	bool					iswearable() const { return isweapon() || isarmor(); }
+	bool					isweapon() const { return bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type].use_damage != 0; }
 	void					set(item_state_s v) { state = v; }
 	void					setidentify(unsigned char v) { identify = v; }
 	void					setquality(unsigned char v) { quality = v; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
+	//
+	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	static int				getvalue(const void* object, int id) { return 0; }
+	static markup			markups[];
 };
 struct character {
-	item					wears[16];
 	operator bool() const { return name != 0; }
 	void					act(const char* text, ...) const {}
 	void					addbattle();
@@ -481,6 +487,7 @@ struct character {
 	void					get(attack_info& ai) const;
 	int						get(ability_s v) const { return abilities[v]; }
 	int						get(class_s v) const { return 0; }
+	item*					get(item_type_s v) const;
 	int						get(skill_s v) const;
 	int						getac() const;
 	static character*		getactive();
@@ -558,6 +565,7 @@ private:
 	char					base_ac;
 	unsigned				coopers;
 	unsigned				experience;
+	item					wears[16];
 	friend struct bsmeta<character>;
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
