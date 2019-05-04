@@ -175,9 +175,11 @@ enum decoration_value_s {
 	Name, Description,
 	Avatar, Grade,
 };
-enum damage_feat_s : unsigned char {
-	SaveHalf, NoSave,
-	AttackAdditional, AttackOnCritical,
+enum save_s : unsigned char {
+	NoSave, SaveHalved, SaveNegate,
+};
+enum attack_affect_s : unsigned char {
+	AttackRegular, AttackOneAndHalf, AttackDouble, AttackAdditional, AttackOnHit, AttackOnCritical
 };
 
 const unsigned CP = 1; // One cooper coin
@@ -254,6 +256,10 @@ struct name_info {
 	const char*				id;
 	const char*				name;
 };
+struct save_info {
+	const char*				id;
+	const char*				name;
+};
 struct skill_info {
 	const char*				id;
 	const char*				name;
@@ -308,9 +314,10 @@ struct size_info {
 	const char*				id;
 	const char*				name;
 };
-struct damage_feat_info {
+struct attack_affect_info {
 	const char*				id;
 	const char*				name;
+	char					attacks;
 };
 struct usability_info {
 	const char*				id;
@@ -372,21 +379,19 @@ struct dice_info : dice {
 	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct damage_info {
-	char					attacks; // per two rounds
 	effect_s				type;
-	char					bonus;
+	attack_affect_s			attack_type;
+	save_s					save_type;
 	char					range; // in squars (5x5 ft each)
 	dice_info				damage;
-	cflags<damage_feat_s>	feats;
 	//
-	static markup			weapon_markup[];
 	static void				edit(void* p);
+	int						getattacks() const;
+	void					getattacks(stringcreator& sc) const;
 	void					getname(stringcreator& sc) const;
-	static bool				isallowfeat(const void* object, int param);
 	bool					ismelee() const { return range <= 2; }
 	bool					isranged() const { return range >= 3; }
-	static bool				isweapon(const void* object, int param);
-	static bool				visible_damage(const void* object, int index);
+	static markup			weapon_markup[];
 	//
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
@@ -394,8 +399,7 @@ struct damage_info {
 };
 struct attack_info : damage_info {
 	item*					weapon;
-	char					critical, multiplier;
-	char*					getattacks(char* result, const char* result_maximum) const;
+	char					bonus, critical, multiplier;
 };
 struct item_info {
 	const char*				name;
@@ -612,7 +616,7 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 DECLENUM(alignment);
 DECLENUM(ability);
 DECLENUM(class);
-DECLENUM(damage_feat);
+DECLENUM(attack_affect);
 DECLENUM(effect);
 DECLENUM(feat);
 DECLENUM(gender);
@@ -620,6 +624,7 @@ DECLENUM(item_state);
 DECLENUM(item_type);
 DECLENUM(race);
 DECLENUM(reaction);
+DECLENUM(save);
 DECLENUM(size);
 DECLENUM(skill);
 DECLENUM(usability);

@@ -723,8 +723,8 @@ int character::view_statistic(int x, int y, int width, const void* object, const
 	char temp[260];
 	auto p = (character*)object;
 	attack_info ai = {}; p->get(ai);
-	auto y0 = y;
-	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
+	auto y0 = y; stringcreator sc(temp); ai.getattacks(sc);
+	y += fieldv(x, y, width, "Количество атак", temp);
 	y += fieldv(x, y, width, "THAC0", ai.bonus);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
 	y += fieldv(x, y, width, "Класс брони", p->get(AC));
@@ -792,7 +792,7 @@ int item_info::view_weapon(int x, int y, int width, const void* object, const ch
 	auto p = (item_info*)object;
 	p->getweapon(sc);
 	szupper(sc, 1);
-	return button(x, y, width, 0, cmdv(editweapon, (void*)object), temp, 0);
+	return button(x, y, width, 0, cmdv(editweapon, (void*)object, &p->damage), temp, 0);
 }
 
 void character::apply_avatar(void* object) {

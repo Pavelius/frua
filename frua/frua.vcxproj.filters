@@ -156,9 +156,6 @@
     <ClCompile Include="combat.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="attack.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="draw_field.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
@@ -185,9 +182,6 @@
     </ClCompile>
     <ClCompile Include="collection_test.cpp">
       <Filter>Коллекция</Filter>
-    </ClCompile>
-    <ClCompile Include="wear.cpp">
-      <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="draw_markup.cpp">
       <Filter>Графика</Filter>
@@ -216,9 +210,6 @@
     <ClCompile Include="damage.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="damage_feat.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="item.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
@@ -229,6 +220,12 @@
       <Filter>Логика</Filter>
     </ClCompile>
     <ClCompile Include="item_type.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="save.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="attack_affect.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
   </ItemGroup>

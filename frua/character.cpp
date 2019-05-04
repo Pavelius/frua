@@ -265,7 +265,6 @@ void character::get(attack_info& ai, bool large_enemy) const {
 		ai.critical = ai.weapon->get(CriticalThread);
 		ai.multiplier = ai.weapon->get(CriticalMultiplier);
 	} else {
-		ai.attacks = 1;
 		ai.damage.c = 1;
 		ai.damage.d = 2;
 	}

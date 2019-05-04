@@ -42,8 +42,9 @@ protected:
 };
 // Command with focus on value rather that procedure
 struct cmdv : cmd {
-	int getid() const override { return v; }
-	template<typename T> constexpr cmdv(void(*p)(T*), T* v) : cmd(p, v) {}
+	void*		focus;
+	int getid() const override { return (int)focus; }
+	template<typename T> constexpr cmdv(void(*p)(T*), T* v, void* f) : cmd(p, v), focus(f) {}
 };
 namespace controls {
 struct control {

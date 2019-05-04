@@ -140,7 +140,7 @@ void item_info::apply(item_info* p) {
 void item_info::create(item_info* p) {
 	p->type = Weapon;
 	p->damage.type = Bludgeon;
-	p->damage.attacks = 1;
+	p->damage.attack_type = AttackRegular;
 	p->damage.damage.c = 1;
 	p->damage.damage.d = 3;
 }

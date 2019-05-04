@@ -1,6 +1,6 @@
 #include "main.h"
 
-BSENUMB(item_type) = {{"Weapon", "Оружие", 1, 1},
+item_type_info bsmeta<item_type_info>::elements[] = {{"Weapon", "Оружие", 1, 1},
 {"Armor", "Доспех", 0, 1},
 {"Shield", "Щит", 0, 1},
 {"Helm", "Шлем", 0, 1},

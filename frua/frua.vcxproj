@@ -123,8 +123,7 @@
     <ClCompile Include="alignment.cpp" />
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
-    <ClCompile Include="attack.cpp" />
-    <ClCompile Include="damage_feat.cpp" />
+    <ClCompile Include="attack_affect.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="item_type.cpp" />
@@ -173,6 +172,7 @@
     <ClCompile Include="point.cpp" />
     <ClCompile Include="race.cpp" />
     <ClCompile Include="reaction.cpp" />
+    <ClCompile Include="save.cpp" />
     <ClCompile Include="screenshoot.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
@@ -184,9 +184,6 @@
     <ClCompile Include="szdup.cpp" />
     <ClCompile Include="use.cpp" />
     <ClCompile Include="view.cpp" />
-    <ClCompile Include="wear.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="win_clipboard.cpp" />
     <ClCompile Include="win_draw.cpp" />
     <ClCompile Include="win_io_file.cpp" />
