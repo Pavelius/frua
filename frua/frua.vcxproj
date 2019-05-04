@@ -179,6 +179,7 @@
     <ClCompile Include="damage.cpp" />
     <ClCompile Include="sprite_util.cpp" />
     <ClCompile Include="stringcreator.cpp" />
+    <ClCompile Include="stringobject.cpp" />
     <ClCompile Include="string_value.cpp" />
     <ClCompile Include="surface_serial.cpp" />
     <ClCompile Include="szdup.cpp" />

@@ -23,7 +23,6 @@ static bool		break_modal;
 static int		break_result;
 static callback	leave_focus;
 callback		draw::domodal;
-extern stringcreator	msg_logger;
 
 static void standart_domodal() {
 	int id;

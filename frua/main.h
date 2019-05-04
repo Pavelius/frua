@@ -471,17 +471,18 @@ struct character {
 	operator bool() const { return name != 0; }
 	void					act(const char* text, ...) const;
 	void					addbattle();
+	void					animate_hit(const character* enemy) const;
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
 	void					apply_feats();
-	result_s				attack(character * enemy);
+	result_s				attack(item* weapon, character * enemy);
 	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					damage(effect_s type, int v);
-	void					get(attack_info& ai, bool large_enemy = false) const;
+	void					get(item* weapon, attack_info& ai, bool large_enemy = false) const;
 	int						get(ability_s v) const;
 	int						get(class_s v) const { return 0; }
 	item*					get(item_type_s v) const;
@@ -501,6 +502,7 @@ struct character {
 	int						getmovement() const;
 	const char*				getname() const { return name; }
 	race_s					getrace() const { return race; }
+	int						getreach(const item* weapon) const;
 	int						getstrex() const;
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
@@ -570,11 +572,14 @@ private:
 	void					roll_ability();
 };
 struct mapcore {
-	static const short unsigned Blocked = 0xFFFF;
-	static const short unsigned DefaultCost = 0xFFFE;
+	enum block_s : short unsigned {
+		DefaultCost = 0xFFFE, Blocked
+	};
 	static short unsigned	getcost(short unsigned index);
 	static direction_s		getdirection(short unsigned i1, short unsigned i2, short xm, short ym);
-	static void				makewave(short unsigned start_index, short xm, short ym);
+	static short unsigned	getnear(short unsigned index, short xm, short ym);
+	static bool				isreachable(short unsigned index, short xm, short ym);
+	static void				makewave(short unsigned start_index, short xm, short ym, short unsigned block_value = Blocked);
 	static void				setblock();
 	static void				setblock(short unsigned index, short unsigned v);
 	static direction_s		step(short unsigned i, short xm, short ym);
@@ -591,27 +596,46 @@ template<short XM, short YM> struct map_info : mapcore {
 	static short unsigned	random() { return m2i(xrand(0, XM - 1), xrand(0, YM - 1)); }
 	static direction_s		step(short unsigned i) { return mapcore::step(i, XM, YM); }
 };
+struct stringobject : stringcreator {
+	const char*				name;
+	gender_s				gender;
+	stringobject(char* result, const char* result_max) : stringcreator(result, result_max),
+		name(""), gender(Male) {}
+	void					addidentifier(const char* id) override;
+};
 struct combat_info : map_info<combat_map_x, combat_map_y> {
+	typedef void(combat_info::*action_proc)(character* p1, int id);
+	struct command {
+		action_proc			proc;
+		int					id;
+		const char*			name;
+	};
 	int						round;
 	int						movement;
 	adat<character, 32>		enemies;
 	adat<character*, 64>	parcipants;
 	constexpr combat_info() : round(1), movement(0), enemies(), parcipants() {}
+	static void				animate(const character* attacker, const character* defender, bool hit);
 	character*				create(const char* name, reaction_s reaction = Hostile);
+	void					add(int value, const char* name);
 	void					addenemies();
 	void					addparty();
-	void					automove(character* player);
+	void					automove(character* player, character* enemy);
+	void					choose();
+	static combat_info*		getactive();
 	character*				getenemy(const character* player) const;
 	short unsigned			getmovecost(short unsigned index) const;
 	bool					isenemy() const;
-	void					makewave(short unsigned index);
+	void					makewave(short unsigned index, short unsigned dest_index = Blocked) const;
 	void					move(character* player);
 	bool					move(character* player, direction_s d);
 	void					play();
 	void					playround();
-	void					splash(unsigned seconds = 100);
-	void					update();
-	void					visualize();
+	void					splash(unsigned seconds = 100, bool use_update = true) const;
+	void					update() const;
+	void					visualize(bool use_update) const;
+private:
+	adat<command, 32>		commands;
 };
 DECLENUM(alignment);
 DECLENUM(ability);
@@ -630,3 +654,4 @@ DECLENUM(skill);
 DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;
+extern stringobject			msg_logger;

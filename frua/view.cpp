@@ -23,9 +23,10 @@ static const char*				file_exclude[] = {"fonts", "monsters", 0};
 static const char*				file_ext_exclude[] = {"pma", 0};
 static const char*				file_monster_exclude[] = {0};
 static const sprite*			spr_monsters;
+static const sprite*			spr_blood = (sprite*)loadb("art/sprites/blood.pma");
 aref<sprite_name_info>			avatar_data;
 static char						logger_buffer[2048];
-stringcreator					msg_logger(logger_buffer);
+stringobject					msg_logger(logger_buffer, logger_buffer + sizeof(logger_buffer) - 1);
 typedef adat<const char*, 256>	strings_array;
 
 static void set_command_value() {
@@ -474,9 +475,18 @@ struct image_info : point {
 	const sprite*			ps;
 	short unsigned			frame, flags;
 	unsigned char			alpha;
+	void*					object;
 	void clear() { memset(this, 0, sizeof(*this)); }
 };
 static adat<image_info, 1024> scene_images;
+
+static image_info* find_image(const void* object) {
+	for(auto& e : scene_images) {
+		if(e.object == object)
+			return &e;
+	}
+	return 0;
+}
 
 static void draw_grid(int x0, int y0) {
 	color c = colors::window;
@@ -544,23 +554,69 @@ void character::addbattle() {
 	pi->ps = spr_monsters;
 	pi->x = x;
 	pi->y = y;
+	pi->object = this;
 	if(direction == Right)
 		pi->flags |= ImageMirrorH;
 }
 
-void combat_info::update() {
+static int compare_image(const void* v1, const void* v2) {
+	auto p1 = (image_info*)v1;
+	auto p2 = (image_info*)v2;
+	auto y1 = p1->y;
+	auto y2 = p2->y;
+	if(y1!=y2)
+		return y1 - y2;
+	return p1->x - p2->x;
+}
+
+static void update_scene() {
+	qsort(scene_images.data, scene_images.count, sizeof(scene_images.data[0]), compare_image);
+}
+
+void combat_info::update() const {
 	scene_images.clear();
 	for(auto p : parcipants)
 		p->addbattle();
+	update_scene();
 }
 
-static combat_info* current_combat;
+void combat_info::animate(const character* attacker, const character* defender, bool hit) {
+	auto pc = getactive();
+	if(!pc)
+		return;
+	auto pp = find_image(attacker);
+	auto pe = find_image(defender);
+	if(!pp || !pe)
+		return;
+	pp->frame++;
+	if(hit) {
+		auto pi = scene_images.add();
+		pi->frame = 2;
+		pi->flags = 0;
+		pi->alpha = 0xFF;
+		pi->ps = spr_blood;
+		pi->x = pe->x;
+		pi->y = pe->y - 16;
+		pc->splash(100, false);
+		if(!defender->isalive())
+			pe->ps = 0;
+		pi->frame = 3;
+		pc->splash(100, false);
+		scene_images.remove(scene_images.indexof(pi));
+	} else
+		pc->splash(200, false);
+	pp->frame--;
+	pc->splash(50, false);
+	msg_logger.clear();
+}
 
 static void move_direction(direction_s d) {
 	auto p = character::getactive();
-	if(!p)
+	auto pc = combat_info::getactive();
+	if(!pc || !p)
 		return;
-	current_combat->move(p, d);
+	if(pc->move(p, d))
+		pc->makewave(p->getposition());
 }
 static void move_up() { move_direction(Up); }
 static void move_down() { move_direction(Down); }
@@ -571,59 +627,99 @@ static void set_defend() {
 	auto p = character::getactive();
 	if(!p)
 		return;
-	current_combat->movement = 0;
+	auto pc = combat_info::getactive();
+	if(!pc)
+		return;
+	pc->movement = 0;
 }
 
 static void draw_images(int x, int y) {
-	for(auto& e : scene_images)
+	for(auto& e : scene_images) {
+		if(!e.ps)
+			continue;
 		image(x + e.x, y + e.y, e.ps, e.frame, e.flags, e.alpha);
+	}
 }
 
-void combat_info::visualize() {
+void combat_info::visualize(bool use_update) const {
 	render_background();
 	auto x = (getwidth() - combat_grid * combat_map_x) / 2;
 	auto y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y - texth() - 2;
-	update();
+	if(use_update)
+		update();
 	draw_grid(x, y);
 	draw_cost(x, y);
 	draw_active_player(x, y);
 	draw_images(x, y);
 	if(msg_logger) {
-		draw::textf(x, y_buttons - metrics::padding * 2 - texth(), getwidth() - metrics::padding * 2,
+		draw::textf(x, y_buttons - metrics::padding - texth() - 2, getwidth() - metrics::padding * 2,
 			msg_logger);
 	}
 }
 
-void combat_info::splash(unsigned seconds) {
-	render_background();
-	visualize();
+void combat_info::splash(unsigned seconds, bool use_update) const {
+	visualize(use_update);
 	sysredraw();
-	ismodal();
-	sleep(100);
+	sleep(seconds);
 }
 
-void combat_info::move(character* player) {
-	current_combat = this;
-	player->setactive();
-	setfocus(0, true);
-	makewave(player->getposition());
+static void attack_enemy() {
+	auto p = character::getactive();
+	auto pc = combat_info::getactive();
+	auto pe = (character*)hot.param;
+	if(!p || !pc || !pe)
+		return;
+	p->attack(p->get(Weapon), pe);
+}
+
+static void combat_command() {
+}
+
+void combat_info::choose() {
+	auto player = character::getactive();
+	if(!player)
+		return;
+	openform();
 	while(ismodal() && movement > 0) {
-		render_background();
-		auto x = metrics::padding, y = y_buttons - metrics::padding * 2 - combat_grid * combat_map_y;
-		visualize();
-		y = y_buttons;
-		x += button(x, y, "Атаковать", cmd(buttonok), Alpha + 'A');
-		//x += button(x, y, "Стрелять", cmd(buttonok), Alpha + 'S');
-		//x += button(x, y, "Метать", cmd(buttonok), Alpha + 'T');
-		//x += button(x, y, "Заклинание", cmd(buttonok), Alpha + 'C');
-		x += button(x, y, "Вверх", cmd(move_up), KeyUp);
-		x += button(x, y, "Вниз", cmd(move_down), KeyDown);
-		x += button(x, y, "Вправо", cmd(move_right), KeyRight);
-		x += button(x, y, "Влево", cmd(move_left), KeyLeft);
-		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
+		player->act("[%герой] (hp %1i/%2i, AC%3i)", player->gethp(), player->gethpmax(), player->get(AC));
+		player->act("готов%а действовать");
+		visualize(true);
+		auto y = y_buttons;
+		auto x = metrics::padding;
+		for(unsigned i=0; i<commands.count; i++)
+			x += button(x, y, commands.data[i].name, cmd(combat_command, i), 0);
+		if(!commands)
+			x += button(x, y, "Продолжить", cmd(buttonok), KeySpace);
 		domodal();
 	}
+	closeform();
+	commands.clear();
 }
+
+//void combat_info::move(character* player) {
+//	player->setactive();
+//	setfocus(0, true);
+//	auto enemy = getenemy(player);
+//	while(ismodal() && movement > 0) {
+//		visualize(true);
+//		auto y = y_buttons;
+//		auto x = metrics::padding;
+//		auto position = player->getposition();
+//		auto weapon = player->get(Weapon);
+//		if(player->getreach(weapon)>=getcost(enemy->getposition()))
+//			x += button(x, y, "Атаковать", cmd(attack_enemy, (int)enemy), Alpha + 'A');
+//		x += button(x, y, "Вверх", cmd(move_up), KeyUp);
+//		x += button(x, y, "Вниз", cmd(move_down), KeyDown);
+//		x += button(x, y, "Вправо", cmd(move_right), KeyRight);
+//		x += button(x, y, "Влево", cmd(move_left), KeyLeft);
+//		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
+//		domodal();
+//		if(position != player->getposition()
+//			|| weapon != player->get(Weapon)) {
+//			enemy = getenemy(player);
+//		}
+//	}
+//}
 
 bool picture_info::choose(short unsigned& result, const char* title, const char* mask, int size) {
 	struct avatar_view : controls::picker {
@@ -729,7 +825,7 @@ int character::gethprollmax() const {
 int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260];
 	auto p = (character*)object;
-	attack_info ai = {}; p->get(ai);
+	attack_info ai = {}; p->get(p->get(Weapon), ai);
 	auto y0 = y; stringcreator sc(temp); ai.getattacks(sc);
 	y += fieldv(x, y, width, "Количество атак", temp);
 	y += fieldv(x, y, width, "THAC0", ai.bonus);

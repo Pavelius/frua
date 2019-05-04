@@ -28,8 +28,7 @@ const char* item::getname(const void* object, char* result, const char* result_m
 }
 
 int	item::getreach() const {
-	auto ei = (item_info&)bsmeta<item_info>::data[type];
-	return 1 + ei.damage.range;
+	return 1 + getinfo().damage.range;
 }
 
 int item::getquaility() const {

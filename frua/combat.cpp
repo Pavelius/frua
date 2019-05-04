@@ -34,7 +34,7 @@ static void get_lesser_cost(short unsigned index, short unsigned& cost) {
 
 short unsigned combat_info::getmovecost(short unsigned index) const {
 	auto cost = getcost(index);
-	if(cost == 0 || cost==Blocked) {
+	if(cost == 0 || cost == Blocked) {
 		for(auto e : std::initializer_list<direction_s>{Left, Right, Up, Down})
 			get_lesser_cost(to(index, e), cost);
 	}
@@ -51,8 +51,11 @@ character* combat_info::getenemy(const character* player) const {
 			continue;
 		if(!player->isenemy(enemy))
 			continue;
-		auto c = getmovecost(enemy->getposition());
-		if(c == 0 || (target_cost>0 && c>target_cost))
+		auto index = getnear(enemy->getposition(), xmax, ymax);
+		if(index == Blocked)
+			continue;
+		auto c = getcost(index);
+		if(target_cost > 0 && c > target_cost)
 			continue;
 		target_cost = c;
 		target = enemy;
@@ -60,35 +63,49 @@ character* combat_info::getenemy(const character* player) const {
 	return target;
 }
 
-void combat_info::automove(character* player) {
-	makewave(player->getposition());
-	auto enemy = getenemy(player);
-	auto reach = 1;
-	if(enemy) {
-		while(movement > 0) {
-			auto i1 = player->getposition();
-			auto i2 = enemy->getposition();
-			makewave(i2);
-			auto d = step(i1);
-			auto i3 = to(i1, d);
-			if(getcost(i3) < reach)
-				break;
-			if(!move(player, d))
-				break;
-			splash();
+void combat_info::automove(character* player, character* enemy) {
+	if(!enemy)
+		return;
+	auto weapon = player->get(Weapon);
+	auto reach = player->getreach(weapon);
+	auto ismelee = (reach <= 2);
+	while(movement > 0) {
+		auto i1 = player->getposition();
+		auto i2 = enemy->getposition();
+		makewave(i2, i1);
+		if(getcost(i1) <= reach) {
+			player->attack(weapon, enemy);
+			movement = 0;
+			break;
 		}
+		if(!move(player, step(i1)))
+			break;
+		splash();
+		msg_logger.clear();
 	}
 }
 
+static combat_info* current_object;
+
+combat_info* combat_info::getactive() {
+	return current_object;
+}
+
 void combat_info::playround() {
+	current_object = this;
 	for(auto p : parcipants) {
 		if(!isenemy())
 			return;
 		movement = p->getmovement();
-		if(p->isplayable())
-			move(p);
-		else
-			automove(p);
+		p->setactive();
+		makewave(p->getposition());
+		if(p->isplayable()) {
+			choose();
+			//move(p);
+		} else {
+			auto enemy = getenemy(p);
+			automove(p, enemy);
+		}
 	}
 	round++;
 }
@@ -113,13 +130,15 @@ bool combat_info::isenemy() const {
 	return false;
 }
 
-void combat_info::makewave(short unsigned index) {
-	mapcore::setblock();
+void combat_info::makewave(short unsigned index, short unsigned dest_index) const {
+	setblock();
 	for(auto p : parcipants) {
 		if(!p->isalive())
 			continue;
-		mapcore::setblock(p->getposition(), Blocked);
+		setblock(p->getposition(), Blocked);
 	}
+	if(dest_index != Blocked)
+		setblock(dest_index, DefaultCost);
 	mapcore::makewave(index, xmax, ymax);
 }
 
@@ -143,4 +162,8 @@ bool combat_info::move(character* player, direction_s d) {
 	movement -= combat_moverate;
 	player->act("%герой двигается.");
 	return true;
+}
+
+void combat_info::add(int value, const char* name) {
+
 }

@@ -30,9 +30,9 @@ short unsigned mapcore::to(short unsigned i, direction_s d, short xm, short ym) 
 	}
 }
 
-void mapcore::makewave(short unsigned start_index, short xm, short ym) {
+void mapcore::makewave(short unsigned start_index, short xm, short ym, short unsigned block_value) {
 	static direction_s directions[] = {Left, Right, Up, Down};
-	short unsigned stack[256 * 64];
+	short unsigned stack[256 * 16];
 	auto stack_end = stack + sizeof(stack) / sizeof(stack[0]);
 	auto push_counter = stack;
 	auto pop_counter = stack;
@@ -45,7 +45,7 @@ void mapcore::makewave(short unsigned start_index, short xm, short ym) {
 		auto cost = map_block[index] + 1;
 		for(auto d : directions) {
 			auto i1 = to(index, d, xm, ym);
-			if(i1 == Blocked || map_block[i1] == Blocked)
+			if(i1 == Blocked || map_block[i1] >= block_value)
 				continue;
 			if(map_block[i1] <= cost)
 				continue;
@@ -92,6 +92,17 @@ direction_s mapcore::step(short unsigned index, short xm, short ym) {
 		d = e;
 	}
 	return d;
+}
+
+short unsigned mapcore::getnear(short unsigned index, short xm, short ym) {
+	auto d = step(index, xm, ym);
+	if(d == Center)
+		return Blocked;
+	return to(index, d, xm, ym);
+}
+
+bool mapcore::isreachable(short unsigned index, short xm, short ym) {
+	return getnear(index, xm, ym) != Blocked;
 }
 
 direction_s mapcore::getdirection(short unsigned i1, short unsigned i2, short xm, short ym) {

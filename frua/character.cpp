@@ -256,8 +256,8 @@ int	character::gethpmax(int v) const {
 	return result;
 }
 
-void character::get(attack_info& ai, bool large_enemy) const {
-	ai.weapon = get(Weapon);
+void character::get(item* weapon, attack_info& ai, bool large_enemy) const {
+	ai.weapon = weapon;
 	if(ai.weapon) {
 		*static_cast<damage_info*>(&ai) = ai.weapon->getinfo().damage;
 		if(large_enemy)
@@ -404,15 +404,16 @@ void character::rollhp() {
 	}
 }
 
-result_s character::attack(character* enemy) {
-	attack_info ai = {}; get(ai);
+result_s character::attack(item* weapon, character* enemy) {
+	attack_info ai = {}; get(weapon, ai);
 	if(enemy->race == Goblinoid && is(BonusToHitOrcs))
 		ai.bonus++;
-	auto chance_hit = (20 - ai.bonus) * 5 + enemy->get(AC) * 5;
-	auto chance_crit = 20 - ai.critical * 5;
+	auto chance_hit = (enemy->get(AC) + ai.bonus) * 5;
+	auto chance_crit = (1 + ai.critical) * 5;
 	auto result_value = d100();
 	if(result_value > chance_hit) {
 		act("%герой промазал%а");
+		combat_info::animate(this, enemy, false);
 		return Fail;
 	}
 	result_s result = Success;
@@ -420,12 +421,18 @@ result_s character::attack(character* enemy) {
 		result = CriticalSuccess;
 	act("%герой попал%а.");
 	enemy->damage(ai.type, ai.damage.roll());
+	combat_info::animate(this, enemy, true);
 	return result;
 }
 
 void character::damage(effect_s type, int v) {
 	if(v < 0)
 		return;
+	hp -= v;
+	act("%герой получил%а [%1i] урона", v);
+	if(hp <= 0)
+		act("и умер%ла");
+	act(".");
 }
 
 item* character::get(item_type_s v) const {
@@ -449,7 +456,14 @@ void character::update_items() {
 		wears[i].clear();
 }
 
-extern stringcreator msg_logger;
 void character::act(const char* text, ...) const {
-	msg_logger.addv(text, xva_start(text));
+	msg_logger.name = getname();
+	msg_logger.gender = gender;
+	msg_logger.addx(' ', text, xva_start(text));
+}
+
+int	character::getreach(const item* weapon) const {
+	if(weapon)
+		return weapon->getreach();
+	return 1;
 }
