@@ -449,6 +449,7 @@ class item {
 	friend struct bsmeta<item>;
 public:
 	constexpr operator bool() const { return type != 0; }
+	void					clear();
 	const armor_info&		getarmor() const;
 	item_type_s				getkind() const { return bsmeta<item_info>::elements[type].type; }
 	void					getname(stringcreator& sc) const;
@@ -517,6 +518,7 @@ struct character {
 	bool					isallow(alignment_s v) const { return isallow(v, type); }
 	bool					isallow(class_s v) const { return isallow(v, race); }
 	static bool				isallow(class_s v, race_s race);
+	static bool				isallowwear(const void* object, int param);
 	bool					isenemy(const character* p) const;
 	bool					isplayable() const { return reaction == Player; }
 	static const bsreq		metadata[];
@@ -535,6 +537,7 @@ struct character {
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
+	void					update_items();
 	static int				view_avatar(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_ability(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_levels(int x, int y, int width, const void* object, const char* id, int index);
@@ -568,7 +571,7 @@ private:
 	char					base_ac;
 	unsigned				coopers;
 	unsigned				experience;
-	item					wears[16];
+	item					wears[12*2];
 	friend struct bsmeta<character>;
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();

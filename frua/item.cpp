@@ -5,8 +5,12 @@ const bsreq bsmeta<item>::meta[] = {
 	BSREQ(value),
 {}};
 
-markup item::markups[] = {{0, "“ип", {"type"}},
+markup item::markups[] = {{0, 0, {"type"}},
 {}};
+
+void item::clear() {
+	memset(this, 0, sizeof(*this));
+}
 
 void item::getname(stringcreator& sc) const {
 	if(!type)

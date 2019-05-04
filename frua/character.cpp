@@ -305,6 +305,7 @@ int picture_info::random(const char* mask) {
 void character::changed(void* object, const void* previous) {
 	auto p1 = (character*)object;
 	auto p2 = (character*)previous;
+	p1->update_items();
 	if(p1->race != p2->race || p1->type != p2->type) {
 		p1->correct();
 		p1->apply_feats();
@@ -407,4 +408,15 @@ item* character::get(item_type_s v) const {
 			return const_cast<item*>(&e);
 	}
 	return 0;
+}
+
+void character::update_items() {
+	unsigned i = 0;
+	for(auto& e : wears) {
+		if(!e)
+			continue;
+		wears[i++] = e;
+	}
+	for(; i < sizeof(wears) / sizeof(wears[0]); i++)
+		wears[i].clear();
 }
