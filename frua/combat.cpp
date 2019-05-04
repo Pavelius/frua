@@ -43,7 +43,7 @@ short unsigned combat_info::getmovecost(short unsigned index) const {
 
 character* combat_info::getenemy(const character* player) const {
 	character* target = 0;
-	short unsigned target_cost = 0;
+	short unsigned target_cost = Blocked;
 	for(auto enemy : parcipants) {
 		if(!enemy->isalive())
 			continue;
@@ -55,7 +55,7 @@ character* combat_info::getenemy(const character* player) const {
 		if(index == Blocked)
 			continue;
 		auto c = getcost(index);
-		if(target_cost > 0 && c > target_cost)
+		if(c > target_cost)
 			continue;
 		target_cost = c;
 		target = enemy;

@@ -405,11 +405,13 @@ void character::rollhp() {
 }
 
 result_s character::attack(item* weapon, character* enemy) {
-	attack_info ai = {}; get(weapon, ai);
+	attack_info ai = {}; get(weapon, ai, enemy->islarge());
 	if(enemy->race == Goblinoid && is(BonusToHitOrcs))
 		ai.bonus++;
 	auto chance_hit = (enemy->get(AC) + ai.bonus) * 5;
 	auto chance_crit = (1 + ai.critical) * 5;
+	if(chance_hit < chance_crit)
+		chance_hit = chance_crit;
 	auto result_value = d100();
 	if(result_value > chance_hit) {
 		act("%герой промазал%а");
@@ -417,10 +419,16 @@ result_s character::attack(item* weapon, character* enemy) {
 		return Fail;
 	}
 	result_s result = Success;
-	if(result_value < chance_crit)
+	if(result_value < chance_crit && (chance_hit - chance_crit)<=10)
 		result = CriticalSuccess;
 	act("%герой попал%а.");
-	enemy->damage(ai.type, ai.damage.roll());
+	auto damage = ai.damage.roll();
+	if(result == CriticalSuccess) {
+		ai.damage.b = 0;
+		for(auto i = 0; i < ai.multiplier + 1; i++)
+			damage += ai.damage.roll();
+	}
+	enemy->damage(ai.type, damage);
 	combat_info::animate(this, enemy, true);
 	return result;
 }

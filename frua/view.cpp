@@ -640,17 +640,6 @@ void combat_info::splash(unsigned seconds, bool use_update) const {
 	sleep(seconds);
 }
 
-static void attack_enemy() {
-	auto p = character::getactive();
-	auto pc = combat_info::getactive();
-	auto pe = (character*)hot.param;
-	if(!p || !pc || !pe)
-		return;
-	p->attack(p->get(Weapon), pe);
-}
-
-static void combat_command() {}
-
 int answer::choose(combat_info& ci) {
 	// Command with focus on value rather that procedure
 	struct cmdv : cmd {
@@ -662,7 +651,10 @@ int answer::choose(combat_info& ci) {
 		return 0;
 	openform();
 	while(ismodal()) {
-		player->act("[%герой] (hp %1i/%2i, AC%3i)", player->gethp(), player->gethpmax(), player->get(AC));
+		player->act("[%герой] (hp %1i/%2i, AC%3i, MV %4i/%5i)",
+			player->gethp(), player->gethpmax(),
+			player->get(AC),
+			player->getmovepoints(), player->getmovement());
 		player->act("готов%а действовать");
 		ci.visualize(true);
 		auto y = y_buttons;
@@ -681,31 +673,6 @@ int answer::choose(combat_info& ci) {
 	clear();
 	return result;
 }
-
-//void combat_info::move(character* player) {
-//	player->setactive();
-//	setfocus(0, true);
-//	auto enemy = getenemy(player);
-//	while(ismodal() && movement > 0) {
-//		visualize(true);
-//		auto y = y_buttons;
-//		auto x = metrics::padding;
-//		auto position = player->getposition();
-//		auto weapon = player->get(Weapon);
-//		if(player->getreach(weapon)>=getcost(enemy->getposition()))
-//			x += button(x, y, "Атаковать", cmd(attack_enemy, (int)enemy), Alpha + 'A');
-//		x += button(x, y, "Вверх", cmd(move_up), KeyUp);
-//		x += button(x, y, "Вниз", cmd(move_down), KeyDown);
-//		x += button(x, y, "Вправо", cmd(move_right), KeyRight);
-//		x += button(x, y, "Влево", cmd(move_left), KeyLeft);
-//		x += button(x, y, "Защита", cmd(set_defend), KeySpace);
-//		domodal();
-//		if(position != player->getposition()
-//			|| weapon != player->get(Weapon)) {
-//			enemy = getenemy(player);
-//		}
-//	}
-//}
 
 bool picture_info::choose(short unsigned& result, const char* title, const char* mask, int size) {
 	struct avatar_view : controls::picker {

@@ -516,6 +516,7 @@ struct character {
 	int						getlevel() const { return levels[0]; }
 	int						getlevel(int i) const { return levels[i]; }
 	int						getmovement() const;
+	int						getmovepoints() const { return current_movement; }
 	const char*				getname() const { return name; }
 	race_s					getrace() const { return race; }
 	int						getreach(const item* weapon) const;
@@ -531,6 +532,7 @@ struct character {
 	static bool				isallow(class_s v, race_s race);
 	static bool				isallowwear(const void* object, int param);
 	bool					isenemy(const character* p) const;
+	bool					islarge() const { return size == Large; }
 	bool					isplayable() const { return reaction == Player; }
 	bool					isready() const { return isalive() && current_movement > 0; }
 	static const bsreq		metadata[];
