@@ -448,3 +448,8 @@ void character::update_items() {
 	for(; i < sizeof(wears) / sizeof(wears[0]); i++)
 		wears[i].clear();
 }
+
+extern stringcreator msg_logger;
+void character::act(const char* text, ...) const {
+	msg_logger.addv(text, xva_start(text));
+}

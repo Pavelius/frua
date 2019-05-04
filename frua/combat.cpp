@@ -141,5 +141,6 @@ bool combat_info::move(character* player, direction_s d) {
 		break;
 	}
 	movement -= combat_moverate;
+	player->act("%герой двигается.");
 	return true;
 }

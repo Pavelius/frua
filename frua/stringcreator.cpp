@@ -37,9 +37,9 @@ const char* stringcreator::readvariable(const char* p) {
 		if(*p == ')')
 			p++;
 	} else {
-		while(*p || ischa(*p) || isnum(*p) || *p=='_') {
+		while(*p && (ischa(*p) || isnum(*p) || *p=='_')) {
 			if(ps < pe)
-				*ps++ = *p;
+				*ps++ = *p++;
 		}
 	}
 	*ps = 0;

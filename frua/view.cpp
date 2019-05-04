@@ -24,6 +24,8 @@ static const char*				file_ext_exclude[] = {"pma", 0};
 static const char*				file_monster_exclude[] = {0};
 static const sprite*			spr_monsters;
 aref<sprite_name_info>			avatar_data;
+static char						logger_buffer[2048];
+stringcreator					msg_logger(logger_buffer);
 typedef adat<const char*, 256>	strings_array;
 
 static void set_command_value() {
@@ -586,12 +588,17 @@ void combat_info::visualize() {
 	draw_cost(x, y);
 	draw_active_player(x, y);
 	draw_images(x, y);
+	if(msg_logger) {
+		draw::textf(x, y_buttons - metrics::padding * 2 - texth(), getwidth() - metrics::padding * 2,
+			msg_logger);
+	}
 }
 
 void combat_info::splash(unsigned seconds) {
 	render_background();
 	visualize();
 	sysredraw();
+	ismodal();
 	sleep(100);
 }
 

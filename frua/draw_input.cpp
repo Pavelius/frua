@@ -23,6 +23,7 @@ static bool		break_modal;
 static int		break_result;
 static callback	leave_focus;
 callback		draw::domodal;
+extern stringcreator	msg_logger;
 
 static void standart_domodal() {
 	int id;
@@ -238,6 +239,7 @@ bool draw::ismodal() {
 		sys_static_area.clear();
 	else
 		sys_static_area = {0, 0, draw::getwidth(), draw::getheight()};
+	msg_logger.clear();
 	tooltips_before();
 	domodal = standart_domodal;
 	if(!break_modal)

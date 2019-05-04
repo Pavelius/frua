@@ -469,7 +469,7 @@ public:
 };
 struct character {
 	operator bool() const { return name != 0; }
-	void					act(const char* text, ...) const {}
+	void					act(const char* text, ...) const;
 	void					addbattle();
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
