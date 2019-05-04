@@ -1,6 +1,6 @@
 #include "main.h"
 
-const int combat_moverate = 3;
+const int combat_moverate = 2;
 
 character* combat_info::create(const char* name, reaction_s reaction) {
 	auto pc = bsmeta<character>::data.find(bsmeta<character>::meta->find("name"), name);

@@ -419,13 +419,26 @@ result_s character::attack(item* weapon, character* enemy) {
 		return Fail;
 	}
 	result_s result = Success;
-	if(result_value < chance_crit && (chance_hit - chance_crit)<=10)
+	if(result_value < chance_crit && (chance_hit - chance_crit) <= 10)
 		result = CriticalSuccess;
-	act("%герой попал%а.");
+	if(result==CriticalSuccess)
+		act("%герой [+критически попал%а].");
+	else
+		act("%герой попал%а.");
+	if(result == CriticalSuccess) {
+		auto chance_deflect = enemy->get(CriticalDeflection);
+		if(chance_deflect > 0) {
+			auto value = d100();
+			if(value < chance_deflect) {
+				act("Критический удар удачно предотвращен доспехами.");
+				result = Success;
+			}
+		}
+	}
 	auto damage = ai.damage.roll();
 	if(result == CriticalSuccess) {
 		ai.damage.b = 0;
-		for(auto i = 0; i < ai.multiplier + 1; i++)
+		for(auto i = ai.multiplier; i >= 0; i--)
 			damage += ai.damage.roll();
 	}
 	enemy->damage(ai.type, damage);
