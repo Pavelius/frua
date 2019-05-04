@@ -33,6 +33,8 @@ int	item::getreach() const {
 }
 
 int item::getquaility() const {
+	if(!identify)
+		return quality;
 	switch(state) {
 	case Cursed: return -(quality + 1);
 	case Magic: return quality + 1;
@@ -41,10 +43,19 @@ int item::getquaility() const {
 	}
 }
 
-const armor_info& item::getarmor() const {
-	return bsmeta<item_info>::elements[type].armor;
-}
-
 const weapon_info& item::getweapon() const {
 	return bsmeta<item_info>::elements[type].damage;
+}
+
+int	item::get(ability_s id) const {
+	auto& ii = bsmeta<item_info>::elements[type];
+	return ii.abilities[id];
+}
+
+int	item::getq(ability_s id) const {
+	auto r = get(id);
+	if(r) {
+		r += getquaility();
+	}
+	return r;
 }

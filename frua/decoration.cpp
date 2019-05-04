@@ -3,7 +3,6 @@
 decoration decoration::data[] = {{"Персонажи или монстры", {250, 60}, character()},
 {"Описания предетов", {200, 18 + 4 * 2}, item_info(), "-"},
 {"Предметы", item()},
-{"Броня", armor_info()},
 {"Оружие", weapon_info()},
 {"Кубик", dice_info()},
 {"Специальная атака", damage_info()},

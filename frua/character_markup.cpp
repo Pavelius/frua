@@ -174,8 +174,12 @@ static markup items_c2[] = {{0, 0, {"wears", 12}, 0, {0, 0, 0, character::isallo
 static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
 static markup items_commands[] = {{0, "Редактировать", {}, 0, {}, edit_items},
 {}};
-static markup items_page[] = {{6, 0, {0, 0, items_c1}},
-{6, 0, {0, 0, items_c2}},
+static markup items_с3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
+{0, "Боевые характеристики", {0, 0, abilities_statistic_group}},
+{}};
+static markup items_page[] = {{4, 0, {0, 0, items_c1}},
+{4, 0, {0, 0, items_c2}},
+{4, 0, {0, 0, items_с3}},
 {0, 0, {"#commands", 0, items_commands}},
 {}};
 static markup element_form[] = {{0, 0, {"#update"}, 0, {}, character::changed},

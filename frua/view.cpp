@@ -722,12 +722,12 @@ int character::gethprollmax() const {
 int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260];
 	auto p = (character*)object;
-	attack_info ai = {};
+	attack_info ai = {}; p->get(ai);
 	auto y0 = y;
 	y += fieldv(x, y, width, "Количество атак", ai.getattacks(temp, zendof(temp)));
 	y += fieldv(x, y, width, "THAC0", ai.bonus);
 	y += fieldv(x, y, width, "Урон", ai.damage.print(temp, zendof(temp)));
-	y += fieldv(x, y, width, "Класс брони", p->getac());
+	y += fieldv(x, y, width, "Класс брони", p->get(AC));
 	if(p->hp_rolled == 0) {
 		auto min = p->gethpmax(0);
 		auto max = p->gethpmax(p->gethprollmax());

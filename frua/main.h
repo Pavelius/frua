@@ -31,6 +31,8 @@ enum alignment_s : unsigned char {
 };
 enum ability_s : unsigned char {
 	Strenght, Dexterity, Constitution, Intellegence, Wisdow, Charisma,
+	AC, DR,
+	CriticalDeflection, CriticalThread, CriticalMultiplier,
 };
 enum skill_s : unsigned char {
 	SaveVsParalization, SaveVsPoison, SaveVsDeath,
@@ -402,14 +404,6 @@ struct weapon_info : damage_info {
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 };
-struct armor_info {
-	char					ac, toughness;
-	char					critical;
-	//
-	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id) { return ""; }
-	static int				getvalue(const void* object, int id) { return 0; }
-};
 struct attack_info : weapon_info {
 	item*					weapon;
 	char*					getattacks(char* result, const char* result_maximum) const;
@@ -420,8 +414,7 @@ struct item_info {
 	item_type_s				type;
 	cflags<usability_s>		usability;
 	weapon_info				damage;
-	armor_info				armor;
-	char					abilities[Charisma + 1];
+	char					abilities[CriticalMultiplier + 1];
 	char					skills[LastSkill + 1];
 	int						cost, weight;
 	//
@@ -450,10 +443,11 @@ class item {
 public:
 	constexpr operator bool() const { return type != 0; }
 	void					clear();
-	const armor_info&		getarmor() const;
+	int						get(ability_s id) const;
 	item_type_s				getkind() const { return bsmeta<item_info>::elements[type].type; }
 	void					getname(stringcreator& sc) const;
 	int						getdamaged() const { return damaged; }
+	int						getq(ability_s id) const;
 	int						getquaility() const;
 	int						getreach() const;
 	const weapon_info&		getweapon() const;
@@ -467,6 +461,7 @@ public:
 	void					set(item_state_s v) { state = v; }
 	void					setidentify(unsigned char v) { identify = v; }
 	void					setquality(unsigned char v) { quality = v; }
+	void					setready(int v) { ready = v; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
 	//
@@ -489,14 +484,14 @@ struct character {
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					damage(effect_s type, int v);
 	void					get(attack_info& ai) const;
-	int						get(ability_s v) const { return abilities[v]; }
+	int						get(ability_s v) const;
 	int						get(class_s v) const { return 0; }
 	item*					get(item_type_s v) const;
 	int						get(skill_s v) const;
-	int						getac() const;
 	static character*		getactive();
 	alignment_s				getalignment() const { return alignment; }
 	int						getavatar() const { return avatar; }
+	int						getbonus(ability_s v) const;
 	class_s					getclass() const { return type; }
 	gender_s				getgender() const { return gender; }
 	int						gethp() const { return hp; }
@@ -558,7 +553,7 @@ private:
 	reaction_s				reaction;
 	direction_s				direction;
 	size_s					size;
-	char					abilities[Charisma + 1];
+	char					abilities[CriticalMultiplier + 1];
 	short					hp, hp_rolled;
 	char					initiative;
 	cflags<feat_s>			feats;

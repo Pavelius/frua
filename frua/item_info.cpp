@@ -7,7 +7,6 @@ const bsreq bsmeta<item_info>::meta[] = {
 	BSREQ(cost),
 	BSREQ(weight),
 	BSREQ(damage),
-	BSREQ(armor),
 	BSREQ(usability),
 	BSREQ(abilities),
 	BSREQ(skills),
@@ -27,7 +26,10 @@ bool hasability(const void* object, int index) {
 }
 static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, 0, 0, item_info::view_weapon}},
 {}};
-static markup armor_block[] = {{0, 0, {"armor"}}, {}};
+static markup deflection_markup[] = {{0, "/", {"abilities", DR}}, {}};
+markup armor_block[] = {{0, "Класс брони", {"abilities", AC, deflection_markup}},
+{0, "Отражение(%)", {"abilities", CriticalDeflection}},
+{}};
 static markup usability_block[] = {{0, "#checkboxes", {"usability"}}, {}};
 static markup item_feat_block[] = {{0, "#checkboxes", {"feat"}}, {}};
 static markup basic_markup[] = {{0, "Название", {"name"}},
@@ -119,7 +121,7 @@ void item_info::apply(item_info* p) {
 	if(!wi.use_damage)
 		memset(&p->damage, 0, sizeof(p->damage));
 	if(!wi.use_armor)
-		memset(&p->armor, 0, sizeof(p->armor));
+		memset(p->abilities + AC, 0, CriticalMultiplier - AC + 1);
 }
 
 void item_info::create(item_info* p) {

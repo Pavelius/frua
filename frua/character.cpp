@@ -216,11 +216,29 @@ int character::getstrex() const {
 	return result;
 }
 
-int character::getac() const {
-	auto result = base_ac;
-	auto dex = get(Dexterity);
-	result -= maptbl(defence_adjustment, dex);
+int character::getbonus(ability_s id) const {
+	auto result = 0;
+	for(auto& e : wears) {
+		if(!e)
+			break;
+		if(e.isready())
+			result += e.getq(id);
+	}
 	return result;
+}
+
+int	character::get(ability_s v) const {
+	int r, a;
+	switch(v) {
+	case AC:
+		r = base_ac;
+		a = get(Dexterity);
+		r -= maptbl(defence_adjustment, a);
+		r -= getbonus(AC);
+		return r;
+	default:
+		return abilities[v];
+	}
 }
 
 int	character::gethpmax(int v) const {
@@ -311,6 +329,13 @@ void character::changed(void* object, const void* previous) {
 		p1->apply_feats();
 		p1->apply_ability_restriction();
 	}
+	for(auto& e : p1->wears) {
+		if(!e)
+			break;
+		if(e.isready())
+			continue;
+		e.setready(1);
+	}
 }
 
 void character::correct() {
@@ -357,7 +382,7 @@ const char* character::getname(const void* object, char* result, const char* res
 		if(true) {
 			stringcreator sc(result, result_max);
 			sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
-			sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->getac(), p->gethpmax());
+			sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->get(AC), p->gethpmax());
 		}
 		return result;
 	default: return "";
@@ -380,7 +405,7 @@ result_s character::attack(character* enemy) {
 	attack_info ai = {}; get(ai);
 	if(enemy->race == Goblinoid && is(BonusToHitOrcs))
 		ai.bonus++;
-	auto chance_hit = (20 - ai.bonus) * 5 + enemy->getac() * 5;
+	auto chance_hit = (20 - ai.bonus) * 5 + enemy->get(AC) * 5;
 	auto chance_crit = 20 - ai.critical * 5;
 	auto result_value = d100();
 	if(result_value > chance_hit) {

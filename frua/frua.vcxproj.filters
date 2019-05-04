@@ -210,9 +210,6 @@
     <ClCompile Include="effect.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="armor.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="item_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
