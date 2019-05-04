@@ -564,7 +564,7 @@ static int compare_image(const void* v1, const void* v2) {
 	auto p2 = (image_info*)v2;
 	auto y1 = p1->y;
 	auto y2 = p2->y;
-	if(y1!=y2)
+	if(y1 != y2)
 		return y1 - y2;
 	return p1->x - p2->x;
 }
@@ -610,29 +610,6 @@ void combat_info::animate(const character* attacker, const character* defender, 
 	msg_logger.clear();
 }
 
-static void move_direction(direction_s d) {
-	auto p = character::getactive();
-	auto pc = combat_info::getactive();
-	if(!pc || !p)
-		return;
-	if(pc->move(p, d))
-		pc->makewave(p->getposition());
-}
-static void move_up() { move_direction(Up); }
-static void move_down() { move_direction(Down); }
-static void move_left() { move_direction(Left); }
-static void move_right() { move_direction(Right); }
-
-static void set_defend() {
-	auto p = character::getactive();
-	if(!p)
-		return;
-	auto pc = combat_info::getactive();
-	if(!pc)
-		return;
-	pc->movement = 0;
-}
-
 static void draw_images(int x, int y) {
 	for(auto& e : scene_images) {
 		if(!e.ps)
@@ -672,28 +649,37 @@ static void attack_enemy() {
 	p->attack(p->get(Weapon), pe);
 }
 
-static void combat_command() {
-}
+static void combat_command() {}
 
-void combat_info::choose() {
+int answer::choose(combat_info& ci) {
+	// Command with focus on value rather that procedure
+	struct cmdv : cmd {
+		int getid() const override { return v + 1; }
+		constexpr cmdv(void(*p)(), int v) : cmd(p, v) {}
+	};
 	auto player = character::getactive();
 	if(!player)
-		return;
+		return 0;
 	openform();
-	while(ismodal() && movement > 0) {
+	while(ismodal()) {
 		player->act("[%герой] (hp %1i/%2i, AC%3i)", player->gethp(), player->gethpmax(), player->get(AC));
 		player->act("готов%а действовать");
-		visualize(true);
+		ci.visualize(true);
 		auto y = y_buttons;
 		auto x = metrics::padding;
-		for(unsigned i=0; i<commands.count; i++)
-			x += button(x, y, commands.data[i].name, cmd(combat_command, i), 0);
-		if(!commands)
-			x += button(x, y, "Продолжить", cmd(buttonok), KeySpace);
+		for(unsigned i = 0; i < count; i++)
+			x += button(x, y, data[i].name, cmdv(buttonparam, i), data[i].key ? data[i].key : Alpha + '1' + i);
+		if(!count)
+			x += button(x, y, "Продолжить", cmdv(buttoncancel, 0), KeySpace);
 		domodal();
 	}
 	closeform();
-	commands.clear();
+	auto result = getresult();
+	if(result >= (int)count)
+		return 0;
+	result = data[result].id;
+	clear();
+	return result;
 }
 
 //void combat_info::move(character* player) {

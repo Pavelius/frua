@@ -121,9 +121,11 @@
   <ItemGroup>
     <ClCompile Include="ability.cpp" />
     <ClCompile Include="alignment.cpp" />
+    <ClCompile Include="answer.cpp" />
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="attack_affect.cpp" />
+    <ClCompile Include="direction.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="item_type.cpp" />

@@ -1,7 +1,7 @@
 #include "main.h"
 
 static short unsigned map_block[64 * 64];
-static direction_s all_directions[] = {Left, Right, Up, Down};
+const direction_s mapcore::all_directions[4] = {Left, Right, Up, Down};
 
 short unsigned mapcore::to(short unsigned i, direction_s d, short xm, short ym) {
 	if(i == Blocked)
@@ -92,6 +92,19 @@ direction_s mapcore::step(short unsigned index, short xm, short ym) {
 		d = e;
 	}
 	return d;
+}
+
+direction_s mapcore::step(short unsigned index, short xm, short ym, short range) {
+	auto d = Center;
+	while(true) {
+		if(index == Blocked)
+			return Center;
+		auto c = getcost(index);
+		if(c == 0 || c<=range)
+			return d;
+		d = step(index, xm, ym);
+		index = to(index, d, xm, ym);
+	}
 }
 
 short unsigned mapcore::getnear(short unsigned index, short xm, short ym) {

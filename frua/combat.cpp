@@ -69,16 +69,16 @@ void combat_info::automove(character* player, character* enemy) {
 	auto weapon = player->get(Weapon);
 	auto reach = player->getreach(weapon);
 	auto ismelee = (reach <= 2);
-	while(movement > 0) {
+	while(player->isready()) {
 		auto i1 = player->getposition();
 		auto i2 = enemy->getposition();
 		makewave(i2, i1);
 		if(getcost(i1) <= reach) {
 			player->attack(weapon, enemy);
-			movement = 0;
+			player->stop();
 			break;
 		}
-		if(!move(player, step(i1)))
+		if(!player->moveto(step(i1)))
 			break;
 		splash();
 		msg_logger.clear();
@@ -91,21 +91,71 @@ combat_info* combat_info::getactive() {
 	return current_object;
 }
 
+int combat_info::getdistance(short unsigned index) const {
+	if(index == Blocked)
+		return Blocked;
+	auto c = getcost(index);
+	if(c == Blocked) {
+		index = getnear(index, xmax, ymax);
+		if(index == Blocked)
+			return Blocked;
+		c = getcost(index) + 1;
+	}
+	return c;
+}
+
+void combat_info::playmove(character* player, character* enemy) {
+	player->setactive();
+	while(player->isready()) {
+		auto position = player->getposition();
+		makewave(position);
+		auto enemy = getenemy(player);
+		if(!enemy)
+			break;
+		auto enemy_position = enemy->getposition();
+		auto weapon = player->get(Weapon);
+		auto reach = player->getreach(weapon);
+		answer an;
+		if(enemy && getdistance(enemy_position) <= reach)
+			an.add(variant(AttackRegular), "Атаковать", 2);
+		for(auto d : all_directions) {
+			auto i1 = to(position, d);
+			if(i1 == Blocked || getcost(i1) == Blocked)
+				continue;
+			an.add(variant(d), getstr(d), 1, bsmeta<direction_s>::elements[d].key);
+		}
+		auto cid = (variant)an.choose(*this);
+		switch(cid.type) {
+		case Attacks:
+			player->attack(weapon, enemy);
+			player->stop();
+			break;
+		case Directions:
+			player->moveto(cid.direction);
+			break;
+		}
+	}
+}
+
 void combat_info::playround() {
 	current_object = this;
 	for(auto p : parcipants) {
+		if(!p->isalive())
+			continue;
+		p->refresh();
+	}
+	for(auto p : parcipants) {
+		if(!p->isready())
+			continue;
 		if(!isenemy())
 			return;
-		movement = p->getmovement();
 		p->setactive();
 		makewave(p->getposition());
-		if(p->isplayable()) {
-			choose();
-			//move(p);
-		} else {
-			auto enemy = getenemy(p);
+		auto enemy = getenemy(p);
+		if(p->isplayable())
+			playmove(p, enemy);
+		else
 			automove(p, enemy);
-		}
 	}
 	round++;
 }
@@ -142,28 +192,22 @@ void combat_info::makewave(short unsigned index, short unsigned dest_index) cons
 	mapcore::makewave(index, xmax, ymax);
 }
 
-bool combat_info::move(character* player, direction_s d) {
-	if(!player)
-		return false;
+bool character::moveto(direction_s d) {
 	if(d == Center)
 		return false;
-	auto i1 = to(player->getposition(), d);
-	if(i1 == Blocked)
+	auto i1 = mapcore::to(getposition(), d, combat_map_x, combat_map_y);
+	if(i1 == mapcore::Blocked)
 		return false;
-	if(getcost(i1) == Blocked)
+	if(mapcore::getcost(i1) == mapcore::Blocked)
 		return false;
-	player->setposition(i1);
+	setposition(i1);
 	switch(d) {
 	case Left:
 	case Right:
-		player->set(d);
+		set(d);
 		break;
 	}
-	movement -= combat_moverate;
-	player->act("%герой двигается.");
+	current_movement -= combat_moverate;
+	act("%герой двигается.");
 	return true;
-}
-
-void combat_info::add(int value, const char* name) {
-
 }

@@ -181,6 +181,9 @@ enum save_s : unsigned char {
 enum attack_affect_s : unsigned char {
 	AttackRegular, AttackOneAndHalf, AttackDouble, AttackAdditional, AttackOnHit, AttackOnCritical
 };
+enum action_s : unsigned char {
+	Guard, Move,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -205,21 +208,29 @@ typedef class_s				classa[3];
 
 enum variant_s : unsigned char {
 	NoVariant,
-	Races, Classes, Alignments
+	Alignments, Attacks, Classes, Directions, Races
 };
 struct variant {
 	variant_s				type;
 	union {
+		action_s			action;
+		attack_affect_s		attack;
+		direction_s			direction;
 		race_s				race;
 		class_s				clas;
 		alignment_s			alignment;
 		unsigned char		value;
 	};
 	constexpr variant() : type(NoVariant), value(0) {}
-	constexpr variant(race_s v) : type(Races), race(v) {}
-	constexpr variant(class_s v) : type(Classes), clas(v) {}
+	constexpr variant(action_s v) : type(Attacks), action(v) {}
 	constexpr variant(alignment_s v) : type(Alignments), alignment(v) {}
+	constexpr variant(attack_affect_s v) : type(Attacks), attack(v) {}
+	constexpr variant(class_s v) : type(Classes), clas(v) {}
+	constexpr variant(direction_s v) : type(Directions), direction(v) {}
+	constexpr variant(race_s v) : type(Races), race(v) {}
+	constexpr variant(const int v) : type((variant_s)(v >> 8)), value(v & 0xFF) {}
 	constexpr bool operator==(const variant& e) const { return type == e.type && value == e.value; }
+	constexpr operator int() const { return ((unsigned char)type << 8) | value; }
 };
 struct decoration {
 	typedef void(*commandp)(void* p);
@@ -255,6 +266,11 @@ struct decoration {
 struct name_info {
 	const char*				id;
 	const char*				name;
+};
+struct direction_info {
+	const char*				id;
+	const char*				name;
+	unsigned				key;
 };
 struct save_info {
 	const char*				id;
@@ -450,7 +466,7 @@ public:
 	int						getquaility() const;
 	int						getreach() const;
 	bool					is(item_state_s v) const { return state == v; }
-	bool					is(item_type_s v) const { return getinfo().type==v; }
+	bool					is(item_type_s v) const { return getinfo().type == v; }
 	bool					isarmor() const { return bsmeta<item_type_info>::elements[getinfo().type].use_armor != 0; }
 	bool					isidentified() const { return identify != 0; }
 	bool					isready() const { return ready != 0; }
@@ -516,11 +532,14 @@ struct character {
 	static bool				isallowwear(const void* object, int param);
 	bool					isenemy(const character* p) const;
 	bool					isplayable() const { return reaction == Player; }
+	bool					isready() const { return isalive() && current_movement > 0; }
 	static const bsreq		metadata[];
+	bool					moveto(direction_s d);
 	void					raise(class_s v);
 	static void				random(void* object);
 	void					recreate();
 	static void				recreate(void* p) { ((character*)p)->recreate(); }
+	void					refresh();
 	void					reroll();
 	static void				reroll(void* p) { ((character*)p)->reroll(); }
 	void					rollhp();
@@ -532,6 +551,7 @@ struct character {
 	void					setavatar(int v) { avatar = v; }
 	void					setname(const char* v) { name = v; }
 	void					setposition(short unsigned v) { index = v; }
+	void					stop();
 	void					update_items();
 	static int				view_avatar(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_ability(int x, int y, int width, const void* object, const char* id, int index);
@@ -559,14 +579,14 @@ private:
 	cflags<feat_s>			feats;
 	cflags<usability_s>		usability;
 	char					strenght_percent;
-	char					movement;
+	char					movement, current_movement;
 	short unsigned			index;
 	short unsigned			avatar;
 	char					levels[3];
 	char					base_ac;
 	unsigned				coopers;
 	unsigned				experience;
-	item					wears[12*2];
+	item					wears[12 * 2];
 	friend struct bsmeta<character>;
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
@@ -575,6 +595,7 @@ struct mapcore {
 	enum block_s : short unsigned {
 		DefaultCost = 0xFFFE, Blocked
 	};
+	static const direction_s all_directions[4];
 	static short unsigned	getcost(short unsigned index);
 	static direction_s		getdirection(short unsigned i1, short unsigned i2, short xm, short ym);
 	static short unsigned	getnear(short unsigned index, short xm, short ym);
@@ -583,6 +604,7 @@ struct mapcore {
 	static void				setblock();
 	static void				setblock(short unsigned index, short unsigned v);
 	static direction_s		step(short unsigned i, short xm, short ym);
+	static direction_s		step(short unsigned i, short xm, short ym, short range);
 	static short unsigned	to(short unsigned i, direction_s d, short xm, short ym);
 };
 template<short XM, short YM> struct map_info : mapcore {
@@ -604,43 +626,43 @@ struct stringobject : stringcreator {
 	void					addidentifier(const char* id) override;
 };
 struct combat_info : map_info<combat_map_x, combat_map_y> {
-	typedef void(combat_info::*action_proc)(character* p1, int id);
-	struct command {
-		action_proc			proc;
-		int					id;
-		const char*			name;
-	};
 	int						round;
-	int						movement;
 	adat<character, 32>		enemies;
 	adat<character*, 64>	parcipants;
-	constexpr combat_info() : round(1), movement(0), enemies(), parcipants() {}
+	constexpr combat_info() : round(1), enemies(), parcipants() {}
 	static void				animate(const character* attacker, const character* defender, bool hit);
 	character*				create(const char* name, reaction_s reaction = Hostile);
-	void					add(int value, const char* name);
 	void					addenemies();
 	void					addparty();
 	void					automove(character* player, character* enemy);
-	void					choose();
 	static combat_info*		getactive();
+	int						getdistance(short unsigned index) const;
 	character*				getenemy(const character* player) const;
 	short unsigned			getmovecost(short unsigned index) const;
 	bool					isenemy() const;
 	void					makewave(short unsigned index, short unsigned dest_index = Blocked) const;
-	void					move(character* player);
-	bool					move(character* player, direction_s d);
 	void					play();
 	void					playround();
+	void					playmove(character* player, character* enemy);
 	void					splash(unsigned seconds = 100, bool use_update = true) const;
 	void					update() const;
 	void					visualize(bool use_update) const;
-private:
-	adat<command, 32>		commands;
+};
+struct answer_element {
+	int						id;
+	const char*				name;
+	int						priority;
+	unsigned				key;
+};
+struct answer : adat<answer_element, 32> {
+	void					add(int id, const char* name, int priority, unsigned key = 0);
+	int						choose(combat_info& ci);
 };
 DECLENUM(alignment);
 DECLENUM(ability);
 DECLENUM(class);
 DECLENUM(attack_affect);
+DECLENUM(direction);
 DECLENUM(effect);
 DECLENUM(feat);
 DECLENUM(gender);

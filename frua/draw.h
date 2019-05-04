@@ -207,6 +207,7 @@ void					blit(surface& dest, int x, int y, int width, int height, unsigned flags
 void					breakmodal(int result);
 void					buttoncancel();
 void					buttonok();
+void					buttonparam();
 extern surface*			canvas;
 void					circle(int x, int y, int radius);
 void					circle(int x, int y, int radius, const color c1);

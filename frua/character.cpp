@@ -467,3 +467,14 @@ int	character::getreach(const item* weapon) const {
 		return weapon->getreach();
 	return 1;
 }
+
+void character::refresh() {
+	auto m = getmovement();
+	current_movement += m;
+	if(current_movement > m)
+		current_movement = m;
+}
+
+void character::stop() {
+	current_movement = 0;
+}
