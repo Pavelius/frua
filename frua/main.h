@@ -379,33 +379,22 @@ struct damage_info {
 	dice_info				damage;
 	cflags<damage_feat_s>	feats;
 	//
-	static markup			body_markup[], body_full_markup[];
+	static markup			weapon_markup[];
 	static void				edit(void* p);
 	void					getname(stringcreator& sc) const;
-	//
-	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id) { return 0; }
-	static bool				visible_damage(const void* object, int index);
-};
-struct weapon_info : damage_info {
-	char					critical, multiplier;
-	dice_info				damage_large;
-	damage_info				special;
-	explicit constexpr operator bool() const { return damage.d != 0; }
-	static markup			body_markup[];
-	static void				edit(void* p);
-	void					getname(stringcreator& sc);
+	static bool				isallowfeat(const void* object, int param);
 	bool					ismelee() const { return range <= 2; }
 	bool					isranged() const { return range >= 3; }
 	static bool				isweapon(const void* object, int param);
+	static bool				visible_damage(const void* object, int index);
 	//
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id) { return 0; }
 };
-struct attack_info : weapon_info {
+struct attack_info : damage_info {
 	item*					weapon;
+	char					critical, multiplier;
 	char*					getattacks(char* result, const char* result_maximum) const;
 };
 struct item_info {
@@ -413,18 +402,23 @@ struct item_info {
 	const char*				name_unidentified;
 	item_type_s				type;
 	cflags<usability_s>		usability;
-	weapon_info				damage;
+	damage_info				damage;
+	dice_info				damage_large;
+	damage_info				special;
 	char					abilities[CriticalMultiplier + 1];
 	char					skills[LastSkill + 1];
 	int						cost, weight;
 	//
-	static void				create(item_info* p);
 	static void				apply(item_info* p);
+	static void				create(item_info* p);
+	static void				editweapon(void* p);
+	void					getweapon(stringcreator& sc) const;
 	static int				view_special(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_weapon(int x, int y, int width, const void* object, const char* id, int index);
 	// Database engine methods
 	static markup			markups[];
 	static const char*		getname(const void* object, char* result, const char* result_max, int id);
+	static const char*		getweapon(const void* object, char* result, const char* result_max, int id);
 	static int				getvalue(const void* object, int id);
 };
 class item {
@@ -444,20 +438,20 @@ public:
 	constexpr operator bool() const { return type != 0; }
 	void					clear();
 	int						get(ability_s id) const;
-	item_type_s				getkind() const { return bsmeta<item_info>::elements[type].type; }
+	const item_info&		getinfo() const { return bsmeta<item_info>::elements[type]; }
+	item_type_s				getkind() const { return getinfo().type; }
 	void					getname(stringcreator& sc) const;
 	int						getdamaged() const { return damaged; }
 	int						getq(ability_s id) const;
 	int						getquaility() const;
 	int						getreach() const;
-	const weapon_info&		getweapon() const;
 	bool					is(item_state_s v) const { return state == v; }
-	bool					is(item_type_s v) const { return bsmeta<item_info>::elements[type].type==v; }
-	bool					isarmor() const { return bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type].use_armor != 0; }
+	bool					is(item_type_s v) const { return getinfo().type==v; }
+	bool					isarmor() const { return bsmeta<item_type_info>::elements[getinfo().type].use_armor != 0; }
 	bool					isidentified() const { return identify != 0; }
 	bool					isready() const { return ready != 0; }
 	bool					iswearable() const { return isweapon() || isarmor(); }
-	bool					isweapon() const { return bsmeta<item_type_info>::elements[bsmeta<item_info>::elements[type].type].use_damage != 0; }
+	bool					isweapon() const { return bsmeta<item_type_info>::elements[getinfo().type].use_damage != 0; }
 	void					set(item_state_s v) { state = v; }
 	void					setidentify(unsigned char v) { identify = v; }
 	void					setquality(unsigned char v) { quality = v; }
@@ -483,7 +477,7 @@ struct character {
 	void					correct();
 	void					create(race_s race, gender_s gender, class_s type, alignment_s alignment, reaction_s reaction);
 	void					damage(effect_s type, int v);
-	void					get(attack_info& ai) const;
+	void					get(attack_info& ai, bool large_enemy = false) const;
 	int						get(ability_s v) const;
 	int						get(class_s v) const { return 0; }
 	item*					get(item_type_s v) const;

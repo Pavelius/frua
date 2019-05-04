@@ -256,11 +256,15 @@ int	character::gethpmax(int v) const {
 	return result;
 }
 
-void character::get(attack_info& ai) const {
+void character::get(attack_info& ai, bool large_enemy) const {
 	ai.weapon = get(Weapon);
-	if(ai.weapon)
-		*static_cast<weapon_info*>(&ai) = ai.weapon->getweapon();
-	else {
+	if(ai.weapon) {
+		*static_cast<damage_info*>(&ai) = ai.weapon->getinfo().damage;
+		if(large_enemy)
+			ai.damage = ai.weapon->getinfo().damage_large;
+		ai.critical = ai.weapon->get(CriticalThread);
+		ai.multiplier = ai.weapon->get(CriticalMultiplier);
+	} else {
 		ai.attacks = 1;
 		ai.damage.c = 1;
 		ai.damage.d = 2;

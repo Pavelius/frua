@@ -43,10 +43,6 @@ int item::getquaility() const {
 	}
 }
 
-const weapon_info& item::getweapon() const {
-	return bsmeta<item_info>::elements[type].damage;
-}
-
 int	item::get(ability_s id) const {
 	auto& ii = bsmeta<item_info>::elements[type];
 	return ii.abilities[id];

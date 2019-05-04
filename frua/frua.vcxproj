@@ -128,7 +128,6 @@
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="item_type.cpp" />
-    <ClCompile Include="weapon.cpp" />
     <ClCompile Include="dice_info.cpp" />
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="bsreq.cpp" />

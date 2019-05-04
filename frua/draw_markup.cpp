@@ -416,7 +416,9 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			auto hint_type = bv.type->type;
 			if(bv.type->hint_type)
 				hint_type = bv.type->hint_type;
-			auto pm = getmarkup(hint_type);
+			auto pm = e.value.child;
+			if(!pm)
+				pm = getmarkup(hint_type);
 			if(!pm)
 				return error(x, y, width, ctx, e, "Не найдена разметка");
 			auto ctx1 = ctx;

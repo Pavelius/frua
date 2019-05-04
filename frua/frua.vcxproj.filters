@@ -213,9 +213,6 @@
     <ClCompile Include="item_info.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
-    <ClCompile Include="weapon.cpp">
-      <Filter>Логика</Filter>
-    </ClCompile>
     <ClCompile Include="damage.cpp">
       <Filter>Логика</Filter>
     </ClCompile>

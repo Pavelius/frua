@@ -787,24 +787,12 @@ void damage_info::edit(void* p) {
 	decoration::edit((damage_info*)p);
 }
 
-int item_info::view_special(int x, int y, int width, const void* object, const char* id, int index) {
-	char temp[260]; stringcreator sc(temp);
-	auto p = (item_info*)object;
-	p->damage.special.getname(sc);
-	szupper(sc, 1);
-	return button(x, y, width, 0, cmdv(damage_info::edit, (void*)&p->damage.special), temp, 0);
-}
-
-void weapon_info::edit(void* p) {
-	decoration::edit((weapon_info*)p);
-}
-
 int item_info::view_weapon(int x, int y, int width, const void* object, const char* id, int index) {
 	char temp[260]; stringcreator sc(temp);
 	auto p = (item_info*)object;
-	p->damage.getname(sc);
+	p->getweapon(sc);
 	szupper(sc, 1);
-	return button(x, y, width, 0, cmdv(weapon_info::edit, (void*)&p->damage), temp, 0);
+	return button(x, y, width, 0, cmdv(editweapon, (void*)object), temp, 0);
 }
 
 void character::apply_avatar(void* object) {
