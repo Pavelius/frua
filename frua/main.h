@@ -171,10 +171,6 @@ enum grade_s : unsigned char {
 enum result_s : unsigned char {
 	Fail, Success, CriticalSuccess,
 };
-enum decoration_value_s {
-	Name, Description,
-	Avatar, Grade,
-};
 enum save_s : unsigned char {
 	NoSave, SaveHalved, SaveNegate,
 };
@@ -198,13 +194,8 @@ const unsigned RMonth = 30 * RDay;
 const unsigned RYear = 12 * 30 * RDay;
 
 class item;
-struct character;
-struct draw_events;
+class character;
 struct sprite;
-
-typedef alignment_s			alignmenta[8];
-typedef race_s				racea[8];
-typedef class_s				classa[3];
 
 enum variant_s : unsigned char {
 	NoVariant,
@@ -469,15 +460,41 @@ public:
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
 };
-struct character {
+class character {
+	const char*				name;
+	gender_s				gender;
+	alignment_s				alignment;
+	class_s					type;
+	race_s					race;
+	reaction_s				reaction;
+	direction_s				direction;
+	size_s					size;
+	char					abilities[CriticalMultiplier + 1];
+	short					hp, hp_rolled;
+	char					initiative;
+	cflags<feat_s>			feats;
+	cflags<usability_s>		usability;
+	char					strenght_percent;
+	char					movement, current_movement;
+	short unsigned			index;
+	short unsigned			avatar;
+	char					levels[3];
+	char					base_ac;
+	unsigned				coopers;
+	unsigned				experience;
+	item					wears[12 * 2];
+	static int				getindex(class_s type, class_s v);
+	void					roll_ability();
+	friend struct bsmeta<character>;
+public:
 	operator bool() const { return name != 0; }
 	void					act(const char* text, ...) const;
 	void					addbattle();
-	void					animate_hit(const character* enemy) const;
 	void					apply_ability_restriction();
 	static void				apply_avatar(void* object);
 	void					apply_feats();
 	result_s				attack(item* weapon, character * enemy);
+	static void				changed(void* object, const void* previous);
 	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }
@@ -494,6 +511,7 @@ struct character {
 	int						getavatar() const { return avatar; }
 	int						getbonus(ability_s v) const;
 	class_s					getclass() const { return type; }
+	static const char*		getdescription(const character* object, char* result, const char* result_max);
 	gender_s				getgender() const { return gender; }
 	int						gethp() const { return hp; }
 	int						gethpmax(int v) const;
@@ -521,6 +539,7 @@ struct character {
 	bool					islarge() const { return size == Large; }
 	bool					isplayable() const { return reaction == Player; }
 	bool					isready() const { return isalive() && current_movement > 0; }
+	static markup			markups[];
 	static const bsreq		metadata[];
 	bool					moveto(direction_s d);
 	void					raise(class_s v);
@@ -547,41 +566,9 @@ struct character {
 	static int				view_personal(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_skills(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_statistic(int x, int y, int width, const void* object, const char* id, int index);
-	// Database engine methods
-	static void				changed(void* object, const void* previous);
-	static markup			markups[];
-	static const char*		getdescription(const character* object, char* result, const char* result_max);
-private:
-	const char*				name;
-	gender_s				gender;
-	alignment_s				alignment;
-	class_s					type;
-	race_s					race;
-	reaction_s				reaction;
-	direction_s				direction;
-	size_s					size;
-	char					abilities[CriticalMultiplier + 1];
-	short					hp, hp_rolled;
-	char					initiative;
-	cflags<feat_s>			feats;
-	cflags<usability_s>		usability;
-	char					strenght_percent;
-	char					movement, current_movement;
-	short unsigned			index;
-	short unsigned			avatar;
-	char					levels[3];
-	char					base_ac;
-	unsigned				coopers;
-	unsigned				experience;
-	item					wears[12 * 2];
-	friend struct bsmeta<character>;
-	static int				getindex(class_s type, class_s v);
-	void					roll_ability();
 };
 struct mapcore {
-	enum block_s : short unsigned {
-		DefaultCost = 0xFFFE, Blocked
-	};
+	enum block_s : short unsigned {DefaultCost = 0xFFFE, Blocked};
 	static const direction_s all_directions[4];
 	static short unsigned	getcost(short unsigned index);
 	static direction_s		getdirection(short unsigned i1, short unsigned i2, short xm, short ym);
@@ -601,9 +588,9 @@ template<short XM, short YM> struct map_info : mapcore {
 	static point			i2m(short unsigned i) { return {i % XM, i / XM}; }
 	static short unsigned	m2i(short x, short y) { return y * XM + x; };
 	static short unsigned	m2i(const point pt) { return pt.y * XM + pt.x; };
-	static short unsigned	to(short unsigned i, direction_s d) { return mapcore::to(i, d, XM, YM); }
 	static short unsigned	random() { return m2i(xrand(0, XM - 1), xrand(0, YM - 1)); }
 	static direction_s		step(short unsigned i) { return mapcore::step(i, XM, YM); }
+	static short unsigned	to(short unsigned i, direction_s d) { return mapcore::to(i, d, XM, YM); }
 };
 struct stringobject : stringcreator {
 	const char*				name;

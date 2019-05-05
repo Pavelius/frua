@@ -74,15 +74,6 @@ void item_info::getweapon(stringcreator& sc) const {
 	}
 }
 
-const char* item_info::getweapon(const void* object, char* result, const char* result_max, int id) {
-	auto p = (item_info*)object;
-	stringcreator sc(result, result_max);
-	switch(id) {
-	case Name: p->getweapon(sc); return sc;
-	default: return "";
-	}
-}
-
 int	damage_info::getattacks() const {
 	return bsmeta<attack_affect_info>::elements[attack_type].attacks;
 }

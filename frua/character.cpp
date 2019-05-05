@@ -236,8 +236,15 @@ int	character::get(ability_s v) const {
 		r -= maptbl(defence_adjustment, a);
 		r -= getbonus(AC);
 		return r;
-	default:
+	case Strenght:
+	case Dexterity:
+	case Constitution:
+	case Intellegence:
+	case Wisdow:
+	case Charisma:
 		return abilities[v];
+	default:
+		return 0;
 	}
 }
 
