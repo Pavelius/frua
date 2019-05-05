@@ -18,15 +18,6 @@ void item::getname(stringcreator& sc) const {
 	sc.add(bsmeta<item_info>::data[type].name);
 }
 
-const char* item::getname(const void* object, char* result, const char* result_max, int id) {
-	auto p = (item*)object;
-	stringcreator sc(result, result_max);
-	switch(id) {
-	case Name: p->getname(sc); return sc;
-	default: return "";
-	}
-}
-
 int	item::getreach() const {
 	return 1 + getinfo().damage.range;
 }

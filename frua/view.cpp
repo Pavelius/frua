@@ -12,7 +12,7 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 
 const markup* getmarkup(const bsreq* type);
-void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri);
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi);
 
 static anyval					command_value;
 static bsdata*					command_data;
@@ -401,12 +401,12 @@ static int field(int x, int y, int width, const char* title, picture_info& v) {
 	return button(x, y, width, choose_picture, &v, temp, AlignLeftCenter);
 }
 
-static int field(int x, int y, int width, const anyval& ev, const bsreq* type, const void* object, const markup::proci* pri) {
+static int field(int x, int y, int width, const anyval& ev, const bsreq* type, const void* object, const markup::proci* pri, const markup::propi* ppi) {
 	setposition(x, y, width);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignLeft;
 	draw::focusing((int)ev.ptr(), flags, rc);
-	field_enum(rc, flags, ev, type, object, pri);
+	field_enum(rc, flags, ev, type, object, pri, ppi);
 	return rc.height() + metrics::padding * 2;
 }
 
@@ -830,7 +830,7 @@ int character::view_avatar(int x, int y, int width, const void* object, const ch
 
 int item::view_state(int x, int y, int width, const void* object, const char* id, int index) {
 	auto p = (item*)object;
-	return field(x, y, width, anyval(&p->value, sizeof(p->value)), bsmeta<item_state_s>::meta, object, 0);
+	return field(x, y, width, anyval(&p->value, sizeof(p->value)), bsmeta<item_state_s>::meta, object, 0, 0);
 }
 
 int item::view_check(int x, int y, int width, const void* object, const char* id, int index) {
@@ -966,32 +966,24 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		adat<int, 512>		source;
 		bsdata&				database;
 		const decoration&	manager;
-		int getmaximum() const override { return source.count; }
-		void rowhilite(const rect& rc, int index) const override {
-			static color grade_colors[] = {colors::window,
-				colors::window.mix(color::create(0, 121, 191), 192),
-				colors::window.mix(color::create(97, 189, 79), 224),
-				colors::window.mix(color::create(242, 214, 0), 192),
-			};
-			auto pv = database.get(source.data[index]);
-			auto g = (grade_s)manager.proc.getvalue(pv, Grade);
-			auto f = grade_colors[g];
-			if(g != Fair)
-				rectf(rc, grade_colors[g]);
-			if(show_selection) {
-				area({rc.x1, rc.y1, rc.x2 - 1, rc.y2 - 1});
-				if(index == current)
-					hilight(rc);
-				else if(index == current_hilite)
-					rectf(rc, colors::edit.mix(f, 96));
-			}
+		static int get_avatar(const void* pv, const bsreq* type) {
+			auto pf = type->find("avatar");
+			if(!pf)
+				return -1;
+			return pf->get(pf->ptr(pv));
 		}
+		static const char* get_name(const void* pv, const bsreq* type) {
+			auto pf = type->find("name");
+			if(!pf)
+				return "No name";
+			return (const char*)pf->get(pf->ptr(pv));
+		}
+		int getmaximum() const override { return source.count; }
 		void row(const rect& rcorigin, int index) override {
-			char temp[260]; temp[0] = 0;
 			auto pv = database.get(source.data[index]);
 			rect rc = rcorigin;
 			rowhilite(rc, index);
-			auto avatar = manager.proc.getvalue(pv, Avatar);
+			auto avatar = get_avatar(pv, database.meta);
 			if(avatar != -1) {
 				rect rp = {rc.x1, rc.y1, rc.x1 + rc.height(), rc.y2};
 				draw::state push;
@@ -999,18 +991,21 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 				image(rp.x1 + rp.width() / 2, rp.y2 - rp.height() / 4, spr_monsters, avatar * 2, 0);
 				rc.x1 += rc.height() + 2;
 			}
-			auto pn = manager.proc.getname(pv, temp, zendof(temp), Name);
+			auto pn = get_name(pv, database.meta);
 			rc.offset(4, 4);
 			if(pn) {
 				draw::textc(rc.x1, rc.y1, rc.width(), pn);
 				rc.y1 += texth() + 2;
 			}
-			pn = manager.proc.getname(pv, temp, zendof(temp), Description);
-			if(pn) {
-				auto old_fore = fore;
-				fore = colors::text.mix(colors::form, 128);
-				text(rc, pn);
-				fore = old_fore;
+			char temp[260]; temp[0] = 0;
+			if(database.meta == bsmeta<character>::meta) {
+				pn = character::getdescription((character*)pv, temp, zendof(temp));
+				if(pn) {
+					auto old_fore = fore;
+					fore = colors::text.mix(colors::form, 128);
+					text(rc, pn);
+					fore = old_fore;
+				}
 			}
 		}
 		int getcurrent() const {
@@ -1043,13 +1038,12 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 			update();
 		}
 	};
-	if(!database || !proc.getvalue || !proc.getname)
+	if(!database)
 		return -1;
 	table e1(*database, *this);
 	e1.show_border = false;
 	e1.pixels_per_line = height;
 	e1.pixels_per_column = width;
-	//e1.show_grid_lines = true;
 	e1.hilite_odd_lines = false;
 	setfocus(0, true);
 	int x, y;

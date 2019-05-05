@@ -22,16 +22,16 @@ static bool only_attacks(const void* object, int param) {
 	return bsmeta<attack_affect_s>::elements[param].attacks != 0;
 }
 static markup attacks_right[] = {{0, "/", {"bonus"}}, {}};
-markup damage_info::weapon_markup[] = {{0, 0, {"type"}, 0, {0, 0, is_weapon}},
-{0, 0, {"attack_type"}, 0, {0, 0, only_attacks, is_type_not_empthy}},
+markup damage_info::weapon_markup[] = {{0, 0, {"type"}, 0, {is_weapon}},
+{0, 0, {"attack_type"}, 0, {only_attacks, is_type_not_empthy}},
 {0, "Дистанция", {"range"}},
 {0, "Урон", {"damage"}},
 {}};
 static markup attack_markup[] = {{0, 0, {"type"}},
-{0, "Срабатывает", {"attack_type"}, 0, {0, 0, 0, is_type_not_empthy}},
-{0, "Спасение", {"save_type"}, 0, {0, 0, 0, is_type_not_empthy}},
-{0, "Дистанция", {"range"}, 0, {0, 0, 0, is_type_not_empthy}},
-{0, "Урон", {"damage"}, 0, {0, 0, 0, is_type_weapon}},
+{0, "Срабатывает", {"attack_type"}, 0, {0, is_type_not_empthy}},
+{0, "Спасение", {"save_type"}, 0, {0, is_type_not_empthy}},
+{0, "Дистанция", {"range"}, 0, {0, is_type_not_empthy}},
+{0, "Урон", {"damage"}, 0, {0, is_type_weapon}},
 {}};
 markup damage_info::markups[] = {{6, 0, {0, 0, attack_markup}},
 {}};
@@ -56,15 +56,6 @@ void damage_info::getname(stringcreator& sc) const {
 	}
 	if(damage)
 		damage.getname(sc);
-}
-
-const char* damage_info::getname(const void* object, char* result, const char* result_max, int id) {
-	auto p = (damage_info*)object;
-	stringcreator sc(result, result_max);
-	switch(id) {
-	case Name: p->getname(sc); return sc;
-	default: return "";
-	}
 }
 
 void item_info::getweapon(stringcreator& sc) const {

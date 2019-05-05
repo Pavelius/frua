@@ -233,23 +233,19 @@ struct variant {
 	constexpr operator int() const { return ((unsigned char)type << 8) | value; }
 };
 struct decoration {
-	typedef void(*commandp)(void* p);
 	const char*				name;
 	bsdata*					database;
 	const bsreq*			meta;
 	unsigned				type_size;
-	markup::proci			proc;
 	point					size;
 	const markup*			markups;
 	const char*				zero_element;
 	static decoration		data[];
 	template<class T> decoration(const char* name, point size, const T& object, const char* zero_element = 0) : name(name), size(size),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(&bsmeta<T>::data),
-		proc{T::getname, T::getvalue},
 		markups(T::markups), zero_element(zero_element) {}
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
-		proc{T::getname, T::getvalue},
 		markups(T::markups), zero_element(0) {}
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
@@ -391,8 +387,6 @@ struct event_info {
 struct dice_info : dice {
 	static markup			markups[];
 	void					getname(stringcreator& sc) const;
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct damage_info {
 	effect_s				type;
@@ -408,10 +402,7 @@ struct damage_info {
 	bool					ismelee() const { return range <= 2; }
 	bool					isranged() const { return range >= 3; }
 	static markup			weapon_markup[];
-	//
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id) { return 0; }
 };
 struct attack_info : damage_info {
 	item*					weapon;
@@ -437,9 +428,7 @@ struct item_info {
 	static int				view_weapon(int x, int y, int width, const void* object, const char* id, int index);
 	// Database engine methods
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
 	static const char*		getweapon(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id);
 };
 class item {
 	unsigned short			type;
@@ -472,16 +461,13 @@ public:
 	bool					isready() const { return ready != 0; }
 	bool					iswearable() const { return isweapon() || isarmor(); }
 	bool					isweapon() const { return bsmeta<item_type_info>::elements[getinfo().type].use_damage != 0; }
+	static markup			markups[];
 	void					set(item_state_s v) { state = v; }
 	void					setidentify(unsigned char v) { identify = v; }
 	void					setquality(unsigned char v) { quality = v; }
 	void					setready(int v) { ready = v; }
 	static int				view_check(int x, int y, int width, const void* object, const char* id, int index);
 	static int				view_state(int x, int y, int width, const void* object, const char* id, int index);
-	//
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id) { return 0; }
-	static markup			markups[];
 };
 struct character {
 	operator bool() const { return name != 0; }
@@ -564,8 +550,7 @@ struct character {
 	// Database engine methods
 	static void				changed(void* object, const void* previous);
 	static markup			markups[];
-	static const char*		getname(const void* object, char* result, const char* result_max, int id);
-	static int				getvalue(const void* object, int id);
+	static const char*		getdescription(const character* object, char* result, const char* result_max);
 private:
 	const char*				name;
 	gender_s				gender;

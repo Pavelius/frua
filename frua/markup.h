@@ -2,8 +2,8 @@
 
 // Standart markup
 struct markup {
-	typedef const char* (*text_type)(const void* object, char* result, const char* result_maximum, int column);
-	typedef int(*num_type)(const void* object, int column);
+	typedef const char* (*text_type)(const void* object, char* result, const char* result_maximum);
+	typedef int(*num_type)(const void* object);
 	typedef bool(*allow_type)(const void* object, int index);
 	typedef int(*custom_type)(int x, int y, int width, const void* object, const char* id, int index); // Custom draw
 	typedef void(*command_type)(void* object);
@@ -21,11 +21,16 @@ struct markup {
 		template<class T> constexpr cmdi(void(*v)(T*, const T*)) : execute(0), change((change_type)v) {}
 	};
 	struct proci {
-		text_type		getname;
-		num_type		getvalue;
 		allow_type		isallow; // Is allow special element or command
 		allow_type		isvisible; // Is element visible
 		custom_type		custom;
+	};
+	struct propi {
+		text_type		getname;
+		num_type		getvalue;
+		constexpr propi() : getname(0), getvalue(0) {}
+		template<class T> constexpr propi(void(*v)(const T*, char*, const char*)) : getname((text_type)v), getvalue(0) {}
+		template<class T> constexpr propi(int(*v)(const T*)) : getname(0), getvalue((num_type)v) {}
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
 	char				width;
@@ -34,6 +39,7 @@ struct markup {
 	int					param;
 	proci				proc;
 	cmdi				cmd;
+	propi				prop;
 	//
 	bool				action(const char* id, void* object) const;
 	bool				isfield() const { return value.id != 0; }

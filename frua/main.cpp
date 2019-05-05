@@ -22,9 +22,9 @@ int	main(int argc, char *argv[]) {
 		return -1;
 	decoration::initialize();
 	draw::initialize();
-	//auto index = decoration::choose(bsmeta<character>::meta);
+	auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
-	test_combat();
+	//test_combat();
 	return 0;
 }
 

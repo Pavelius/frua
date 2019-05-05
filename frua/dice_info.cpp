@@ -15,12 +15,3 @@ void dice_info::getname(stringcreator& sc) const {
 	if(b != 0)
 		sc.add("%+1i", b);
 }
-
-const char* dice_info::getname(const void* object, char* result, const char* result_max, int id) {
-	auto p = (dice_info*)object;
-	stringcreator sc(result, result_max);
-	switch(id) {
-	case Name: p->getname(sc); return sc;
-	default: return "";
-	}
-}

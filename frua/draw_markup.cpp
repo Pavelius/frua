@@ -14,6 +14,7 @@ struct commandi {
 	void*			object;
 	bsdata*			data;
 	markup::proci	proc;
+	markup::propi	prop;
 	rect			rc;
 	anyval			value;
 	void clear() { memset(this, 0, sizeof(commandi)); }
@@ -91,10 +92,11 @@ static const char* getpresent(const void* p, const bsreq* type) {
 static void choose_enum() {
 	struct enum_view : controls::list, adat<int, 512> {
 		markup::proci	proc;
+		markup::propi	prop;
 		const bsdata&	source;
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
-			if(proc.getname)
-				return proc.getname(source.get(data[line]), result, result_max, column);
+			if(prop.getname)
+				return prop.getname(source.get(data[line]), result, result_max);
 			switch(column) {
 			case 0: return getpresent(source.get(data[line]), source.meta);
 			}
@@ -221,7 +223,7 @@ static int error(int x, int y, int width, contexti& ctx, const markup& e, const 
 	return rc.height() + metrics::padding * 2;
 }
 
-void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri) {
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi) {
 	auto pb = bsdata::find(meta_type, bsdata::firstenum);
 	if(!pb)
 		pb = bsdata::find(meta_type, bsdata::first);
@@ -234,8 +236,8 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 		result = true;
 	auto pn = "";
 	auto pv = pb->get(ev);
-	if(pri && pri->getname)
-		pn = pri->getname(pv, temp, zendof(temp), 0);
+	if(ppi && ppi->getname)
+		pn = ppi->getname(pv, temp, zendof(temp));
 	else
 		pn = getpresent(pb->get(ev), pb->meta);
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
@@ -253,12 +255,13 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 			//	return;
 			//}
 			command.proc = *pri;
+			command.prop = *ppi;
 		}
 		execute(choose_enum);
 	}
 }
 
-static int field_main(int x, int y, int width, contexti& ctx, const char* title_text, void* pv, const bsreq* type, int param, const markup* child, const markup::proci* pri) {
+static int field_main(int x, int y, int width, contexti& ctx, const char* title_text, void* pv, const bsreq* type, int param, const markup* child, const markup::proci* pri, const markup::propi* ppi) {
 	auto xe = x + width;
 	auto y0 = y;
 	setposition(x, y, width);
@@ -274,7 +277,7 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 		auto hint = type->type;
 		if(type->hint_type)
 			hint = type->hint_type;
-		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri);
+		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri, ppi);
 	} else if(type->isnum()) {
 		auto d = param;
 		if(!d)
@@ -399,7 +402,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				auto pv = bv.type->ptr(bv.data, i);
 				if(!ctx.isallow(e, i))
 					continue;
-				y += field_main(x, y, width, ctx, getpresent(pb->get(i), pb->meta), pv, bv.type, e.param, 0, &e.proc);
+				y += field_main(x, y, width, ctx, getpresent(pb->get(i), pb->meta), pv, bv.type, e.param, 0, &e.proc, &e.prop);
 			}
 		}
 		return y - y0;
@@ -426,7 +429,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 			ctx1.source = bsval(pv, hint_type);
 			return group_vertial(x, y, width, ctx1, pm);
 		} else
-			return field_main(x, y, width, ctx, e.title, pv, bv.type, e.param, e.value.child, &e.proc);
+			return field_main(x, y, width, ctx, e.title, pv, bv.type, e.param, e.value.child, &e.proc, &e.prop);
 	} else if(e.value.child) {
 		rect rgo = {};
 		auto y0 = y;

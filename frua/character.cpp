@@ -365,31 +365,11 @@ void character::correct() {
 	}
 }
 
-int character::getvalue(const void* object, int id) {
-	auto p = (character*)object;
-	switch(id) {
-	case Avatar: return p->avatar;
-	case Grade:
-		if(p->is(UniqueCharacter))
-			return Excellent;
-		return Fair;
-	default: return 0;
-	}
-}
-
-const char* character::getname(const void* object, char* result, const char* result_max, int id) {
-	auto p = (character*)object;
-	switch(id) {
-	case Name: return p->name;
-	case Description:
-		if(true) {
-			stringcreator sc(result, result_max);
-			sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
-			sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->get(AC), p->gethpmax());
-		}
-		return result;
-	default: return "";
-	}
+const char* character::getdescription(const character* p, char* result, const char* result_max) {
+	stringcreator sc(result, result_max);
+	sc.addn("Str:%1i, Int:%2i, Con:%3i", p->get(Strenght), p->get(Intellegence), p->get(Constitution));
+	sc.addn("HD:%1i, AC:%2i, HP:%3i", p->getlevel(), p->get(AC), p->gethpmax());
+	return sc;
 }
 
 void character::choose_avatar(void* object) {
