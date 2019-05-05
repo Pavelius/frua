@@ -17,13 +17,26 @@ static void test_combat() {
 	ci.play();
 }
 
+void test_item() {
+	static const markup columns[] = {{10, 0, {"name"}},
+	{1, 0, {"weight"}},
+	{1, 0, {"cost"}},
+	{}};
+	adat<item_info*, 12> source;
+	source.add(bsmeta<item_info>::elements + 0);
+	source.add(bsmeta<item_info>::elements + 1);
+	decoration::choose("Выбирайте оружие", (void**)source.data, source.count, bsmeta<item_info>::meta, columns);
+}
+
 int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	decoration::initialize();
 	draw::initialize();
-	auto index = decoration::choose(bsmeta<character>::meta);
+	test_item();
+	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
+	picture_info::choose_image();
 	//test_combat();
 	return 0;
 }

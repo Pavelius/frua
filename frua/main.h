@@ -241,6 +241,7 @@ struct decoration {
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
+	static void*			choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns);
 	static void				initialize();
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
@@ -371,9 +372,6 @@ struct race_info {
 	size_s					size;
 	char					movement;
 	const char*				info;
-};
-struct event_info {
-	picture_info			picture;
 };
 struct dice_info : dice {
 	static markup			markups[];

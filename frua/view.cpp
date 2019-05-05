@@ -191,10 +191,8 @@ static void header(int x, int y, int width, const char* title, const char* text)
 
 const picture_info* picture_info::choose_image() {
 	struct string_view : controls::list {
-		agrw<picture_info> source;
-		int getmaximum() const override {
-			return source.getcount();
-		}
+		agrw<picture_info>	source;
+		int getmaximum() const override { return source.getcount(); }
 		const char*	getname(char* result, const char* result_max, int line, int column) const {
 			if(source) {
 				switch(column) {
@@ -1071,4 +1069,19 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		return e1.getcurrent();
 	}
 	return -1;
+}
+
+void* decoration::choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns) {
+	controls::reftable e1(source, count, type, columns);
+	openform();
+	while(ismodal()) {
+		render_background();
+		int x, y;
+		page_header(x, y, 0, title, 0);
+		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
+		page_footer(x, y, false);
+		domodal();
+	}
+	closeform();
+	return (void*)getresult();
 }

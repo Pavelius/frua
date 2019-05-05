@@ -126,6 +126,7 @@
     <ClCompile Include="archive.cpp" />
     <ClCompile Include="attack_affect.cpp" />
     <ClCompile Include="direction.cpp" />
+    <ClCompile Include="draw_table.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="item_type.cpp" />

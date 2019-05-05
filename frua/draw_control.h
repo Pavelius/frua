@@ -1,5 +1,6 @@
 #include "pointl.h"
 #include "draw.h"
+#include "markup.h"
 
 #pragma once
 
@@ -7,6 +8,7 @@ namespace clipboard {
 void					copy(const void* string, int lenght);
 char*					paste();
 }
+struct					bsreq;
 struct					bsval;
 struct					markup;
 namespace draw {
@@ -112,27 +114,23 @@ struct picker : list {
 	void					mousewheel(unsigned id, point position, int step);
 	void					view(const rect& rc) override;
 };
-struct column {
-	unsigned				flags;
-	const char*				id;
-	const char*				name;
-	int						width;
-	bool operator==(const char* id) const;
-	explicit operator bool() const { return id != 0; }
-	column_type_s			getcontol() const { return column_type_s(flags & ControlMask); }
-	int						gettotalwidth() const;
-};
 struct table : list {
-	const column*			columns;
-	constexpr table(const column* columns) : columns(columns) {}
-	const column*			find(const char* id) const;
+	const markup*			columns;
+	constexpr table(const markup* columns) : columns(columns) {}
 	virtual const char*		getheader(char* result, const char* result_max, int column) const;
-	const char*				getname(char* result, const char* result_max, int line, int column) const override { return ""; }
-	virtual int				getnumber(int line, int column) const { return 0; }
-	int						gettotal(int column) const;
-	int						gettotal(const char* id) const;
+	virtual void*			getrow(int index) const { return 0; }
 	void					row(const rect &rc, int index) override;
-	int						rowheader(const rect& rc) const;
+	int						rowheader(const rect& rc) const { return 0; }
+};
+struct reftable : table {
+	void**					source;
+	unsigned				count;
+	const markup*			columns;
+	const bsreq*			type;
+	constexpr reftable(void** source, unsigned count, const bsreq* type, const markup* columns) : table(columns), source(source), count(count), columns(columns), type(type) {}
+	int						getmaximum() const override { return count; }
+	const char*				getname(char* result, const char* result_end, int line, int column) const override;
+	void*					getrow(int index) const override { return source[index]; }
 };
 struct scrollable : control {
 	pointl					origin;

@@ -237,6 +237,9 @@
     <ClCompile Include="direction.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_table.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">
