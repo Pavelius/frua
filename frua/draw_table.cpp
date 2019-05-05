@@ -65,6 +65,7 @@ const char* reftable::getname(char* result, const char* result_end, int line, in
 				}
 			}
 		}
+		return result;
 	}
 	return 0;
 }
