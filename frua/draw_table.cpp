@@ -14,16 +14,17 @@ void table::row(const rect &rc, int index) {
 	rect re = rc; re.x2 = re.x1;
 	auto w1 = rc.width() / 12;
 	auto object = getrow(index);
-	for(auto pc = columns; *pc; pc++) {
-		if(pc->proc.isvisible && !pc->proc.isvisible(object, pc->value.index))
+	for(unsigned i = 0; columns[i]; i++) {
+		auto& e = columns[i];
+		if(e.proc.isvisible && !e.proc.isvisible(object, e.value.index))
 			continue;
-		re.x2 = re.x1 + w1 * pc->width;
+		re.x2 = re.x1 + w1 * e.width;
 		re.x1 = re.x1 + 1;
-		re.x1 = re.x2;
 		char temp[260]; temp[0] = 0;
-		auto p = getname(temp, temp + sizeof(temp) - 1, index, 0);
+		auto p = getname(temp, temp + sizeof(temp) - 1, index, i);
 		if(p)
-			draw::textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, p);
+			draw::textc(re.x1 + 4, re.y1 + 4, rc.width() - 4 * 2, p);
+		re.x1 = re.x2;
 	}
 }
 

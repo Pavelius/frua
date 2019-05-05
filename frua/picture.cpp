@@ -11,3 +11,8 @@ const char* picture_info::geturl(char* temp) const {
 const char* picture_info::geturl(char* temp, int part) const {
 	return szprint(temp, temp + 260, "art/%1/%2_%3i.png", folder, id, part);
 }
+
+void picture_info::set(const char* folder, const char* id) {
+	this->folder = folder;
+	this->id = id;
+}

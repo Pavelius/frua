@@ -117,12 +117,12 @@ void combat_info::playmove(character* player, character* enemy) {
 		auto reach = player->getreach(weapon);
 		answer an;
 		if(enemy && getdistance(enemy_position) <= reach)
-			an.add(variant(AttackRegular), "Атаковать", 2);
+			an.ask(variant(AttackRegular), "Атаковать", 2);
 		for(auto d : all_directions) {
 			auto i1 = to(position, d);
 			if(i1 == Blocked || getcost(i1) == Blocked)
 				continue;
-			an.add(variant(d), getstr(d), 1, bsmeta<direction_s>::elements[d].key);
+			an.ask(variant(d), getstr(d), 1, bsmeta<direction_s>::elements[d].key);
 		}
 		auto cid = (variant)an.choose(*this);
 		switch(cid.type) {

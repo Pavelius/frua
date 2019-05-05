@@ -8,6 +8,15 @@ static void add_position(aref<character*> source) {
 
 bool test_array();
 
+static void addparty(const char* name, reaction_s reaction) {
+	auto pc = (character*)bsmeta<character>::data.find(bsmeta<character>::meta->find("name"), name);
+	if(!pc)
+		return;
+	party.add(pc);
+	pc->rollhp();
+	pc->set(reaction);
+}
+
 static void test_combat() {
 	combat_info ci;
 	ci.create("Бандит");
@@ -28,16 +37,28 @@ void test_item() {
 	decoration::choose("Выбирайте оружие", (void**)source.data, source.count, bsmeta<item_info>::meta, columns);
 }
 
+void test_scene() {
+	addparty("Гордек", Player);
+	addparty("Сер Кеалах", Player);
+	scene sc;
+	sc.img.set("adventure", "camp");
+	sc.add("Вы находитесь рядом с домом.");
+	sc.ask(1, "Заглянуть");
+	sc.ask(2, "Оставить");
+	sc.choose();
+}
+
 int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
 	decoration::initialize();
 	draw::initialize();
-	test_item();
+	//test_item();
 	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
-	picture_info::choose_image();
+	//picture_info::choose_image();
 	//test_combat();
+	test_scene();
 	return 0;
 }
 

@@ -179,14 +179,18 @@ static void make_cash(agrw<picture_info>& source, const char* folder, const char
 	}
 }
 
-static void header(int x, int y, int width, const char* title, const char* text) {
+static int header(int x, int y, int width, const char* title, const char* text) {
 	draw::state push;
+	auto y1 = y;
 	font = metrics::h1;
 	fore = colors::yellow;
 	y += textf(x, y, width, title) + metrics::padding;
-	fore = colors::text;
-	font = metrics::font;
-	y += textf(x, y, width, text);
+	if(text) {
+		fore = colors::text;
+		font = metrics::font;
+		y += textf(x, y, width, text);
+	}
+	return y - y1;
 }
 
 const picture_info* picture_info::choose_image() {
@@ -657,18 +661,19 @@ int answer::choose(combat_info& ci) {
 		ci.visualize(true);
 		auto y = y_buttons;
 		auto x = metrics::padding;
-		for(unsigned i = 0; i < count; i++)
-			x += button(x, y, data[i].name, cmdv(buttonparam, i), data[i].key ? data[i].key : Alpha + '1' + i);
-		if(!count)
+		for(unsigned i = 0; i < elements.count; i++)
+			x += button(x, y, elements.data[i].name, cmdv(buttonparam, i),
+				elements.data[i].key ? elements.data[i].key : Alpha + '1' + i);
+		if(!elements.count)
 			x += button(x, y, "Продолжить", cmdv(buttoncancel, 0), KeySpace);
 		domodal();
 	}
 	closeform();
 	auto result = getresult();
-	if(result >= (int)count)
+	if(result >= (int)elements.count)
 		return 0;
-	result = data[result].id;
-	clear();
+	result = elements.data[result].id;
+	elements.clear();
 	return result;
 }
 
@@ -1073,6 +1078,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 
 void* decoration::choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns) {
 	controls::reftable e1(source, count, type, columns);
+	e1.show_border = false;
 	openform();
 	while(ismodal()) {
 		render_background();
@@ -1084,4 +1090,91 @@ void* decoration::choose(const char* title, void** source, unsigned count, const
 	}
 	closeform();
 	return (void*)getresult();
+}
+
+static void fieldc(int x, int y, int width, const char* v) {
+	textc(x, y, width - 4, v);
+}
+
+static void fieldh(int x, int y, int width, const char* v) {
+	auto old_fore = fore;
+	fore = colors::yellow;
+	text(x + width - 4 - textw(v), y, v);
+	fore = old_fore;
+}
+
+static void fieldc(int x, int y, int width, int v) {
+	char temp[32];
+	zprint(temp, "%1i", v);
+	text(x + width - 4 - textw(temp), y, temp);
+}
+
+static void fieldc(int x, int y, int width, int v1, int v2) {
+	char temp[32];
+	zprint(temp, "%1i/%2i", v1, v2);
+	text(x + width - 4 - textw(temp), y, temp);
+}
+
+static void change_character() {
+	auto pc = character::getactive();
+	auto index = party.indexof(pc);
+	if(index == -1) {
+		party[0]->setactive();
+		return;
+	}
+	if(++index >= (int)party.count)
+		index = 0;
+	party[index]->setactive();
+}
+
+static void character_sheet() {
+
+}
+
+int scene::choose() {
+	struct cmdv : cmd {
+		int getid() const override { return v + 1; }
+		constexpr cmdv(void(*p)(), int v) : cmd(p, v) {}
+	};
+	party[0]->setactive();
+	openform();
+	while(ismodal()) {
+		render_background();
+		auto x = metrics::padding, y = metrics::padding;
+		picture.load(img);
+		picture.position = img.position;
+		render_picture(x, y);
+		x += picture_width + metrics::padding * 2;
+		// Нарисуем партию
+		const auto w1 = 110;
+		const auto w2 = 64;
+		const auto w3 = 240;
+		y += header(x, y, 200, "Партия", 0);
+		fieldh(x + w1 + w2 * 0, y - texth() - 4, w2, "AC");
+		fieldh(x + w1 + w2 * 1, y - texth() - 4, w2, "Хиты");
+		for(auto p : party) {
+			if(!p || !p->isalive())
+				continue;
+			if(p->getactive() == p)
+				rectf({x, y, x + w3, y + texth()}, colors::edit);
+			textc(x, y, w1, p->getname()); auto x2 = x + w1;
+			fieldc(x2, y, w2, p->get(AC)); x2 += w2;
+			fieldc(x2, y, w2, p->gethp(), p->gethpmax()); x2 += w2;
+			y += texth();
+		}
+		x = metrics::padding;
+		y = picture_height + metrics::padding * 2;
+		textf(x, y, getwidth() - metrics::padding * 2, *this);
+		x = metrics::padding;
+		y = y_buttons;
+		for(unsigned i = 0; i < elements.count; i++)
+			x += button(x, y, elements.data[i].name, cmdv(buttonparam, elements.data[i].id), 0);
+		x += button(x, y, "Лист", cmd(character_sheet), Alpha + 'C');
+		x += button(x, y, "Сменить", cmd(change_character), Alpha + 'N');
+		domodal();
+	}
+	closeform();
+	auto result = elements.data[getresult()].id;
+	elements.clear();
+	return result;
 }

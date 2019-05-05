@@ -344,6 +344,7 @@ struct picture_info {
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
 	static int				random(const char* mask);
+	void					set(const char* folder, const char* id);
 	static int				select(short unsigned* result, unsigned count, const char* mask);
 };
 struct class_info {
@@ -620,15 +621,23 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update() const;
 	void					visualize(bool use_update) const;
 };
-struct answer_element {
-	int						id;
-	const char*				name;
-	int						priority;
-	unsigned				key;
-};
-struct answer : adat<answer_element, 32> {
-	void					add(int id, const char* name, int priority, unsigned key = 0);
+struct answer {
+	struct element {
+		int					id;
+		const char*			name;
+		int					priority;
+		unsigned			key;
+	};
+	adat<element, 32>		elements;
+	void					ask(int id, const char* name, int priority = 0, unsigned key = 0);
 	int						choose(combat_info& ci);
+};
+class scene : public stringcreator, public answer {
+	char					buffer[2048];
+public:
+	constexpr scene() : stringcreator(buffer), buffer() {}
+	int						choose();
+	picture_info			img;
 };
 DECLENUM(alignment);
 DECLENUM(ability);
