@@ -117,6 +117,7 @@ struct picker : list {
 struct table : list {
 	const markup*			columns;
 	constexpr table(const markup* columns) : columns(columns) {}
+	virtual unsigned		getalign(int column) const { return AlignLeft; }
 	virtual const char*		getheader(char* result, const char* result_max, int column) const;
 	virtual void*			getrow(int index) const { return 0; }
 	void					row(const rect &rc, int index) override;
@@ -128,6 +129,7 @@ struct reftable : table {
 	const markup*			columns;
 	const bsreq*			type;
 	constexpr reftable(void** source, unsigned count, const bsreq* type, const markup* columns) : table(columns), source(source), count(count), columns(columns), type(type) {}
+	unsigned				getalign(int column) const override;
 	int						getmaximum() const override { return count; }
 	const char*				getname(char* result, const char* result_end, int line, int column) const override;
 	void*					getrow(int index) const override { return source[index]; }

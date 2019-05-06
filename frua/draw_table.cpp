@@ -28,45 +28,56 @@ void table::row(const rect &rc, int index) {
 	}
 }
 
+unsigned reftable::getalign(int column) const {
+	auto& e = columns[column];
+	if(!e.value.id)
+		return AlignLeft;
+	auto pf = type->find(e.value.id);
+	if(!pf)
+		return AlignLeft;
+	if(pf->isnum())
+		return AlignRight;
+	return AlignLeft;
+}
+
 const char* reftable::getname(char* result, const char* result_end, int line, int column) const {
 	auto& e = columns[column];
 	auto object = getrow(line);
-	if(e.value.id) {
-		auto pf = type->find(e.value.id);
-		if(!pf)
-			return 0;
-		auto pv = pf->ptr(object, e.value.index);
-		if(e.prop.getname)
-			e.prop.getname(pv, result, result_end);
-		else if(pf->isnum())
-			szprint(result, result_end, "%1i", pf->get(pv));
-		else if(pf->istext()) {
-			auto p = (const char*)pf->get(pv);
-			if(p)
-				szprint(result, result_end, p);
-		} else {
-			if(pf->is(KindEnum)) {
-				auto pb = bsdata::find(type, bsdata::firstenum);
-				if(!pb)
-					pb = bsdata::find(type, bsdata::first);
-				if(!pb)
-					return 0;
-				auto index = pf->get(pv);
-				pv = (char*)pb->get(index);
-			} else
-				pv = (char*)pf->get(pv);
-			if(pv) {
-				auto ppf = pf->type->find("name");
-				if(!ppf)
-					ppf = pf->type->find("id");
-				if(ppf) {
-					auto p = (const char*)ppf->get(ppf->ptr(pv));
-					if(p)
-						szprint(result, result_end, p);
-				}
+	if(!e.value.id)
+		return 0;
+	auto pf = type->find(e.value.id);
+	if(!pf)
+		return 0;
+	auto pv = pf->ptr(object, e.value.index);
+	if(e.prop.getname)
+		e.prop.getname(pv, result, result_end);
+	else if(pf->isnum())
+		szprint(result, result_end, "%1i", pf->get(pv));
+	else if(pf->istext()) {
+		auto p = (const char*)pf->get(pv);
+		if(p)
+			szprint(result, result_end, p);
+	} else {
+		if(pf->is(KindEnum)) {
+			auto pb = bsdata::find(type, bsdata::firstenum);
+			if(!pb)
+				pb = bsdata::find(type, bsdata::first);
+			if(!pb)
+				return 0;
+			auto index = pf->get(pv);
+			pv = (char*)pb->get(index);
+		} else
+			pv = (char*)pf->get(pv);
+		if(pv) {
+			auto ppf = pf->type->find("name");
+			if(!ppf)
+				ppf = pf->type->find("id");
+			if(ppf) {
+				auto p = (const char*)ppf->get(ppf->ptr(pv));
+				if(p)
+					szprint(result, result_end, p);
 			}
 		}
-		return result;
 	}
-	return 0;
+	return result;
 }

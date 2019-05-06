@@ -167,7 +167,9 @@
     <ClCompile Include="io.cpp" />
     <ClCompile Include="item_info.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="main_util.cpp" />
+    <ClCompile Include="main_util.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="mapcore.cpp" />
     <ClCompile Include="markup.cpp" />
     <ClCompile Include="picture.cpp" />
@@ -180,7 +182,9 @@
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="damage.cpp" />
-    <ClCompile Include="sprite_util.cpp" />
+    <ClCompile Include="sprite_util.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="stringcreator.cpp" />
     <ClCompile Include="stringobject.cpp" />
     <ClCompile Include="string_value.cpp" />
