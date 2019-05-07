@@ -20,6 +20,14 @@
       0,
       0
     ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseMetalArmor",
+      "UseShield",
+      "UseTheifWeapon",
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ],
     "hp":4,
     "hp_rolled":4,
     "strenght_percent":54,
@@ -33,7 +41,81 @@
     "movement":12,
     "reaction":"Player",
     "wears":[
-      
+      {
+        "type":1,
+        "value":32
+      },
+      {
+        "type":2,
+        "value":32
+      },
+      {
+        "type":3,
+        "value":32
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      }
     ]
   },
   {
@@ -57,6 +139,22 @@
       0,
       0
     ],
+    "feats":[
+      "Darkvision",
+      "BonusSaveVsPoison",
+      "BonusSaveVsWands",
+      "BonusSaveVsSpells",
+      "BonusHits",
+      "DetectUndegroundPassages"
+    ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseMetalArmor",
+      "UseShield",
+      "UseTheifWeapon",
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ],
     "hp":7,
     "hp_rolled":7,
     "strenght_percent":95,
@@ -70,13 +168,106 @@
     "movement":12,
     "reaction":"Player",
     "wears":[
-      
+      {
+        "type":1,
+        "value":32
+      },
+      {
+        "type":3,
+        "value":32
+      },
+      {
+        "type":4,
+        "value":32
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      },
+      {
+        
+      }
     ]
   },
   {
     "typeid":"item_info",
     "name":"-",
     "type":"Weapon",
+    "damage":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "damage_large":{
+      
+    },
+    "special":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
     "abilities":[
       0,
       0,
@@ -120,6 +311,28 @@
     "typeid":"item_info",
     "name":"Железный шлем",
     "type":"Helm",
+    "damage":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "damage_large":{
+      
+    },
+    "special":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "usability":[
+      "UseMetalArmor"
+    ],
     "abilities":[
       0,
       0,
@@ -163,6 +376,31 @@
     "typeid":"item_info",
     "name":"Длинный меч",
     "type":"Weapon",
+    "damage":{
+      "type":"Slashing",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        "c":1,
+        "d":8
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":12
+    },
+    "special":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "usability":[
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ],
     "abilities":[
       0,
       0,
@@ -208,6 +446,28 @@
     "type":"Armor",
     "cost":150,
     "weight":20,
+    "damage":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "damage_large":{
+      
+    },
+    "special":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "usability":[
+      "UseLeatherArmor"
+    ],
     "abilities":[
       0,
       0,
@@ -253,6 +513,30 @@
     "type":"Weapon",
     "cost":100,
     "weight":8,
+    "damage":{
+      "type":"Slashing",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        "c":1,
+        "d":8
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":8
+    },
+    "special":{
+      "type":"NoEffect",
+      "attack_type":"AttackRegular",
+      "save_type":"NoSave",
+      "damage":{
+        
+      }
+    },
+    "usability":[
+      "UseMartialWeapon"
+    ],
     "abilities":[
       0,
       0,
