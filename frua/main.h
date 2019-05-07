@@ -246,6 +246,7 @@ struct decoration {
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
 	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
+	static bool				edit(const char* name, void* object, const bsreq* type, const markup* elements);
 	template<class T> static bool edit(T* p) { return edit(0, p, sizeof(T), bsmeta<T>::meta); }
 	static void				editlist(const bsreq* type) { choose(type, false); }
 	static const decoration* find(const bsreq* type);
@@ -494,6 +495,7 @@ public:
 	void					apply_feats();
 	result_s				attack(item* weapon, character * enemy);
 	static void				changed(void* object, const void* previous);
+	static markup			charsheet_markup[];
 	static void				choose_avatar(void* object);
 	void					clear();
 	static void				clear(void* object) { ((character*)object)->clear(); }

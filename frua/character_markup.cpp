@@ -191,3 +191,5 @@ static markup element_form[] = {{0, 0, {"#update"}, 0, {}, character::changed},
 markup character::markups[] = {{0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};
+markup character::charsheet_markup[] = {{3, 0, {0,0, abilities_ability_group}},
+{}};
