@@ -127,6 +127,8 @@
     <ClCompile Include="attack_affect.cpp" />
     <ClCompile Include="direction.cpp" />
     <ClCompile Include="draw_table.cpp" />
+    <ClCompile Include="io_plugin.cpp" />
+    <ClCompile Include="io_plugin_json.cpp" />
     <ClCompile Include="item.cpp" />
     <ClCompile Include="item_state.cpp" />
     <ClCompile Include="item_type.cpp" />
@@ -179,6 +181,7 @@
     <ClCompile Include="reaction.cpp" />
     <ClCompile Include="save.cpp" />
     <ClCompile Include="screenshoot.cpp" />
+    <ClCompile Include="serial.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="damage.cpp" />
@@ -211,6 +214,7 @@
     <ClInclude Include="draw_control.h" />
     <ClInclude Include="initializer_list.h" />
     <ClInclude Include="io.h" />
+    <ClInclude Include="io_plugin.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="markup.h" />
     <ClInclude Include="plugin.h" />
