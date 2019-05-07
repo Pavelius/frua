@@ -870,54 +870,6 @@ static void sub_value() {
 	p--;
 }
 
-bool decoration::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
-	int x, y;
-	openform();
-	auto current_page = 0;
-	const markup* page_markup_last = 0;
-	while(ismodal()) {
-		auto page_maximum = elements->getpagecount(object);
-		if(current_page < 0)
-			current_page = 0;
-		if(current_page > page_maximum)
-			current_page = page_maximum - 1;
-		auto page_name = name;
-		const char* page_title = 0;
-		auto page = elements;
-		auto page_markup = elements->getpage(object, current_page);
-		if(page_markup) {
-			page = page_markup->value.child;
-			if(page_markup->title)
-				page_title = page_markup->title;
-			if(page_markup_last != page_markup) {
-				page_markup_last = page_markup;
-				setfocus(0, true);
-				if(page_markup->cmd.execute)
-					cmd(page_markup->cmd.execute, object).execute();
-			}
-		}
-		render_background();
-		page_header(x, y, 0, page_name, page_title, current_page, page_maximum);
-		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, page, bsval(object, type), 100);
-		page_footer(x, y, false);
-		if(page_maximum > 0) {
-			if(current_page < page_maximum - 1)
-				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
-			if(current_page > 0)
-				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
-		}
-		auto commands = page->findcommands(object);
-		if(commands && commands->value.child) {
-			for(auto p = commands->value.child; *p; p++)
-				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
-		}
-		domodal();
-	}
-	closeform();
-	return getresult() != 0;
-}
-
 bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements, bool creating) {
 	int x, y;
 	if(!elements) {
@@ -1226,4 +1178,52 @@ int scene::choose() {
 	auto result = elements.data[getresult()].id;
 	elements.clear();
 	return result;
+}
+
+bool decoration::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
+	int x, y;
+	openform();
+	auto current_page = 0;
+	const markup* page_markup_last = 0;
+	while(ismodal()) {
+		auto page_maximum = elements->getpagecount(object);
+		if(current_page < 0)
+			current_page = 0;
+		if(current_page > page_maximum)
+			current_page = page_maximum - 1;
+		auto page_name = name;
+		const char* page_title = 0;
+		auto page = elements;
+		auto page_markup = elements->getpage(object, current_page);
+		if(page_markup) {
+			page = page_markup->value.child;
+			if(page_markup->title)
+				page_title = page_markup->title;
+			if(page_markup_last != page_markup) {
+				page_markup_last = page_markup;
+				setfocus(0, true);
+				if(page_markup->cmd.execute)
+					cmd(page_markup->cmd.execute, object).execute();
+			}
+		}
+		render_background();
+		page_header(x, y, 0, page_name, page_title, current_page, page_maximum);
+		auto width = getwidth() - x * 2;
+		y += draw::field(x, y, width, page, bsval(object, type), 100);
+		page_footer(x, y, false);
+		if(page_maximum > 0) {
+			if(current_page < page_maximum - 1)
+				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
+			if(current_page > 0)
+				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
+		}
+		auto commands = page->findcommands(object);
+		if(commands && commands->value.child) {
+			for(auto p = commands->value.child; *p; p++)
+				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
+		}
+		domodal();
+	}
+	closeform();
+	return getresult() != 0;
 }

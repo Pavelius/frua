@@ -191,13 +191,14 @@ static markup element_form[] = {{0, 0, {"#update"}, 0, {}, character::changed},
 markup character::markups[] = {{0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};
-static markup charsheet_c1[] = {{0, 0, {"personal"}, 0, {0, 0, character::view_personal}},
-{0, "Атрибуты", {0, 0, abilities_ability_group}},
+static markup charsheet_c1[] = {{0, "Атрибуты", {0, 0, abilities_ability_group}},
 {0, "Статистика", {0, 0, abilities_statistic_group}},
 {}};
+static markup charsheet_c3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
+{}};
 static markup charsheet_c2[] = {{0, "Уровни и опыт", {0, 0, abilities_levels_group}},
-{0, "Навыки", {0, 0, abilities_skills_group}},
 {}};
 markup character::charsheet_markup[] = {{3, 0, {0,0, charsheet_c1}},
-{4, 0, {0, 0, charsheet_c2}},
+{5, 0, {0, 0, charsheet_c2}},
+{4, 0, {0, 0, charsheet_c3}},
 {}};
