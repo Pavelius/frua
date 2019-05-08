@@ -13,12 +13,7 @@
       11,
       13,
       16,
-      17,
-      0,
-      0,
-      0,
-      0,
-      0
+      17
     ],
     "usability":[
       "UseLeatherArmor",
@@ -33,9 +28,7 @@
     "strenght_percent":54,
     "avatar":63,
     "levels":[
-      1,
-      0,
-      0
+      1
     ],
     "base_ac":10,
     "movement":12,
@@ -52,69 +45,6 @@
       {
         "type":3,
         "value":32
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
       }
     ]
   },
@@ -132,12 +62,7 @@
       13,
       9,
       17,
-      13,
-      0,
-      0,
-      0,
-      0,
-      0
+      13
     ],
     "feats":[
       "Darkvision",
@@ -160,9 +85,7 @@
     "strenght_percent":95,
     "avatar":47,
     "levels":[
-      1,
-      0,
-      0
+      1
     ],
     "base_ac":10,
     "movement":12,
@@ -179,69 +102,6 @@
       {
         "type":4,
         "value":32
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
-      },
-      {
-        
       }
     ]
   },
@@ -252,60 +112,13 @@
     "damage":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
-    },
-    "damage_large":{
-      
+      "save_type":"NoSave"
     },
     "special":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
-    },
-    "abilities":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ],
-    "skills":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
-    ]
+      "save_type":"NoSave"
+    }
   },
   {
     "typeid":"item_info",
@@ -314,21 +127,12 @@
     "damage":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
-    },
-    "damage_large":{
-      
+      "save_type":"NoSave"
     },
     "special":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
+      "save_type":"NoSave"
     },
     "usability":[
       "UseMetalArmor"
@@ -342,34 +146,7 @@
       0,
       0,
       0,
-      5,
-      0,
-      0
-    ],
-    "skills":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      5
     ]
   },
   {
@@ -392,10 +169,7 @@
     "special":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
+      "save_type":"NoSave"
     },
     "usability":[
       "UseMartialWeapon",
@@ -411,33 +185,7 @@
       0,
       0,
       0,
-      1,
-      0
-    ],
-    "skills":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      1
     ]
   },
   {
@@ -449,21 +197,12 @@
     "damage":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
-    },
-    "damage_large":{
-      
+      "save_type":"NoSave"
     },
     "special":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
+      "save_type":"NoSave"
     },
     "usability":[
       "UseLeatherArmor"
@@ -475,36 +214,7 @@
       0,
       0,
       0,
-      2,
-      0,
-      0,
-      0,
-      0
-    ],
-    "skills":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      2
     ]
   },
   {
@@ -529,10 +239,7 @@
     "special":{
       "type":"NoEffect",
       "attack_type":"AttackRegular",
-      "save_type":"NoSave",
-      "damage":{
-        
-      }
+      "save_type":"NoSave"
     },
     "usability":[
       "UseMartialWeapon"
@@ -549,31 +256,6 @@
       0,
       0,
       1
-    ],
-    "skills":[
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
     ]
   }
 ]

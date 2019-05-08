@@ -8,10 +8,14 @@ static bool write_field(io::writer& ew, const void* pv, const bsreq* pf, const c
 
 static bool write_object(io::writer& ew, const void* pv, const bsreq* pf, const char* id, bool run) {
 	if(run) {
+		if(!write_object(ew, pv, pf, id, false))
+			return false;
+		ew.open(id);
 		while(*pf) {
 			write_field(ew, pv, pf, pf->id, true);
 			pf++;
 		}
+		ew.close(id);
 	} else {
 		while(*pf) {
 			if(write_field(ew, pv, pf, pf->id, false))
@@ -20,6 +24,7 @@ static bool write_object(io::writer& ew, const void* pv, const bsreq* pf, const 
 		}
 		return false;
 	}
+	return true;
 }
 
 static bsdata* find_base(const bsreq* type) {
@@ -88,35 +93,31 @@ static bool write_element(io::writer& ew, const void* pv, const bsreq* pf, int i
 			}
 			ew.close(id, io::plugin::Array);
 		}
-	} else {
-		pv = pf->ptr(pv, index);
-		if(run) {
-			ew.open(id);
-			for(auto pf1 = pf->type; *pf1; pf1++)
-				write_field(ew, pv, pf1, pf1->id, true);
-			ew.close(id);
-		} else {
-			for(auto pf1 = pf->type; *pf1; pf1++) {
-				if(!write_field(ew, pv, pf1, pf1->id, false))
-					return false;
-			}
-		}
-	}
+	} else
+		return write_object(ew, pf->ptr(pv, index), pf->type, id, run);
 	return true;
 }
 
 static bool write_field(io::writer& ew, const void* pv, const bsreq* pf, const char* id, bool run) {
 	if(pf->count > 1) {
 		if(run) {
+			auto minimal = -1;
+			for(unsigned i = 0; i < pf->count; i++) {
+				if(write_element(ew, pv, pf, i, "element", true, false))
+					minimal = i;
+			}
+			if(minimal < 0)
+				return false;
 			ew.open(id, io::plugin::Array);
-			for(unsigned i = 0; i < pf->count; i++)
+			for(auto i = 0; i <= minimal; i++)
 				write_element(ew, pv, pf, i, "element", false, true);
 			ew.close(id, io::plugin::Array);
 		} else {
 			for(unsigned i = 0; i < pf->count; i++) {
-				if(!write_element(ew, pv, pf, i, "element", false, true))
-					return false;
+				if(write_element(ew, pv, pf, i, "element", true, false))
+					return true;
 			}
+			return false;
 		}
 		return true;
 	} else
