@@ -4,7 +4,23 @@
 
 using namespace io;
 
-static void write_field(io::writer& ew, const void* pv, const bsreq* pf, const char* id);
+static bool write_field(io::writer& ew, const void* pv, const bsreq* pf, const char* id, bool run);
+
+static bool write_object(io::writer& ew, const void* pv, const bsreq* pf, const char* id, bool run) {
+	if(run) {
+		while(*pf) {
+			write_field(ew, pv, pf, pf->id, true);
+			pf++;
+		}
+	} else {
+		while(*pf) {
+			if(write_field(ew, pv, pf, pf->id, false))
+				return true;
+			pf++;
+		}
+		return false;
+	}
+}
 
 static bsdata* find_base(const bsreq* type) {
 	auto p = bsdata::find(type, bsdata::first);
@@ -13,78 +29,98 @@ static bsdata* find_base(const bsreq* type) {
 	return p;
 }
 
-static void write_element(io::writer& ew, const void* pv, const bsreq* pf, int index, const char* id, bool skip_zero) {
+static bool write_element(io::writer& ew, const void* pv, const bsreq* pf, int index, const char* id, bool skip_zero, bool run) {
 	if(pf->isnum()) {
 		auto value = pf->get(pf->ptr(pv, index));
 		if(!value && skip_zero)
-			return;
-		ew.set(id, value);
+			return false;
+		if(run)
+			ew.set(id, value);
 	} else if(pf->istext()) {
 		auto value = (const char*)pf->get(pf->ptr(pv, index));
 		if(!value)
 			value = "";
 		if(!value[0] && skip_zero)
-			return;
-		ew.set(id, value);
+			return false;
+		if(run)
+			ew.set(id, value);
 	} else if(pf->isref()) {
 		if(pf->isnum() || pf->istext() || pf->is(KindEnum))
-			return;
+			return false;
 		auto value = pf->get(pf->ptr(pv, index));
 		if(!value) {
 			if(!skip_zero)
 				ew.set(id, value);
-			return;
+			return false;
 		}
 		auto pb = bsdata::findbyptr((void*)value, bsdata::first);
 		if(!pb)
 			pb = bsdata::findbyptr((void*)value, bsdata::firstenum);
 		if(!pb)
-			return;
-		write_field(ew, (void*)value, pb->meta, id);
+			return false;
+		return write_field(ew, (void*)value, pb->meta, id, run);
 	} else if(pf->is(KindEnum)) {
 		auto value = pf->get(pf->ptr(pv, index));
 		auto pb = find_base(pf->type);
 		if(!pb)
-			return;
-		write_field(ew, pb->get(value), pf->type, id);
+			return false;
+		return write_field(ew, pb->get(value), pf->type, id, run);
 	} else if(pf->is(KindCFlags)) {
 		unsigned value = pf->get(pf->ptr(pv, index));
 		if(!value && skip_zero)
-			return;
+			return false;
 		auto pb = find_base(pf->type);
 		if(!pb)
-			return;
+			return false;
 		auto pk = pb->meta->getkey();
 		if(!pk)
-			return;
-		ew.open(id, io::plugin::Array);
-		for(unsigned i = 0; i < pb->count; i++) {
-			if((value & (1 << i)) == 0)
-				continue;
-			auto pv1 = pb->get(i);
-			auto nm = (const char*)pk->get(pk->ptr(pv1));
-			if(!nm)
-				continue;
-			ew.set("value", nm);
+			return false;
+		if(run) {
+			ew.open(id, io::plugin::Array);
+			for(unsigned i = 0; i < pb->count; i++) {
+				if((value & (1 << i)) == 0)
+					continue;
+				auto pv1 = pb->get(i);
+				auto nm = (const char*)pk->get(pk->ptr(pv1));
+				if(!nm)
+					continue;
+				ew.set("value", nm);
+			}
+			ew.close(id, io::plugin::Array);
 		}
-		ew.close(id, io::plugin::Array);
 	} else {
 		pv = pf->ptr(pv, index);
-		ew.open(id);
-		for(auto pf1 = pf->type; *pf1; pf1++)
-			write_field(ew, pv, pf1, pf1->id);
-		ew.close(id);
+		if(run) {
+			ew.open(id);
+			for(auto pf1 = pf->type; *pf1; pf1++)
+				write_field(ew, pv, pf1, pf1->id, true);
+			ew.close(id);
+		} else {
+			for(auto pf1 = pf->type; *pf1; pf1++) {
+				if(!write_field(ew, pv, pf1, pf1->id, false))
+					return false;
+			}
+		}
 	}
+	return true;
 }
 
-static void write_field(io::writer& ew, const void* pv, const bsreq* pf, const char* id) {
+static bool write_field(io::writer& ew, const void* pv, const bsreq* pf, const char* id, bool run) {
 	if(pf->count > 1) {
-		ew.open(id, io::plugin::Array);
-		for(unsigned i = 0; i < pf->count; i++)
-			write_element(ew, pv, pf, i, "element", false);
-		ew.close(id, io::plugin::Array);
+		if(run) {
+			ew.open(id, io::plugin::Array);
+			for(unsigned i = 0; i < pf->count; i++)
+				write_element(ew, pv, pf, i, "element", false, true);
+			ew.close(id, io::plugin::Array);
+		} else {
+			for(unsigned i = 0; i < pf->count; i++) {
+				if(!write_element(ew, pv, pf, i, "element", false, true))
+					return false;
+			}
+		}
+		return true;
 	} else
-		write_element(ew, pv, pf, 0, id, true);
+		return write_element(ew, pv, pf, 0, id, true, run);
 }
 
 bool export_base(const char* url) {
@@ -104,7 +140,7 @@ bool export_base(const char* url) {
 			pw->open("record");
 			pw->set("typeid", ps->id);
 			for(auto pf = ps->meta; *pf; pf++)
-				write_field(*pw, p, pf, pf->id);
+				write_field(*pw, p, pf, pf->id, true);
 			pw->close("record");
 		}
 	}
