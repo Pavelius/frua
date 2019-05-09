@@ -37,11 +37,11 @@ struct bsdata_bin {
 	}
 	bool serial(const void* object, const bsreq* records) {
 		for(auto p = records; *p; p++) {
-			bool isenum;
 			switch(p->subtype) {
 			case KindNumber:
 			case KindCFlags:
-				// Числа и флаги записываются с оптимизацией
+			case KindEnum:
+				// Сериализация с оптимизацией
 				serial(p->ptr(object), p->lenght);
 				break;
 			case KindText:
@@ -54,21 +54,10 @@ struct bsdata_bin {
 				}
 				break;
 			case KindReference:
-			case KindEnum:
-				isenum = p->is(KindEnum);
 				for(unsigned i = 0; i < p->count; i++) {
 					void* pv = 0;
 					if(writemode) {
-						if(isenum) {
-							auto pb = bsdata::find(p->type, bsdata::firstenum);
-							if(!pb)
-								pb = bsdata::find(p->type, bsdata::first);
-							if(!pb)
-								continue;
-							auto index = p->get(p->ptr(object, i));
-							pv = (void*)pb->get(index);
-						} else
-							pv = (void*)p->get(p->ptr(object, i));
+						pv = (void*)p->get(p->ptr(object, i));
 						if(!serial_reference(pv, 0))
 							return false;
 					} else {
@@ -77,13 +66,7 @@ struct bsdata_bin {
 							return false;
 						if(!pb)
 							return false;
-						if(isenum) {
-							auto index = pb->indexof(pv);
-							if(index == -1)
-								return false; // Когда это может быть?
-							p->set(p->ptr(object, i), index);
-						} else
-							p->set(p->ptr(object, i), (int)pv);
+						p->set(p->ptr(object, i), (int)pv);
 					}
 				}
 				break;
