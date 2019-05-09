@@ -42,6 +42,10 @@
       {
         "type":3,
         "value":32
+      },
+      {
+        "type":6,
+        "value":32
       }
     ]
   },
@@ -101,6 +105,41 @@
     ]
   },
   {
+    "typeid":"character",
+    "name":"Бандит",
+    "alignment":"Chaotic Evil",
+    "size":"Medium",
+    "abilities":[
+      10,
+      10,
+      10,
+      10,
+      10,
+      10
+    ],
+    "feats":[
+      "BonusHits"
+    ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseTheifWeapon",
+      "UseLargeWeapon"
+    ],
+    "avatar":2,
+    "levels":[
+      1
+    ],
+    "base_ac":10,
+    "movement":12,
+    "reaction":"Hostile",
+    "wears":[
+      {
+        "type":3,
+        "value":32
+      }
+    ]
+  },
+  {
     "typeid":"item_info",
     "name":"-"
   },
@@ -120,7 +159,7 @@
       0,
       0,
       0,
-      5
+      15
     ]
   },
   {
@@ -204,6 +243,58 @@
       0,
       0,
       1
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Кожанный шлем",
+    "type":"Armor",
+    "usability":[
+      "UseLeatherArmor"
+    ],
+    "abilities":[
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      5
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Кинжал",
+    "damage":{
+      "type":"Piercing",
+      "damage":{
+        "c":1,
+        "d":4
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":3
+    }
+  },
+  {
+    "typeid":"item_info",
+    "name":"Короткий меч",
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":1,
+        "d":6
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":8
+    },
+    "usability":[
+      "UseTheifWeapon"
     ]
   }
 ]
