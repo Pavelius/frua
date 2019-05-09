@@ -21,11 +21,11 @@
       "UseLargeWeapon"
     ],
     "hp":4,
-    "hp_rolled":4,
+    "hp_rolled":10,
     "strenght_percent":54,
     "avatar":63,
     "levels":[
-      1
+      2
     ],
     "base_ac":10,
     "movement":12,
@@ -144,6 +144,40 @@
     ]
   },
   {
+    "typeid":"character",
+    "name":"Минотавр",
+    "alignment":"Lawful Evil",
+    "race":"Humanoid",
+    "size":"Large",
+    "abilities":[
+      10,
+      10,
+      15,
+      6,
+      10,
+      10
+    ],
+    "feats":[
+      "BonusHits"
+    ],
+    "usability":[
+      "UseLargeWeapon"
+    ],
+    "avatar":102,
+    "levels":[
+      6
+    ],
+    "base_ac":6,
+    "movement":12,
+    "reaction":"Hostile",
+    "wears":[
+      {
+        "type":10,
+        "value":32
+      }
+    ]
+  },
+  {
     "typeid":"item_info",
     "name":"-"
   },
@@ -169,6 +203,8 @@
   {
     "typeid":"item_info",
     "name":"Длинный меч",
+    "cost":150,
+    "weight":60,
     "damage":{
       "type":"Slashing",
       "damage":{
@@ -220,7 +256,7 @@
     "typeid":"item_info",
     "name":"Боевой топор",
     "cost":100,
-    "weight":8,
+    "weight":75,
     "damage":{
       "type":"Slashing",
       "damage":{
@@ -271,6 +307,7 @@
   {
     "typeid":"item_info",
     "name":"Кинжал",
+    "weight":10,
     "damage":{
       "type":"Piercing",
       "damage":{
@@ -286,6 +323,7 @@
   {
     "typeid":"item_info",
     "name":"Короткий меч",
+    "weight":35,
     "damage":{
       "type":"Slashing",
       "damage":{
@@ -299,6 +337,166 @@
     },
     "usability":[
       "UseTheifWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Дубина",
+    "weight":30,
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":1,
+        "d":6
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":3
+    }
+  },
+  {
+    "typeid":"item_info",
+    "name":"Цеп",
+    "weight":150,
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":1,
+        "d":6,
+        "b":1
+      }
+    },
+    "damage_large":{
+      "c":2,
+      "d":4
+    },
+    "usability":[
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Алебарда",
+    "weight":175,
+    "damage":{
+      "type":"Slashing",
+      "damage":{
+        "c":1,
+        "d":10
+      }
+    },
+    "damage_large":{
+      "c":2,
+      "d":6
+    },
+    "usability":[
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Боевой молот",
+    "cost":70,
+    "weight":150,
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":2,
+        "d":4
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":6
+    },
+    "usability":[
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Булава",
+    "weight":100,
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":1,
+        "d":6,
+        "b":1
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":6
+    },
+    "usability":[
+      "UseMartialWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Копье",
+    "weight":50,
+    "damage":{
+      "type":"Piercing",
+      "damage":{
+        "c":1,
+        "d":6
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":8
+    },
+    "usability":[
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Лук",
+    "cost":150,
+    "weight":30,
+    "damage":{
+      "type":"Piercing",
+      "attack_type":"AttackDouble",
+      "range":10,
+      "damage":{
+        "c":1,
+        "d":6
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":6
+    },
+    "usability":[
+      "UseTheifWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Посох",
+    "cost":5,
+    "weight":50,
+    "damage":{
+      "type":"Bludgeon",
+      "damage":{
+        "c":1,
+        "d":6
+      }
+    },
+    "damage_large":{
+      "c":1,
+      "d":6
+    },
+    "usability":[
+      "UseLargeWeapon"
     ]
   }
 ]

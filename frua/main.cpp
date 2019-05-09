@@ -21,7 +21,9 @@ static void test_combat() {
 	combat_info ci;
 	ci.create("Бандит");
 	ci.create("Бандит");
+	ci.create("Минотавр");
 	ci.create("Гордек", Player);
+	ci.create("Сер Кеалах", Player);
 	ci.addenemies();
 	ci.play();
 }
@@ -68,6 +70,9 @@ static void main_menu() {
 		case 3:
 			picture_info::choose_image();
 			break;
+		case 4:
+			picture_info::edit_monsters();
+			break;
 		case 6:
 			bsdata::readtxt("campaigns/autosave.json");
 			break;
@@ -84,10 +89,10 @@ int	main(int argc, char *argv[]) {
 	decoration::initialize();
 	draw::initialize();
 	//test_item();
+	//test_combat();
 	main_menu();
 	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
-	//;
 	//test_combat();
 	//bsdata::writetxt("test.json");
 	//inport_base("test.json");
