@@ -69,6 +69,8 @@ struct bsdata_writer_txt {
 			auto pb = find_base(pf->type);
 			if(!pb)
 				return false;
+			if(!value && skip_zero)
+				return false;
 			return write_field(pb->get(value), pf->type, id, run);
 		} else if(pf->is(KindCFlags)) {
 			unsigned value = pf->get(pf->ptr(pv, index));
