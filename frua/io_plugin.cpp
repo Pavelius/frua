@@ -63,6 +63,13 @@ int io::node::getlevel() const {
 	return result;
 }
 
+io::node& io::node::getroot() const {
+	auto r = (node*)this;
+	while(r->parent)
+		r = r->parent;
+	return *r;
+}
+
 bool io::read(const char* url, io::reader& e) {
 	auto pp = io::plugin::find(szext(url));
 	if(!pp)
@@ -98,12 +105,6 @@ bool io::read(const char* url, const char* root_name, void* param) {
 					st->open(e);
 				break;
 			}
-		}
-		void set(node& e, int value) {
-			if(!st)
-				e.skip = true;
-			else
-				st->set(e, value);
 		}
 
 		void set(node& e, const char* value) {
@@ -152,9 +153,10 @@ bool io::write(const char* url, const char* root_name, void* param) {
 	return true;
 }
 
-io::node::node(int type) : parent(0), name(""), type(type), index(0), skip(false) {
+io::node::node(io::node::type_s type) : parent(0), name(""), type(type), index(0), skip(false) {
+	memset(params, 0, sizeof(params));
 }
 
-io::node::node(node& parent, const char* name, int type) : parent(&parent), name(name), type(type), index(0), skip(parent.skip) {
+io::node::node(node& parent, const char* name, io::node::type_s type) : parent(&parent), name(name), type(type), index(0), skip(parent.skip) {
 	memset(params, 0, sizeof(params));
 }

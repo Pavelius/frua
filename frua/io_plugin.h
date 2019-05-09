@@ -6,23 +6,27 @@ namespace io {
 // Network protocols
 enum protocols { NoProtocol, TCP, UDP };
 struct node {
+	enum type_s {
+		Text, Number, Array, Struct
+	};
 	node*				parent;
 	const char*			name;
-	int					type, index;
+	type_s				type;
+	int					index;
 	bool				skip; // set this if you want skip block
 	int					params[12];
 	//
-	node(int type = 0);
-	node(node& parent, const char* name = "", int type = 0);
+	node(type_s type = Text);
+	node(node& parent, const char* name = "", type_s type = Text);
 	bool				operator==(const char* name) const;
 	//
 	int					getlevel() const;
+	node&				getroot() const;
 };
 // Application defined reader.
 // Plugin read file and post events to this class.
 struct reader {
 	virtual void		open(node& e) {}
-	virtual void		set(node& e, int value) {};
 	virtual void		set(node& e, const char* value) {};
 	virtual void		close(node& e) {}
 };
@@ -38,9 +42,6 @@ struct writer {
 	virtual void		close(const char* name, int type = 0) {}
 };
 struct plugin {
-	enum json_type_s {
-		Text, Number, Array, Struct
-	};
 	const char*			name;
 	const char*			fullname;
 	const char*			filter;

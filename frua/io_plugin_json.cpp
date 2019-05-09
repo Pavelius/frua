@@ -87,7 +87,7 @@ static const char* read_dictionary(const char* p, node& pn, reader& e) {
 static const char* read_string(const char* p, char end_symbol, node& n, reader& e) {
 	char temp[256 * 64];
 	p = psstr(p, temp, end_symbol);
-	n.type = io::plugin::Text;
+	n.type = io::node::Text;
 	if(!n.skip)
 		e.set(n, temp);
 	return p;
@@ -109,7 +109,7 @@ static const char* read_number(const char* p, node& n, reader& e) {
 		p++;
 	}
 	*ps = 0;
-	n.type = io::plugin::Number;
+	n.type = io::node::Number;
 	if(!n.skip)
 		e.set(n, temp);
 	return p;
@@ -124,16 +124,16 @@ static const char* read_object(const char* p, node& n, reader& e) {
 		p = read_number(p, n, e);
 	else if(equal(p, "false")) {
 		p += 5;
-		n.type = io::plugin::Number;
+		n.type = io::node::Number;
 		if(!n.skip)
 			e.set(n, "false");
 	} else if(equal(p, "true")) {
 		p += 4;
-		n.type = io::plugin::Number;
+		n.type = io::node::Number;
 		if(!n.skip)
 			e.set(n, "true");
 	} else if(*p == '{') {
-		n.type = io::plugin::Struct;
+		n.type = io::node::Struct;
 		if(!n.skip)
 			e.open(n);
 		p = zskipspcr(p + 1);
@@ -146,7 +146,7 @@ static const char* read_object(const char* p, node& n, reader& e) {
 		if(!n.skip)
 			e.close(n);
 	} else if(*p == '[') {
-		n.type = io::plugin::Array;
+		n.type = io::node::Array;
 		if(!n.skip)
 			e.open(n);
 		p = zskipspcr(p + 1);
@@ -173,7 +173,7 @@ struct json_writer : writer {
 			e << ",";
 			write_cr();
 		}
-		if(level && name && name[0] && types[level] != io::plugin::Array)
+		if(level && name && name[0] && types[level] != io::node::Array)
 			e << "\"" << name << "\":";
 		count[level]++;
 	}
@@ -188,7 +188,7 @@ struct json_writer : writer {
 
 	void open(const char* name, int type) override {
 		write_name(name);
-		if(type == io::plugin::Array)
+		if(type == io::node::Array)
 			e << "[";
 		else
 			e << "{";
@@ -246,7 +246,7 @@ struct json_writer : writer {
 	void close(const char* name, int type) override {
 		level--;
 		write_cr();
-		if(type == io::plugin::Array)
+		if(type == io::node::Array)
 			e << "]";
 		else
 			e << "}";
@@ -265,7 +265,7 @@ static struct json_reader_parser : public io::plugin {
 
 	const char* read(const char* p, io::reader& e) override {
 		node root;
-		root.type = Struct;
+		root.type = io::node::Struct;
 		return read_object(p, root, e);
 	}
 

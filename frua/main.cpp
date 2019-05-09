@@ -49,6 +49,7 @@ void test_scene() {
 }
 
 bool export_base(const char* url);
+bool inport_base(const char* url);
 
 int	main(int argc, char *argv[]) {
 	if(!test_array())
@@ -61,6 +62,7 @@ int	main(int argc, char *argv[]) {
 	//picture_info::choose_image();
 	//test_combat();
 	export_base("test.json");
+	//inport_base("test.json");
 	//test_scene();
 	return 0;
 }
