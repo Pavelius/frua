@@ -415,7 +415,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		}
 		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
-		if(bv.type->is(KindScalar) && !bv.type->istext() && !bv.type->isref() && !bv.type->isnum()) {
+		if(bv.type->is(KindScalar) && !bv.type->istext() && !bv.type->is(KindReference) && !bv.type->isnum()) {
 			auto hint_type = bv.type->type;
 			if(bv.type->hint_type)
 				hint_type = bv.type->hint_type;

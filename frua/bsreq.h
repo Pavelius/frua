@@ -7,11 +7,9 @@ sizeof(bsreq::btype<decltype(data_type::fn)>::value),\
 sizeof(data_type::fn),\
 bsreq::icount<decltype(data_type::fn)>::value,\
 bsmeta<bsreq::btype<decltype(data_type::fn)>::value>::meta,\
-bsreq::iref<decltype(data_type::fn)>::value,\
 bsreq::isubtype<decltype(data_type::fn)>::value,\
 hint}
 #define	BSREQ(fn) BSHIN(fn,0)
-#define BSENUMB(e) e##_info bsmeta<e##_info>::elements[]
 #define BSDATA(c, i) c bsmeta<c>::elements[i];\
 bsdatat<c> bsmeta<c>::data(#c, bsmeta<c>::elements, KindScalar);
 #define DECLENUM(e) template<> struct bsmeta<e##_s> : bsmeta<e##_info> {}
@@ -19,17 +17,15 @@ bsdatat<c> bsmeta<c>::data(#c, bsmeta<c>::elements, KindScalar);
 const bsreq bsmeta<e##_info>::meta[] = {BSREQ(id), BSREQ(name), {}};\
 bsdatat<e##_info> bsmeta<e##_info>::data(#e, bsmeta<e##_info>::elements, KindEnum);
 
-enum bstype_s : unsigned char { KindScalar, KindEnum, KindADat, KindARef, KindARem, KindCFlags };
+// Basic metadata types
+enum bstype_s : unsigned char {
+	KindNoType,
+	KindNumber, KindText, KindScalar, KindEnum,
+	KindReference, KindADat, KindARef, KindARem, KindCFlags
+};
 
 // Metadata field descriptor
 struct bsreq {
-	typedef const char* (*proc_text)(const void* object, char* result, const char* result_max);
-	typedef int (*proc_num)(const void* object);
-	// Get count of reference
-	template<class T> struct iref : static_int<0> {};
-	template<class T> struct iref<T*> : static_int<1 + iref<T>::value> {};
-	template<class T, int N> struct iref<T[N]> : static_int<iref<T>::value> {};
-	template<class T> struct iref<T[]> : static_int<iref<T>::value> {};
 	// Get type count
 	template<class T> struct icount : static_int<1> {};
 	template<class T, unsigned N> struct icount<T[N]> : static_int<N> {};
@@ -44,20 +40,21 @@ struct bsreq {
 	template<class T> struct btype<const T> : btype<T> {};
 	template<class T> struct btype<const T*> : btype<T> {};
 	template<class T> struct btype<aref<T>> : btype<T> {};
-	template<class T, unsigned N> struct btype<adat<T,N>> : btype<T> {};
+	template<class T, unsigned N> struct btype<adat<T, N>> : btype<T> {};
 	template<class T, class DT> struct btype<cflags<T, DT>> : btype<T> {};
 	// Get subtype
 	template<class T> struct isubtype : static_value<bstype_s, __is_enum(T) ? KindEnum : KindScalar> {};
-	template<> struct isubtype<const char*> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<char> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<short> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<int> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<unsigned char> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<unsigned short> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<unsigned int> : static_value<bstype_s, KindScalar> {};
-	template<> struct isubtype<bool> : static_value<bstype_s, KindScalar> {};
-	template<class T> struct isubtype<T*> : static_value<bstype_s, isubtype<T>::value> {};
-	template<class T> struct isubtype<const T*> : static_value<bstype_s, isubtype<T>::value> {};
+	template<> struct isubtype<const char*> : static_value<bstype_s, KindText> {};
+	template<> struct isubtype<char> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<short> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<int> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<unsigned char> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<unsigned short> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<unsigned int> : static_value<bstype_s, KindNumber> {};
+	template<> struct isubtype<bool> : static_value<bstype_s, KindNumber> {};
+	template<class T> struct isubtype<T*> : static_value<bstype_s, KindReference> {};
+	template<class T> struct isubtype<T**> {}; // Not allowed complex pointer
+	template<class T> struct isubtype<const T*> : static_value<bstype_s, KindReference> {};
 	template<class T> struct isubtype<const T> : static_value<bstype_s, isubtype<T>::value> {};
 	template<class T, unsigned N> struct isubtype<T[N]> : static_value<bstype_s, isubtype<T>::value> {};
 	template<class T, unsigned N> struct isubtype<adat<T, N>> : static_value<bstype_s, KindADat> {};
@@ -70,8 +67,7 @@ struct bsreq {
 	unsigned			lenght; // total size in bytes of all field (array has size*count)
 	unsigned			count; // count of elements
 	const bsreq*		type; // metadata of element
-	unsigned char		reference; // 1+ if reference
-	bstype_s			subtype;
+	bstype_s			subtype; // metadata subtype
 	const bsreq*		hint_type; // type for user defined algoritm
 	//
 	operator bool() const { return id != 0; }
@@ -84,7 +80,6 @@ struct bsreq {
 	const bsreq*		getkey() const;
 	bool				is(bstype_s v) const { return subtype == v; }
 	bool				isnum() const;
-	bool				isref() const { return reference > 0; }
 	bool				istext() const;
 	bool				match(const void* p, const char* name) const;
 	constexpr char*		ptr(const void* data) const { return (char*)data + offset; }

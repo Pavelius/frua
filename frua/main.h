@@ -483,9 +483,9 @@ class character {
 	unsigned				coopers;
 	unsigned				experience;
 	item					wears[12 * 2];
+	friend struct bsmeta<character>;
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
-	friend struct bsmeta<character>;
 public:
 	operator bool() const { return name != 0; }
 	void					act(const char* text, ...) const;

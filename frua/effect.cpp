@@ -1,6 +1,6 @@
 #include "main.h"
 
-BSENUMB(effect) = {{"NoEffect", "Не используется"},
+effect_info bsmeta<effect_info>::elements[] = {{"NoEffect", "Не используется"},
 {"Bludgeon", "Ударное"},
 {"Piercing", "Колющее"},
 {"Slashing", "Режущее"},

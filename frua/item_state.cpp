@@ -1,6 +1,6 @@
 #include "main.h"
 
-BSENUMB(item_state) = {{"Mundane", "Обычное"},
+item_state_info bsmeta<item_state_info>::elements[] = {{"Mundane", "Обычное"},
 {"Cursed", "Проклятое"},
 {"Magic", "Волшебное"},
 {"Artifact", "Артифакт"},

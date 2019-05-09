@@ -51,7 +51,7 @@ struct bsdata_writer_txt {
 				return false;
 			if(run)
 				ew.set(id, value);
-		} else if(pf->isref()) {
+		} else if(pf->is(KindReference)) {
 			if(pf->isnum() || pf->istext() || pf->is(KindEnum))
 				return false;
 			auto value = pf->get(pf->ptr(pv, index));
@@ -181,14 +181,14 @@ struct bsdata_reader_txt : reader {
 			return (int)szdup(value);
 		else if(pf->isnum())
 			return sz2num(value);
-		else if(pf->isref() || pf->is(KindEnum)) {
+		else if(pf->is(KindReference) || pf->is(KindEnum)) {
 			auto pd = bsdata::find(pf->type, bsdata::firstenum);
 			if(!pd)
 				pd = bsdata::find(pf->type, bsdata::first);
 			if(!pd)
 				return 0;
 			auto pv = findvalue(value, pd);
-			if(pf->isref())
+			if(pf->is(KindReference))
 				return (int)pv;
 			return pd->indexof(pv);
 		}
@@ -203,7 +203,7 @@ struct bsdata_reader_txt : reader {
 		auto pf = getmeta(e)->find(e.name);
 		if(!pf)
 			return;
-		if(!pf->isref() && pf->is(KindScalar) && !pf->isnum() && !pf->istext()) {
+		if(pf->is(KindScalar) && !pf->is(KindReference) && !pf->isnum() && !pf->istext()) {
 			auto pv = getsource(e);
 			if(!pv)
 				return;

@@ -37,11 +37,8 @@ struct bsdata_bin {
 	}
 	bool serial(const void* object, const bsreq* records) {
 		for(auto p = records; *p; p++) {
-			// Ссылки на ссылки сразу пропускаем. Их нельзя сохранять.
-			if(p->reference >= 2)
-				continue;
 			if(p->isnum()) {
-				if(p->isref()) // Пропускаем ссылки на числа. Их нельзя соранять.
+				if(p->is(KindReference)) // Пропускаем ссылки на числа. Их нельзя соранять.
 					continue;
 				// Записываем весь массив сразу
 				if(writemode)
@@ -57,9 +54,9 @@ struct bsdata_bin {
 					else
 						*ps = read_string();
 				}
-			} else if(p->isref() || p->subtype == KindEnum) {
-				auto isenum = (p->subtype == KindEnum);
-				if(isenum && p->isref())
+			} else if(p->is(KindReference) || p->is(KindEnum)) {
+				auto isenum = p->is(KindEnum);
+				if(isenum && p->is(KindReference))
 					continue; // Пропускаем ссылки на перечисления
 				for(unsigned i = 0; i < p->count; i++) {
 					void* pv = 0;
@@ -132,9 +129,9 @@ struct bsdata_bin {
 		// Ключем может быть только ОДНО первое поле
 		// Оно может быть текстовое или скалярного типа (не ссылочный объект)
 		auto pk = pb->meta;
-		if(!pk->type->istext() && pk->type->isref())
+		if(!pk->type->istext() && pk->type->is(KindReference))
 			return false;
-		if(pk->type->istext() && (pk->type->count > 1 || pk->reference > 1))
+		if(pk->type->istext() && (pk->type->count > 1))
 			return false;
 		if(pk->lenght > sizeof(temp))
 			return false;

@@ -1,6 +1,6 @@
 #include "main.h"
 
-BSENUMB(feat) = {{"Darkvision", "Видит в темноте"},
+feat_info bsmeta<feat_info>::elements[] = {{"Darkvision", "Видит в темноте"},
 {"BonusSaveVsPoison", "Бонус к спасению от яда"},
 {"BonusSaveVsWands", "Бонус к спасению от палочек"},
 {"BonusSaveVsSpells", "Бонус к спасению от заклинаний"},

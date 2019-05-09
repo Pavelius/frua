@@ -13,7 +13,6 @@ const bsreq bsmeta<bsreq>::meta[] = {
 	BSREQ(size),
 	BSREQ(lenght),
 	BSREQ(count),
-	BSREQ(reference),
 	BSREQ(type),
 {}};
 
