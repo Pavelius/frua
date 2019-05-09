@@ -1,6 +1,7 @@
 #include "crt.h"
 #include "draw_control.h"
 #include "io.h"
+#include "io_plugin.h"
 #include "main.h"
 
 using namespace draw;
@@ -1250,13 +1251,17 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 }
 
 void decoration::database_export() {
+	char filter_text[261];
+	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
 	char folder[261] = {0};
-	if(dialog::save("Ёкспортировать данные", folder, "‘ормат *.json\0*.json", 0))
+	if(dialog::save("Ёкспортировать данные", folder, filter_text, 0))
 		bsdata::writetxt(folder);
 }
 
 void decoration::database_import() {
+	char filter_text[261];
+	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
 	char folder[261] = {0};
-	if(dialog::open("»мпортировать данные", folder, "‘ормат *.json\0*.json", 0))
+	if(dialog::open("»мпортировать данные", folder, filter_text, 0))
 		bsdata::readtxt(folder);
 }
