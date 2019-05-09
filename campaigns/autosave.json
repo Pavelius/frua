@@ -134,6 +134,10 @@
     "reaction":"Hostile",
     "wears":[
       {
+        "type":7,
+        "value":32
+      },
+      {
         "type":3,
         "value":32
       }
@@ -283,7 +287,7 @@
     "typeid":"item_info",
     "name":"Короткий меч",
     "damage":{
-      "type":"Bludgeon",
+      "type":"Slashing",
       "damage":{
         "c":1,
         "d":6

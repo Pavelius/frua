@@ -55,20 +55,24 @@ static void main_menu() {
 		e.ask(2, "Редактировать предметы");
 		e.ask(3, "Редактировать рисунки");
 		e.ask(4, "Редактировать картинки монстров");
-		e.ask(5, "Экпортировать данные");
 		e.ask(6, "Импортировать данные");
 		e.ask(100, "Выход и прогаммы");
 		auto id = e.choose("Приключения в забытых королевствах", {"intro", "main"});
 		switch(id) {
-		case 1: decoration::choose(bsmeta<character>::meta); break;
-		case 2: decoration::choose(bsmeta<item_info>::meta); break;
-		case 5: 
-			bsdata::writetxt("campaigns/autosave.json");
+		case 1:
+			decoration::choose(bsmeta<character>::meta);
+			break;
+		case 2:
+			decoration::choose(bsmeta<item_info>::meta);
+			break;
+		case 3:
+			picture_info::choose_image();
 			break;
 		case 6:
 			bsdata::readtxt("campaigns/autosave.json");
 			break;
 		case 100:
+			bsdata::writetxt("campaigns/autosave.json");
 			return;
 		}
 	}
@@ -83,7 +87,7 @@ int	main(int argc, char *argv[]) {
 	main_menu();
 	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
-	//picture_info::choose_image();
+	//;
 	//test_combat();
 	//bsdata::writetxt("test.json");
 	//inport_base("test.json");
