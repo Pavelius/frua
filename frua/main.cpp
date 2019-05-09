@@ -54,12 +54,12 @@ int	main(int argc, char *argv[]) {
 	decoration::initialize();
 	draw::initialize();
 	//test_item();
+	bsdata::readtxt("test.json");
 	//auto index = decoration::choose(bsmeta<character>::meta);
-	//auto index = decoration::choose(bsmeta<item_info>::meta);
+	auto index = decoration::choose(bsmeta<item_info>::meta);
 	//picture_info::choose_image();
 	//test_combat();
-	bsdata::writetxt("test.json");
-	//bsdata::readtxt("test.json");
+	//bsdata::writetxt("test.json");
 	//inport_base("test.json");
 	//test_scene();
 	return 0;
