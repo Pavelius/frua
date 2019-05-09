@@ -81,7 +81,7 @@ struct bsdata_writer_txt {
 			if(!pk)
 				return false;
 			if(run) {
-				ew.open(id, io::node::Array);
+				ew.open(id, io::Array);
 				for(unsigned i = 0; i < pb->count; i++) {
 					if((value & (1 << i)) == 0)
 						continue;
@@ -91,7 +91,7 @@ struct bsdata_writer_txt {
 						continue;
 					ew.set("value", nm);
 				}
-				ew.close(id, io::node::Array);
+				ew.close(id, io::Array);
 			}
 		} else
 			return write_object(pf->ptr(pv, index), pf->type, id, run);
@@ -108,10 +108,10 @@ struct bsdata_writer_txt {
 				}
 				if(minimal < 0)
 					return false;
-				ew.open(id, node::Array);
+				ew.open(id, io::Array);
 				for(auto i = 0; i <= minimal; i++)
 					write_element(pv, pf, i, "element", false, true);
-				ew.close(id, node::Array);
+				ew.close(id, Array);
 			} else {
 				for(unsigned i = 0; i < pf->count; i++) {
 					if(write_element(pv, pf, i, "element", true, false))
@@ -127,32 +127,7 @@ struct bsdata_writer_txt {
 };
 
 struct bsdata_reader_txt : reader {
-
-	enum param_s : unsigned char { Meta, Source, Database };
-
-	int getvalue(const node& e, param_s v) const {
-		auto p = &e;
-		while(p->parent) {
-			if(p->params[v])
-				return p->params[v];
-			p = p->parent;
-		}
-		return 0;
-	}
-
-	const bsreq* getmeta(const node& e) const { return (bsreq*)getvalue(e, Meta); }
-	void setmeta(node& e, const bsreq* type) const {
-		e.params[Meta] = (int)type;
-	}
-	void* getsource(const node& e) const { return (void*)getvalue(e, Source); }
-	void setsource(node& e, void* source) const {
-		e.params[Source] = (int)source;
-	}
-	bsdata* getbase(const node& e) const { return (bsdata*)getvalue(e, Database); }
-	void setbase(node& e, void* v) const {
-		e.params[Database] = (int)v;
-	}
-
+	enum param_s : unsigned char { Meta, Object, Database };
 	void* findvalue(const char* value, bsdata* pd) const {
 		void* pv = 0;
 		auto pk = pd->meta;
@@ -173,13 +148,12 @@ struct bsdata_reader_txt : reader {
 		}
 		return pv;
 	}
-
 	int getvalue(const char* value, const bsreq* pf) const {
 		if(pf->is(KindText))
 			return (int)szdup(value);
 		else if(pf->is(KindNumber))
 			return sz2num(value);
-		else if(pf->is(KindReference) || pf->is(KindEnum)) {
+		else if(pf->is(KindReference) || pf->is(KindEnum) || pf->is(KindCFlags)) {
 			auto pd = bsdata::find(pf->type, bsdata::firstenum);
 			if(!pd)
 				pd = bsdata::find(pf->type, bsdata::first);
@@ -192,24 +166,44 @@ struct bsdata_reader_txt : reader {
 		}
 		return 0;
 	}
-
+	int getindex(const node& e) const {
+		if(e.parent && e.parent->type == io::Array)
+			return e.index;
+		return 0;
+	}
+	void setvalue(void* object, const bsreq* pf, int index, const char* value) {
+		if(!object || !pf)
+			return;
+		if(pf->is(KindCFlags)) {
+			object = pf->ptr(object, 0);
+			auto i0 = getvalue(value, pf);
+			auto i1 = pf->get(object);
+			pf->set(object, i1 | (1<<i0));
+		} else {
+			object = pf->ptr(object, index);
+			pf->set(object, getvalue(value, pf));
+		}
+	}
 	void open(node& e) override {
 		if(e.name[0] == 0)
 			return;
-		if(e == "element" || !e.parent || e.type==e.Array)
+		if(!e.parent)
 			return;
-		auto pf = getmeta(e)->find(e.name);
+		if(e == "element")
+			return;
+		auto pv = (void*)e.get(Object);
+		if(!pv)
+			return;
+		auto pf = ((bsreq*)e.get(Meta))->find(e.name);
 		if(!pf)
 			return;
-		if(pf->is(KindScalar)) {
-			auto pv = getsource(e);
-			if(!pv)
-				return;
-			setmeta(e, pf->type);
-			setsource(e, pf->ptr(pv));
+		if(e.type == Array)
+			e.set(Meta, (int)pf);
+		else {
+			e.set(Meta, (int)pf->type);
+			e.set(Object, (int)pf->ptr(pv, getindex(e)));
 		}
 	}
-
 	void set(node& e, const char* value) override {
 		if(e == "typeid") {
 			if(!e.parent)
@@ -218,39 +212,31 @@ struct bsdata_reader_txt : reader {
 			auto pd = bsdata::find(value, bsdata::first);
 			if(!pd)
 				pd = bsdata::find(value, bsdata::firstenum);
-			setbase(*e.parent, pd);
-			setmeta(*e.parent, pd->meta);
+			e.parent->set(Database, (int)pd);
+			e.parent->set(Meta, (int)pd->meta);
 			return;
 		}
 		const bsreq* pf = 0;
+		auto index = 0;
 		if(e == "element") {
-			if(e.parent)
-				pf = getmeta(e)->find(e.parent->name);
+			pf = (bsreq*)e.get(Meta);
+			index = e.index;
 		} else
-			pf = getmeta(e)->find(e.name);
+			pf = ((bsreq*)e.get(Meta))->find(e.name);
 		if(!pf)
 			return;
-		void* pv = getsource(e);
+		auto pv = (void*)e.get(Object);
 		if(!pv) {
-			auto pd = getbase(e);
+			auto pd = (bsdata*)e.get(Database);
 			if(!pd)
 				return;
 			// Допускаются только простые ключи
 			pv = findvalue(value, pd);
 			if(e.parent)
-				setsource(*e.parent, pv);
-		} else {
-			auto v = getvalue(value, pf);
-			auto i = 0;
-			if(e.parent && e.parent->type == e.Array)
-				i = e.index;
-			pf->set(pf->ptr(pv, i), v);
-		}
+				e.parent->set(Object, (int)pv);
+		} else
+			setvalue(pv, pf, index, value);
 	};
-
-	void close(node& e) override {
-	}
-
 };
 
 int bsdata::writetxt(const char* url) {
@@ -265,7 +251,7 @@ int bsdata::writetxt(const char* url) {
 		return 0;
 	auto object_count = 0;
 	bsdata_writer_txt bw(*pw);
-	pw->open("records", node::Array);
+	pw->open("records", Array);
 	for(auto ps = bsdata::first; ps; ps = ps->next) {
 		for(unsigned i = 0; i < ps->count; i++) {
 			auto p = ps->get(i);
@@ -277,7 +263,7 @@ int bsdata::writetxt(const char* url) {
 			object_count++;
 		}
 	}
-	pw->close("records", node::Array);
+	pw->close("records", Array);
 	return object_count;
 }
 

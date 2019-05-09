@@ -5,27 +5,26 @@
 namespace io {
 // Network protocols
 enum protocols { NoProtocol, TCP, UDP };
-struct node {
-	enum type_s {
-		Text, Number, Array, Struct
-	};
-	node*				parent;
-	const char*			name;
-	type_s				type;
-	int					index;
-	bool				skip; // set this if you want skip block
-	int					params[12];
-	//
-	node(type_s type = Text);
-	node(node& parent, const char* name = "", type_s type = Text);
-	bool				operator==(const char* name) const;
-	//
-	int					getlevel() const;
-	node&				getroot() const;
-};
+enum type_s { Text, Number, Array, Struct };
 // Application defined reader.
 // Plugin read file and post events to this class.
 struct reader {
+	struct node {
+		node*			parent;
+		const char*		name;
+		type_s			type;
+		int				index;
+		bool			skip; // set this if you want skip block
+		int				params[12];
+		//
+		node(type_s type = Text);
+		node(node& parent, const char* name = "", type_s type = Text);
+		bool				operator==(const char* name) const;
+		//
+		int				get(int n) const;
+		int				getlevel() const;
+		void			set(int n, int v);
+	};
 	virtual void		open(node& e) {}
 	virtual void		set(node& e, const char* value) {};
 	virtual void		close(node& e) {}
