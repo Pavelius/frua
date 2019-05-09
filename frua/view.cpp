@@ -677,6 +677,27 @@ int answer::choose(combat_info& ci) {
 	return result;
 }
 
+int answer::choose(const char* title, const picture_info& pi) {
+	int x, y;
+	openform();
+	while(ismodal()) {
+		render_background();
+		page_header(x, y, title, 0, 0, 0, 0);
+		picture.load(pi);
+		picture.position = pi.position;
+		render_picture(x, y);
+		auto x1 = x + picture_width + metrics::padding;
+		auto w1 = getwidth() - x1 - metrics::padding;
+		for(auto& e : elements)
+			y += button(x1, y, w1, 0, cmdi(buttonparam, e.id), e.name);
+		domodal();
+	}
+	closeform();
+	auto result = getresult();
+	elements.clear();
+	return result;
+}
+
 bool picture_info::choose(short unsigned& result, const char* title, const char* mask, int size) {
 	struct avatar_view : controls::picker {
 		adat<short unsigned, 512> elements;

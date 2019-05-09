@@ -335,8 +335,8 @@ struct picture_info {
 	const char*				folder;
 	const char*				id;
 	point					position;
-	point					size;
-	constexpr picture_info() : folder(0), id(0), position(), size() {}
+	constexpr picture_info() : folder(0), id(0), position() {}
+	constexpr picture_info(const char* folder, const char* id) : folder(folder), id(id), position() {}
 	explicit constexpr operator bool() const { return id != 0; }
 	bool operator==(const picture_info& e) const;
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
@@ -633,6 +633,7 @@ struct answer {
 	adat<element, 32>		elements;
 	void					ask(int id, const char* name, int priority = 0, unsigned key = 0);
 	int						choose(combat_info& ci);
+	int						choose(const char* title, const picture_info& pi);
 };
 class scene : public stringcreator, public answer {
 	char					buffer[2048];

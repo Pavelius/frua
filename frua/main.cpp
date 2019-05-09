@@ -48,6 +48,23 @@ void test_scene() {
 	sc.choose();
 }
 
+static void main_menu() {
+	answer e;
+	while(true) {
+		e.ask(1, "Редактировать героев");
+		e.ask(2, "Редактировать предметы");
+		e.ask(3, "Редактировать рисунки");
+		e.ask(4, "Редактировать картинки монстров");
+		e.ask(100, "Выход и прогаммы");
+		auto id = e.choose("Приключения в забытых королевствах", {"intro", "main"});
+		switch(id) {
+		case 1: decoration::choose(bsmeta<character>::meta); break;
+		case 2: decoration::choose(bsmeta<item_info>::meta); break;
+		case 100: return;
+		}
+	}
+}
+
 int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
@@ -55,8 +72,9 @@ int	main(int argc, char *argv[]) {
 	draw::initialize();
 	//test_item();
 	bsdata::readtxt("test.json");
+	main_menu();
 	//auto index = decoration::choose(bsmeta<character>::meta);
-	auto index = decoration::choose(bsmeta<item_info>::meta);
+	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//picture_info::choose_image();
 	//test_combat();
 	//bsdata::writetxt("test.json");

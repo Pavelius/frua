@@ -42,9 +42,14 @@ protected:
 	p0						p;
 	int						v;
 };
-// Command with focus on value rather that procedure
+// Command with focus on integer value rather that procedure
+struct cmdi : cmd {
+	int getid() const override { return v + 1; }
+	constexpr cmdi(void(*p)(), int v) : cmd(p, v) {}
+};
+// Command with custom focus
 struct cmdv : cmd {
-	void*		focus;
+	void*					focus;
 	int getid() const override { return (int)focus; }
 	template<typename T> constexpr cmdv(void(*p)(T*), T* v, void* f) : cmd(p, v), focus(f) {}
 };

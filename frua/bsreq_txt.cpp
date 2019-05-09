@@ -189,12 +189,17 @@ struct bsdata_reader_txt : reader {
 			return;
 		if(!e.parent)
 			return;
-		if(e == "element")
+		if(e == "element" && !e.parent->parent)
 			return;
 		auto pv = (void*)e.get(Object);
 		if(!pv)
 			return;
-		auto pf = ((bsreq*)e.get(Meta))->find(e.name);
+		auto pf = (const bsreq*)e.get(Meta);
+		if(!pf)
+			return;
+		if(e == "element") {
+		} else
+			pf = pf->find(e.name);
 		if(!pf)
 			return;
 		if(e.type == Array)
