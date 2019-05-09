@@ -108,7 +108,9 @@ struct bsdata {
 	bool				has(const void* object) const { return object >= data && object < ((char*)data + maximum * size); }
 	int					indexof(const void* object) const;
 	static int			read(const char* url);
+	static int			readtxt(const char* url);
 	static int			write(const char* url);
+	static int			writetxt(const char* url);
 };
 template<typename T> struct bsdatat : bsdata {
 	template<unsigned N> constexpr bsdatat(const char* id, T(&source)[N], bstype_s subtype) :

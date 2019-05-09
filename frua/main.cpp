@@ -48,9 +48,6 @@ void test_scene() {
 	sc.choose();
 }
 
-bool export_base(const char* url);
-bool inport_base(const char* url);
-
 int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
@@ -61,7 +58,8 @@ int	main(int argc, char *argv[]) {
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//picture_info::choose_image();
 	//test_combat();
-	export_base("test.json");
+	//bsdata::writetxt("test.json");
+	bsdata::readtxt("test.json");
 	//inport_base("test.json");
 	//test_scene();
 	return 0;

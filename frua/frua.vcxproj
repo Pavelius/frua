@@ -181,7 +181,7 @@
     <ClCompile Include="reaction.cpp" />
     <ClCompile Include="save.cpp" />
     <ClCompile Include="screenshoot.cpp" />
-    <ClCompile Include="serial.cpp" />
+    <ClCompile Include="bsreq_txt.cpp" />
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="damage.cpp" />

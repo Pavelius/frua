@@ -212,16 +212,17 @@ struct bsdata_reader_txt : io::reader {
 
 };
 
-bool export_base(const char* url) {
+int bsdata::writetxt(const char* url) {
 	io::plugin* pp = plugin::find(szext(url));
 	if(!pp)
-		return false;
+		return 0;
 	io::file file(url, StreamWrite | StreamText);
 	if(!file)
-		return false;
+		return 0;
 	io::writer* pw = pp->write(file);
 	if(!pw)
-		return false;
+		return 0;
+	auto object_count = 0;
 	bsdata_writer_txt bw(*pw);
 	pw->open("records", node::Array);
 	for(auto ps = bsdata::first; ps; ps = ps->next) {
@@ -232,19 +233,20 @@ bool export_base(const char* url) {
 			for(auto pf = ps->meta; *pf; pf++)
 				bw.write_field(p, pf, pf->id, true);
 			pw->close("record");
+			object_count++;
 		}
 	}
 	pw->close("records", node::Array);
-	return true;
+	return object_count;
 }
 
-bool inport_base(const char* url) {
+int bsdata::readtxt(const char* url) {
 	io::plugin* pp = plugin::find(szext(url));
 	if(!pp)
-		return false;
+		return 0;
 	auto p = loadt(url);
 	bsdata_reader_txt ev;
 	pp->read(p, ev);
 	delete p;
-	return true;
+	return 1;
 }

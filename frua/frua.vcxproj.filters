@@ -246,8 +246,8 @@
     <ClCompile Include="io_plugin_json.cpp">
       <Filter>Поддержка</Filter>
     </ClCompile>
-    <ClCompile Include="serial.cpp">
-      <Filter>Логика</Filter>
+    <ClCompile Include="bsreq_txt.cpp">
+      <Filter>Коллекция</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
