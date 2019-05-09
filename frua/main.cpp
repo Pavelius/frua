@@ -58,8 +58,8 @@ int	main(int argc, char *argv[]) {
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//picture_info::choose_image();
 	//test_combat();
-	//bsdata::writetxt("test.json");
-	bsdata::readtxt("test.json");
+	bsdata::writetxt("test.json");
+	//bsdata::readtxt("test.json");
 	//inport_base("test.json");
 	//test_scene();
 	return 0;

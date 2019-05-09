@@ -5,8 +5,8 @@
 using namespace io;
 
 struct bsdata_writer_txt {
-	io::writer&			ew;
-	bsdata_writer_txt(io::writer& ew) : ew(ew) {}
+	writer&	ew;
+	bsdata_writer_txt(writer& ew) : ew(ew) {}
 
 	static bsdata* find_base(const bsreq* type) {
 		auto p = bsdata::find(type, bsdata::first);
@@ -128,55 +128,108 @@ struct bsdata_writer_txt {
 
 };
 
-struct bsdata_reader_txt : io::reader {
+struct bsdata_reader_txt : reader {
 
 	enum param_s : unsigned char { Meta, Source, Database };
-	
-	const bsreq* getmeta(const node& e) const { return e.parent ? (bsreq*)e.parent->params[Meta] : 0; }
-	const bsreq* getmeta(const node& e, const char* id) const { return getmeta(e)->find(id); }
+
+	int getvalue(const node& e, param_s v) const {
+		auto p = &e;
+		while(p->parent) {
+			if(p->params[v])
+				return p->params[v];
+			p = p->parent;
+		}
+		return 0;
+	}
+
+	const bsreq* getmeta(const node& e) const { return (bsreq*)getvalue(e, Meta); }
 	void setmeta(node& e, const bsreq* type) const {
-		if(e.parent)
-			e.parent->params[Meta] = (int)type;
+		e.params[Meta] = (int)type;
 	}
-	void* getsource(const node& e) const { return e.parent ? (void*)e.parent->params[Source] : 0; }
+	void* getsource(const node& e) const { return (void*)getvalue(e, Source); }
 	void setsource(node& e, void* source) const {
-		if(e.parent)
-			e.parent->params[Source] = (int)source;
+		e.params[Source] = (int)source;
 	}
-	bsdata* getbase(const node& e) const { return e.parent ? (bsdata*)e.parent->params[Database] : 0; }
+	bsdata* getbase(const node& e) const { return (bsdata*)getvalue(e, Database); }
 	void setbase(node& e, void* v) const {
-		if(e.parent)
-			e.parent->params[Database] = (int)v;
+		e.params[Database] = (int)v;
+	}
+
+	void* findvalue(const char* value, bsdata* pd) const {
+		void* pv = 0;
+		auto pk = pd->meta;
+		if(pk->istext())
+			pv = (void*)pd->find(pk, value);
+		else if(pk->isnum()) {
+			auto number = sz2num(value);
+			auto size = pk->size;
+			if(size > sizeof(number))
+				size = sizeof(number);
+			pv = (void*)pd->find(pk, &number, size);
+		} else
+			return 0;
+		if(!pv) {
+			pv = pd->add();
+			auto kv = getvalue(value, pk);
+			pk->set(pk->ptr(pv), kv);
+		}
+		return pv;
+	}
+
+	int getvalue(const char* value, const bsreq* pf) const {
+		if(pf->istext())
+			return (int)szdup(value);
+		else if(pf->isnum())
+			return sz2num(value);
+		else if(pf->isref() || pf->is(KindEnum)) {
+			auto pd = bsdata::find(pf->type, bsdata::firstenum);
+			if(!pd)
+				pd = bsdata::find(pf->type, bsdata::first);
+			if(!pd)
+				return 0;
+			auto pv = findvalue(value, pd);
+			if(pf->isref())
+				return (int)pv;
+			return pd->indexof(pv);
+		}
+		return 0;
 	}
 
 	void open(node& e) override {
 		if(e.name[0] == 0)
 			return;
-		else if(e == "element")
+		if(e == "element" || !e.parent || e.type==e.Array)
 			return;
-		if(!e.parent)
-			return;
-		auto pf = getmeta(e, e.name);
+		auto pf = getmeta(e)->find(e.name);
 		if(!pf)
 			return;
-		setmeta(e, pf);
-		auto pv = getsource(e);
-		if(!pv)
-			return;
-		setsource(e, pf->ptr(pv, e.index));
+		if(!pf->isref() && pf->is(KindScalar) && !pf->isnum() && !pf->istext()) {
+			auto pv = getsource(e);
+			if(!pv)
+				return;
+			setmeta(e, pf->type);
+			setsource(e, pf->ptr(pv));
+		}
 	}
 
 	void set(node& e, const char* value) override {
 		if(e == "typeid") {
+			if(!e.parent)
+				return;
 			// Это идентификатор типа
 			auto pd = bsdata::find(value, bsdata::first);
 			if(!pd)
 				pd = bsdata::find(value, bsdata::firstenum);
-			setbase(e, pd);
-			setmeta(e, pd->meta);
+			setbase(*e.parent, pd);
+			setmeta(*e.parent, pd->meta);
 			return;
 		}
-		auto pf = getmeta(e, e.name);
+		const bsreq* pf = 0;
+		if(e == "element") {
+			if(e.parent)
+				pf = getmeta(e)->find(e.parent->name);
+		} else
+			pf = getmeta(e)->find(e.name);
 		if(!pf)
 			return;
 		void* pv = getsource(e);
@@ -184,31 +237,21 @@ struct bsdata_reader_txt : io::reader {
 			auto pd = getbase(e);
 			if(!pd)
 				return;
-			// Поиск по ключу
-			if(pf->istext())
-				pv = (void*)pd->find(pf, value);
-			else if(pf->isnum()) {
-				auto number = sz2num(value);
-				auto size = pf->size;
-				if(size > sizeof(number))
-					size = sizeof(number);
-				pv = (void*)pd->find(pf, &number, size);
-			} else
-				return;
-			if(!pv)
-				pv = pd->add();
-			// Значение ключа не заполняем - оно будет позже
-			setsource(e, pv);
+			// Допускаются только простые ключи
+			pv = findvalue(value, pd);
+			if(e.parent)
+				setsource(*e.parent, pv);
+		} else {
+			auto v = getvalue(value, pf);
+			auto i = 0;
+			if(e.parent && e.parent->type == e.Array)
+				i = e.index;
+			pf->set(pf->ptr(pv, i), v);
 		}
-		if(!pv)
-			return;
-		if(pf->istext())
-			pf->set(pf->ptr(pv, e.index), (int)szdup(value));
-		else if(pf->isnum())
-			pf->set(pf->ptr(pv, e.index), sz2num(value));
 	};
 
-	void close(node& e) override {}
+	void close(node& e) override {
+	}
 
 };
 

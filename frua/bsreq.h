@@ -48,7 +48,17 @@ struct bsreq {
 	template<class T, class DT> struct btype<cflags<T, DT>> : btype<T> {};
 	// Get subtype
 	template<class T> struct isubtype : static_value<bstype_s, __is_enum(T) ? KindEnum : KindScalar> {};
+	template<> struct isubtype<const char*> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<char> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<short> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<int> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<unsigned char> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<unsigned short> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<unsigned int> : static_value<bstype_s, KindScalar> {};
+	template<> struct isubtype<bool> : static_value<bstype_s, KindScalar> {};
 	template<class T> struct isubtype<T*> : static_value<bstype_s, isubtype<T>::value> {};
+	template<class T> struct isubtype<const T*> : static_value<bstype_s, isubtype<T>::value> {};
+	template<class T> struct isubtype<const T> : static_value<bstype_s, isubtype<T>::value> {};
 	template<class T, unsigned N> struct isubtype<T[N]> : static_value<bstype_s, isubtype<T>::value> {};
 	template<class T, unsigned N> struct isubtype<adat<T, N>> : static_value<bstype_s, KindADat> {};
 	template<class T> struct isubtype<aref<T>> : static_value<bstype_s, KindARef> {};
