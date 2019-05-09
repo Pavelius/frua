@@ -35,7 +35,7 @@ unsigned reftable::getalign(int column) const {
 	auto pf = type->find(e.value.id);
 	if(!pf)
 		return AlignLeft;
-	if(pf->isnum())
+	if(pf->is(KindNumber))
 		return AlignRight;
 	return AlignLeft;
 }
@@ -51,9 +51,9 @@ const char* reftable::getname(char* result, const char* result_end, int line, in
 	auto pv = pf->ptr(object, e.value.index);
 	if(e.prop.getname)
 		e.prop.getname(pv, result, result_end);
-	else if(pf->isnum())
+	else if(pf->is(KindNumber))
 		szprint(result, result_end, "%1i", pf->get(pv));
-	else if(pf->istext()) {
+	else if(pf->is(KindText)) {
 		auto p = (const char*)pf->get(pv);
 		if(p)
 			szprint(result, result_end, p);

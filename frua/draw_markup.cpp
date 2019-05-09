@@ -84,7 +84,7 @@ static const char* getpresent(const void* p, const bsreq* type) {
 		pf = type->find("id");
 	if(!pf)
 		pf = type->find("text");
-	if(!pf || !pf->istext())
+	if(!pf || !pf->is(KindText))
 		return "";
 	return (const char*)pf->get(pf->ptr(p));
 }
@@ -268,17 +268,17 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	header(x, y, width, ctx, title_text);
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignLeft;
-	if(type->isnum())
+	if(type->is(KindNumber))
 		flags = AlignRight;
 	draw::focusing((int)pv, flags, rc);
-	if(type->istext())
+	if(type->is(KindText))
 		draw::field(rc, flags, anyval(pv, type->size), -1, FieldText);
-	else if(type->is(KindEnum) || (type->isnum() && type->hint_type)) {
+	else if(type->is(KindEnum) || (type->is(KindNumber) && type->hint_type)) {
 		auto hint = type->type;
 		if(type->hint_type)
 			hint = type->hint_type;
 		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri, ppi);
-	} else if(type->isnum()) {
+	} else if(type->is(KindNumber)) {
 		auto d = param;
 		if(!d)
 			d = 2;
@@ -388,7 +388,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				y += radio(x, y, width, flags, ev, p, 0) + 2;
 			}
 		} else {
-			if(!bv.type->isnum())
+			if(!bv.type->is(KindNumber))
 				return error(x, y, width, ctx, e, bv.type->id);
 			auto pb = bsdata::find(pn, bsdata::firstenum);
 			if(!pb)
@@ -415,7 +415,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		}
 		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
-		if(bv.type->is(KindScalar) && !bv.type->istext() && !bv.type->is(KindReference) && !bv.type->isnum()) {
+		if(bv.type->is(KindScalar)) {
 			auto hint_type = bv.type->type;
 			if(bv.type->hint_type)
 				hint_type = bv.type->hint_type;

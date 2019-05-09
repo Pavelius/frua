@@ -37,16 +37,14 @@ struct bsdata_bin {
 	}
 	bool serial(const void* object, const bsreq* records) {
 		for(auto p = records; *p; p++) {
-			if(p->isnum()) {
-				if(p->is(KindReference)) // Пропускаем ссылки на числа. Их нельзя соранять.
-					continue;
-				// Записываем весь массив сразу
-				if(writemode)
-					file.write(p->ptr(object), p->lenght);
-				else
-					file.read(p->ptr(object), p->lenght);
-			} else if(p->istext()) {
-				// Текст записываем поэлементно
+			bool isenum;
+			switch(p->subtype) {
+			case KindNumber:
+			case KindCFlags:
+				// Числа и флаги записываются с оптимизацией
+				serial(p->ptr(object), p->lenght);
+				break;
+			case KindText:
 				for(unsigned i = 0; i < p->count; i++) {
 					auto ps = (const char**)p->ptr(object, i);
 					if(writemode)
@@ -54,10 +52,10 @@ struct bsdata_bin {
 					else
 						*ps = read_string();
 				}
-			} else if(p->is(KindReference) || p->is(KindEnum)) {
-				auto isenum = p->is(KindEnum);
-				if(isenum && p->is(KindReference))
-					continue; // Пропускаем ссылки на перечисления
+				break;
+			case KindReference:
+			case KindEnum:
+				isenum = p->is(KindEnum);
 				for(unsigned i = 0; i < p->count; i++) {
 					void* pv = 0;
 					if(writemode) {
@@ -88,13 +86,11 @@ struct bsdata_bin {
 							p->set(p->ptr(object, i), (int)pv);
 					}
 				}
-			} else if(p->subtype == KindCFlags) {
-				for(unsigned i = 0; i < p->count; i++)
-					serial(p->ptr(object, i), p->lenght); // Флаги переносятся особым образом
-			}
-			else {
+				break;
+			case KindScalar:
 				for(unsigned i = 0; i < p->count; i++)
 					serial(p->ptr(object, i), p->type); // Подчиненный объект, указанный прямо в теле
+				break;
 			}
 		}
 		return true;
@@ -129,21 +125,21 @@ struct bsdata_bin {
 		// Ключем может быть только ОДНО первое поле
 		// Оно может быть текстовое или скалярного типа (не ссылочный объект)
 		auto pk = pb->meta;
-		if(!pk->type->istext() && pk->type->is(KindReference))
+		if(pk->type->is(KindReference))
 			return false;
-		if(pk->type->istext() && (pk->type->count > 1))
+		if(pk->type->is(KindText) && (pk->type->count > 1))
 			return false;
 		if(pk->lenght > sizeof(temp))
 			return false;
 		// Запишем ключевое поле
 		if(writemode) {
-			if(pk->istext()) {
+			if(pk->is(KindText)) {
 				auto v = (const char*)pk->get(pk->ptr(pv));
 				write_string(v);
 			} else
 				file.write(pk->ptr(pv), pk->lenght);
 		} else {
-			if(pk->istext()) {
+			if(pk->is(KindText)) {
 				*((const char**)temp) = read_string();
 				pv = (void*)pb->find(pk, *((const char**)temp));
 			} else {

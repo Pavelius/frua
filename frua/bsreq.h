@@ -20,8 +20,8 @@ bsdatat<e##_info> bsmeta<e##_info>::data(#e, bsmeta<e##_info>::elements, KindEnu
 // Basic metadata types
 enum bstype_s : unsigned char {
 	KindNoType,
-	KindNumber, KindText, KindScalar, KindEnum,
-	KindReference, KindADat, KindARef, KindARem, KindCFlags
+	KindNumber, KindText, KindScalar, KindEnum, KindReference,
+	KindADat, KindARef, KindARem, KindCFlags
 };
 
 // Metadata field descriptor
@@ -75,13 +75,10 @@ struct bsreq {
 	const bsreq*		find(const char* name) const;
 	const bsreq*		find(const char* name, unsigned count) const;
 	const bsreq*		find(const char* name, const bsreq* type) const;
-	static const bsreq	metadata[];
 	int					get(const void* p) const;
-	const bsreq*		getkey() const;
 	bool				is(bstype_s v) const { return subtype == v; }
-	bool				isnum() const;
-	bool				istext() const;
 	bool				match(const void* p, const char* name) const;
+	static const bsreq	metadata[];
 	constexpr char*		ptr(const void* data) const { return (char*)data + offset; }
 	constexpr char*		ptr(const void* data, int index) const { return (char*)data + offset + index * size; }
 	void				set(const void* p, int value) const;

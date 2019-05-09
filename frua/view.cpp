@@ -902,7 +902,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 	auto current_page = 0;
 	const markup* page_markup_last = 0;
 	auto updater = elements->find("update", object, 0, false);
-	auto type_key = type->getkey();
+	auto type_key = type;
 	while(ismodal()) {
 		auto page_maximum = elements->getpagecount(object);
 		if(current_page < 0)
@@ -924,7 +924,7 @@ bool decoration::edit(const char* name, void* object, unsigned size, const bsreq
 					cmd(page_markup->cmd.execute, object).execute();
 			}
 		}
-		if(type_key && type_key->istext()) {
+		if(type_key && type_key->is(KindText)) {
 			auto pn = (const char*)type_key->get(type_key->ptr(object));
 			if(pn && pn[0])
 				page_name = pn;

@@ -16,23 +16,6 @@ const bsreq bsmeta<bsreq>::meta[] = {
 	BSREQ(type),
 {}};
 
-bool bsreq::istext() const {
-	return type == bsmeta<const char*>::meta;
-}
-
-bool bsreq::isnum() const {
-	return type == bsmeta<int>::meta;
-}
-
-const bsreq* bsreq::getkey() const {
-	auto f = find("id", bsmeta<const char*>::meta);
-	if(!f)
-		f = find("name", bsmeta<const char*>::meta);
-	if(!f)
-		f = find("text", bsmeta<const char*>::meta);
-	return f;
-}
-
 const bsreq* bsreq::find(const char* name) const {
 	if(!this)
 		return 0;

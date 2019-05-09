@@ -37,13 +37,13 @@ struct bsdata_writer_txt {
 	}
 
 	bool write_element(const void* pv, const bsreq* pf, int index, const char* id, bool skip_zero, bool run) {
-		if(pf->isnum()) {
+		if(pf->is(KindNumber)) {
 			auto value = pf->get(pf->ptr(pv, index));
 			if(!value && skip_zero)
 				return false;
 			if(run)
 				ew.set(id, value);
-		} else if(pf->istext()) {
+		} else if(pf->is(KindText)) {
 			auto value = (const char*)pf->get(pf->ptr(pv, index));
 			if(!value)
 				value = "";
@@ -52,8 +52,6 @@ struct bsdata_writer_txt {
 			if(run)
 				ew.set(id, value);
 		} else if(pf->is(KindReference)) {
-			if(pf->isnum() || pf->istext() || pf->is(KindEnum))
-				return false;
 			auto value = pf->get(pf->ptr(pv, index));
 			if(!value) {
 				if(!skip_zero)
@@ -79,7 +77,7 @@ struct bsdata_writer_txt {
 			auto pb = find_base(pf->type);
 			if(!pb)
 				return false;
-			auto pk = pb->meta->getkey();
+			auto pk = pb->meta;
 			if(!pk)
 				return false;
 			if(run) {
@@ -158,9 +156,9 @@ struct bsdata_reader_txt : reader {
 	void* findvalue(const char* value, bsdata* pd) const {
 		void* pv = 0;
 		auto pk = pd->meta;
-		if(pk->istext())
+		if(pk->is(KindText))
 			pv = (void*)pd->find(pk, value);
-		else if(pk->isnum()) {
+		else if(pk->is(KindNumber)) {
 			auto number = sz2num(value);
 			auto size = pk->size;
 			if(size > sizeof(number))
@@ -177,9 +175,9 @@ struct bsdata_reader_txt : reader {
 	}
 
 	int getvalue(const char* value, const bsreq* pf) const {
-		if(pf->istext())
+		if(pf->is(KindText))
 			return (int)szdup(value);
-		else if(pf->isnum())
+		else if(pf->is(KindNumber))
 			return sz2num(value);
 		else if(pf->is(KindReference) || pf->is(KindEnum)) {
 			auto pd = bsdata::find(pf->type, bsdata::firstenum);
@@ -203,7 +201,7 @@ struct bsdata_reader_txt : reader {
 		auto pf = getmeta(e)->find(e.name);
 		if(!pf)
 			return;
-		if(pf->is(KindScalar) && !pf->is(KindReference) && !pf->isnum() && !pf->istext()) {
+		if(pf->is(KindScalar)) {
 			auto pv = getsource(e);
 			if(!pv)
 				return;
