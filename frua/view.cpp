@@ -1248,3 +1248,15 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 	closeform();
 	return getresult() != 0;
 }
+
+void decoration::database_export() {
+	char folder[261] = {0};
+	if(dialog::save("Ёкспортировать данные", folder, "‘ормат *.json\0*.json", 0))
+		bsdata::writetxt(folder);
+}
+
+void decoration::database_import() {
+	char folder[261] = {0};
+	if(dialog::open("»мпортировать данные", folder, "‘ормат *.json\0*.json", 0))
+		bsdata::readtxt(folder);
+}

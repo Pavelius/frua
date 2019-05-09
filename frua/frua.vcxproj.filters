@@ -249,6 +249,12 @@
     <ClCompile Include="bsreq_txt.cpp">
       <Filter>Коллекция</Filter>
     </ClCompile>
+    <ClCompile Include="win_draw_dlg.cpp">
+      <Filter>Платформа</Filter>
+    </ClCompile>
+    <ClCompile Include="win_draw_shell.cpp">
+      <Filter>Платформа</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

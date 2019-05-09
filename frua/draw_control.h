@@ -23,6 +23,9 @@ enum column_type_s {
 	Text = 0x00000, Number = 0x10000,
 	ControlMask = 0xF0000
 };
+enum field_type_s : unsigned char {
+	FieldNumber, FieldText,
+};
 struct runable {
 	virtual void			execute() const = 0;
 	virtual int				getid() const = 0;
@@ -187,9 +190,12 @@ private:
 	int						p1, p2;
 };
 }
-enum field_type_s : unsigned char {
-	FieldNumber, FieldText,
-};
+namespace dialog {
+bool						color(struct color& result, struct color* custom = 0);
+bool						folder(const char* title, char* path);
+bool						open(const char* title, char* path, const char* filter, int filter_index = 0, const char* ext = 0);
+bool						save(const char* title, char* path, const char* filter, int filter_index = 0);
+}
 int							button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips = 0, int key = 0);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);

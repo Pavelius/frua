@@ -58,27 +58,17 @@ static void main_menu() {
 		e.ask(3, "Редактировать рисунки");
 		e.ask(4, "Редактировать картинки монстров");
 		e.ask(6, "Импортировать данные");
+		e.ask(7, "Экспортировать данные");
 		e.ask(100, "Выход и прогаммы");
 		auto id = e.choose("Приключения в забытых королевствах", {"intro", "main"});
 		switch(id) {
-		case 1:
-			decoration::choose(bsmeta<character>::meta);
-			break;
-		case 2:
-			decoration::choose(bsmeta<item_info>::meta);
-			break;
-		case 3:
-			picture_info::choose_image();
-			break;
-		case 4:
-			picture_info::edit_monsters();
-			break;
-		case 6:
-			bsdata::readtxt("campaigns/autosave.json");
-			break;
-		case 100:
-			bsdata::writetxt("campaigns/autosave.json");
-			return;
+		case 1: decoration::choose(bsmeta<character>::meta); break;
+		case 2: decoration::choose(bsmeta<item_info>::meta); break;
+		case 3: picture_info::choose_image(); break;
+		case 4: picture_info::edit_monsters(); break;
+		case 6: decoration::database_import(); break;
+		case 7: decoration::database_export(); break;
+		case 100: bsdata::writetxt("campaigns/autosave.json"); return;
 		}
 	}
 }

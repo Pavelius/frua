@@ -242,6 +242,8 @@ struct decoration {
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
 	static void*			choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns);
+	static void				database_export();
+	static void				database_import();
 	static void				initialize();
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0, const char* form_name = 0);
