@@ -135,8 +135,7 @@ static markup element_special_usability[] = {{0, "#checkboxes", {"usability"}}, 
 static markup element_special_quality[] = {{0, "#checkboxes", {"special_quality"}}, {}};
 static markup element_special_с1[] = {{0, "Способности расы или класса", {0, 0, element_special_feats}},
 {}};
-static markup element_special_с2[] = {{0, "Доступность предметов", {0, 0, element_special_usability}},
-{0, "Специальные качества", {0, 0, element_special_quality}},
+static markup element_special_с2[] = {{0, "Специальные качества", {0, 0, element_special_quality}},
 {}};
 static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},
@@ -161,18 +160,7 @@ static markup items_c1[] = {{0, 0, {"wears", 0}, 0, {0, character::isallowwear}}
 {0, 0, {"wears", 10}, 0, {0, character::isallowwear}},
 {0, 0, {"wears", 11}, 0, {0, character::isallowwear}},
 {}};
-static markup items_c2[] = {{0, 0, {"wears", 12}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 13}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 14}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 15}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 16}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 17}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 18}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 19}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 20}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 21}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 22}, 0, {0, character::isallowwear}},
-{0, 0, {"wears", 23}, 0, {0, character::isallowwear}},
+static markup items_c2[] = {{0, "Доступность предметов", {0, 0, element_special_usability}},
 {}};
 static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
 static markup items_commands[] = {{0, "Редактировать", {}, 0, {}, edit_items},

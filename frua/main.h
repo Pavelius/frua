@@ -22,7 +22,7 @@ enum class_s : unsigned char {
 };
 enum race_s : unsigned char {
 	Human, Dwarf, Elf, Gnome, HalfElf, Halfling,
-	Goblinoid, Humanoid, Animal, Insectoid, Demon, Dragon, Undead,
+	Goblinoid, Humanoid, Animal, Insectoid, Demon, Dragon
 };
 enum alignment_s : unsigned char {
 	LawfulGood, NeutralGood, ChaoticGood,
@@ -95,9 +95,11 @@ enum feat_s : unsigned char {
 	UniqueCharacter,
 };
 enum special_quality_s : unsigned char {
+	ImmunityDesease, ImmunityPoison, ImmunityCharm,
+	ImmunityCold, ImmunityFire,
 	HitMagicWeapon, HitSilverWeapon,
 	HalfDamagePierce, HalfDamageSlashing, HalfDamageBludgeon,
-	Regeneration,
+	Regeneration, Undead,
 };
 enum usability_s : unsigned char {
 	UseLeatherArmor, UseMetalArmor, UseShield,
@@ -180,7 +182,8 @@ enum save_s : unsigned char {
 	NoSave, SaveHalved, SaveNegate,
 };
 enum attack_affect_s : unsigned char {
-	AttackRegular, AttackOneAndHalf, AttackDouble, AttackAdditional, AttackOnHit, AttackOnCritical
+	AttackRegular, AttackOneAndHalf, AttackDouble,
+	AttackAdditional, AttackOnAnyOneHit, AttackOnAllHit, AttackOnCritical
 };
 enum action_s : unsigned char {
 	Guard, Move,
@@ -540,6 +543,7 @@ public:
 	int						getstrper() const { return strenght_percent; }
 	short unsigned			getposition() const { return index; }
 	bool					is(feat_s v) const { return feats.is(v); }
+	bool					is(special_quality_s v) const { return special_quality.is(v); }
 	bool					is(usability_s v) const { return usability.is(v); }
 	bool					isalive() const { return hp > 0; }
 	static bool				isallow(alignment_s v, class_s type);

@@ -1070,8 +1070,8 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	e1.pixels_per_line = height;
 	e1.pixels_per_column = width;
 	e1.hilite_odd_lines = false;
-	setfocus(0, true);
 	int x, y;
+	openform();
 	while(ismodal()) {
 		render_background();
 		page_header(x, y, "ƒоступные", title, 0);
@@ -1090,6 +1090,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 		}
 		domodal();
 	}
+	closeform();
 	if(getresult()) {
 		// DEBUG: сохраним модуль автоматически
 		save_campaign();

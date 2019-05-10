@@ -4,7 +4,8 @@ attack_affect_info bsmeta<attack_affect_info>::elements[] = {{"AttackRegular", "
 {"AttackOneAndHalf", "Бросок на попадание, 3/2 атаки", 3},
 {"AttackDouble", "Бросок на попадание, 2 атаки", 4},
 {"AttackAdditional", "В дополнение к предыдущей атаке"},
-{"AttackOnHit", "При попадании"},
+{"AttackOnAnyOneHit", "При попадании любой атаки"},
+{"AttackOnAllHit", "При попадании всех атак"},
 {"AttackOnCritical", "При критическом попадании"},
 };
 assert_enum(attack_affect, AttackOnCritical);

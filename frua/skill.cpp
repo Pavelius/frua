@@ -179,6 +179,8 @@ int	character::get(skill_s id) const {
 		case SaveVsPoison:
 			if(is(BonusSaveVsPoison))
 				result += maptbl(darwen_bonus, get(Constitution)) * 5;
+			if(is(ImmunityPoison))
+				result = 100;
 			break;
 		case SaveVsWands:
 			if(is(BonusSaveVsWands))
@@ -191,12 +193,24 @@ int	character::get(skill_s id) const {
 			result += maptbl(widow_spell_bonus, get(Wisdow)) * 5;
 			break;
 		}
+		if(result > 100)
+			result = 100;
 	} else if(id >= FirstResist && id <= LastResist) {
 		auto con = get(Constitution);
 		switch(id) {
 		case ResistCharm:
 			if(is(CharmResistance))
 				result += 90;
+			if(is(ImmunityCharm))
+				return 100;
+			break;
+		case ResistFire:
+			if(is(ImmunityFire))
+				return 100;
+			break;
+		case ResistCold:
+			if(is(ImmunityCold))
+				return 100;
 			break;
 		}
 		if(result > 99)

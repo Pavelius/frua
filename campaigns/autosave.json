@@ -178,6 +178,64 @@
     ]
   },
   {
+    "typeid":"character",
+    "name":"Тирон",
+    "alignment":"Neutral Good",
+    "type":"FighterMageTheif",
+    "race":"Halfelf",
+    "size":"Medium",
+    "abilities":[
+      16,
+      13,
+      12,
+      15,
+      13,
+      11
+    ],
+    "feats":[
+      "Darkvision",
+      "BonusHits"
+    ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseShield",
+      "UseTheifWeapon",
+      "UseMartialWeapon",
+      "UseLargeWeapon",
+      "UseMagicDevice",
+      "UseScrolls"
+    ],
+    "special_quality":[
+      "ImmunityDesease",
+      "ImmunityPoison",
+      "ImmunityCharm",
+      "ImmunityCold",
+      "ImmunityFire"
+    ],
+    "hp":5,
+    "hp_rolled":15,
+    "strenght_percent":14,
+    "avatar":57,
+    "levels":[
+      1,
+      1,
+      1
+    ],
+    "base_ac":10,
+    "movement":12,
+    "reaction":"Player",
+    "wears":[
+      {
+        "type":2,
+        "value":32
+      },
+      {
+        "type":3,
+        "value":32
+      }
+    ]
+  },
+  {
     "typeid":"item_info",
     "name":"-"
   },

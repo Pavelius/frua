@@ -170,6 +170,7 @@ int bsdata::read(const char* url) {
 }
 
 int bsdata::write(const char* url) {
+	char temp[261]; io::file::getdir(temp, sizeof(temp) - 1);
 	io::file file(url, StreamWrite);
 	if(!file)
 		return 0;
