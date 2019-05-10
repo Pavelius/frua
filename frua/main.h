@@ -86,7 +86,7 @@ enum duration_s : unsigned char {
 	Permanent,
 };
 enum feat_s : unsigned char {
-	Darkvision,
+	Darkvision, TurnUndead,
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells, BonusHits,
 	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,

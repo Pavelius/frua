@@ -1,6 +1,7 @@
 #include "main.h"
 
 feat_info bsmeta<feat_info>::elements[] = {{"Darkvision", "Видит в темноте"},
+{"TurnUndead", "Изгоняет нежить"},
 {"BonusSaveVsPoison", "Бонус к спасению от яда"},
 {"BonusSaveVsWands", "Бонус к спасению от палочек"},
 {"BonusSaveVsSpells", "Бонус к спасению от заклинаний"},
