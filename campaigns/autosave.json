@@ -243,6 +243,7 @@
   },
   {
     "typeid":"character",
+    "name":"Герда",
     "gender":"Female",
     "alignment":"Neutral Good",
     "type":"Fighter",
@@ -250,7 +251,7 @@
     "size":"Medium",
     "abilities":[
       17,
-      10,
+      15,
       11,
       10,
       14,
@@ -292,6 +293,14 @@
     "movement":12,
     "reaction":"Player",
     "wears":[
+      {
+        "type":5,
+        "value":32
+      },
+      {
+        "type":3,
+        "value":32
+      },
       {
         "type":2,
         "value":32
@@ -338,6 +347,7 @@
       "d":12
     },
     "usability":[
+      "UseElfWeapon",
       "UseMartialWeapon",
       "UseLargeWeapon"
     ],
