@@ -460,6 +460,7 @@ public:
 	int						getreach() const;
 	bool					is(item_state_s v) const { return state == v; }
 	bool					is(item_type_s v) const { return getinfo().type == v; }
+	bool					is(usability_s v) const { return getinfo().usability.is(v); }
 	bool					isallow(unsigned mask) const;
 	bool					isarmor() const { return bsmeta<item_type_info>::elements[getinfo().type].use_armor != 0; }
 	bool					isidentified() const { return identify != 0; }
@@ -499,6 +500,7 @@ class character {
 	unsigned				experience;
 	item					wears[12 * 2];
 	friend struct bsmeta<character>;
+	result_s				attack(attack_info& ai, character* enemy);
 	static int				getindex(class_s type, class_s v);
 	void					roll_ability();
 public:

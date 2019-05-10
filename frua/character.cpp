@@ -271,6 +271,8 @@ void character::get(item* weapon, attack_info& ai, bool large_enemy) const {
 			ai.damage = ai.weapon->getinfo().damage_large;
 		ai.critical = ai.weapon->get(CriticalThread);
 		ai.multiplier = ai.weapon->get(CriticalMultiplier);
+		if(is(ElfWeaponTraining) && ai.weapon->is(UseElfWeapon))
+			ai.bonus += 1;
 	} else {
 		ai.damage.c = 1;
 		ai.damage.d = 2;
@@ -391,10 +393,11 @@ void character::rollhp() {
 	}
 }
 
-result_s character::attack(item* weapon, character* enemy) {
-	attack_info ai = {}; get(weapon, ai, enemy->islarge());
-	if(enemy->race == Goblinoid && is(BonusToHitOrcs))
+result_s character::attack(attack_info& ai, character* enemy) {
+	if(is(BonusToHitOrcs) && enemy->race == Goblinoid)
 		ai.bonus++;
+	if(is(HuntEnemy) && (enemy->race == Goblinoid || (enemy->race == Humanoid && enemy->islarge())))
+		ai.damage.b += getlevel();
 	auto chance_hit = (enemy->get(AC) + ai.bonus) * 5;
 	auto chance_crit = (1 + ai.critical) * 5;
 	if(chance_hit < chance_crit)
@@ -408,7 +411,7 @@ result_s character::attack(item* weapon, character* enemy) {
 	result_s result = Success;
 	if(result_value < chance_crit && (chance_hit - chance_crit) <= 10)
 		result = CriticalSuccess;
-	if(result==CriticalSuccess)
+	if(result == CriticalSuccess)
 		act("%герой [+критически попал%а].");
 	else
 		act("%герой попал%а.");
@@ -431,6 +434,11 @@ result_s character::attack(item* weapon, character* enemy) {
 	enemy->damage(ai.type, damage);
 	combat_info::animate(this, enemy, true);
 	return result;
+}
+
+result_s character::attack(item* weapon, character* enemy) {
+	attack_info ai = {}; get(weapon, ai, enemy->islarge());
+	return attack(ai, enemy);
 }
 
 void character::damage(effect_s type, int v) {
