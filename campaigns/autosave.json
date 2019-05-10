@@ -242,6 +242,63 @@
     ]
   },
   {
+    "typeid":"character",
+    "gender":"Female",
+    "alignment":"Neutral Good",
+    "type":"Fighter",
+    "race":"Elf",
+    "size":"Medium",
+    "abilities":[
+      17,
+      10,
+      11,
+      10,
+      14,
+      15
+    ],
+    "feats":[
+      "Darkvision",
+      "BonusHits",
+      "DetectSecretDoors",
+      "DetectUndegroundPassages",
+      "CharmResistance90",
+      "CharmResistance30",
+      "ElfWeaponTraining",
+      "BonusToHitOrcs",
+      "SmallSizeCombatAdvantage",
+      "LightSteps",
+      "HolyGrace",
+      "NoExeptionalStrenght",
+      "LightSensivity",
+      "UniqueCharacter"
+    ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseMetalArmor",
+      "UseShield",
+      "UseTheifWeapon",
+      "UseElfWeapon",
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ],
+    "hp":10,
+    "hp_rolled":10,
+    "strenght_percent":33,
+    "avatar":5,
+    "levels":[
+      2
+    ],
+    "base_ac":10,
+    "movement":12,
+    "reaction":"Player",
+    "wears":[
+      {
+        "type":2,
+        "value":32
+      }
+    ]
+  },
+  {
     "typeid":"item_info",
     "name":"-"
   },
