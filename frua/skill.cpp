@@ -199,8 +199,10 @@ int	character::get(skill_s id) const {
 		auto con = get(Constitution);
 		switch(id) {
 		case ResistCharm:
-			if(is(CharmResistance))
+			if(is(CharmResistance90))
 				result += 90;
+			if(is(CharmResistance30))
+				result += 30;
 			if(is(ImmunityCharm))
 				return 100;
 			break;

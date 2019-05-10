@@ -86,9 +86,9 @@ enum duration_s : unsigned char {
 	Permanent,
 };
 enum feat_s : unsigned char {
-	Darkvision, TurnUndead,
+	Darkvision, TurnUndead, HuntEnemy,
 	BonusSaveVsPoison, BonusSaveVsWands, BonusSaveVsSpells, BonusHits,
-	DetectSecretDoors, DetectUndegroundPassages, CharmResistance,
+	DetectSecretDoors, DetectUndegroundPassages, CharmResistance90, CharmResistance30,
 	ElfWeaponTraining, BonusToHitOrcs, SmallSizeCombatAdvantage, LightSteps,
 	HolyGrace, NoExeptionalStrenght,
 	LightSensivity,
@@ -103,7 +103,7 @@ enum special_quality_s : unsigned char {
 };
 enum usability_s : unsigned char {
 	UseLeatherArmor, UseMetalArmor, UseShield,
-	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon,
+	UseTheifWeapon, UseElfWeapon, UseMartialWeapon, UseLargeWeapon,
 	UseMagicDevice, UseScrolls,
 };
 enum reaction_s : unsigned char {
@@ -460,6 +460,7 @@ public:
 	int						getreach() const;
 	bool					is(item_state_s v) const { return state == v; }
 	bool					is(item_type_s v) const { return getinfo().type == v; }
+	bool					isallow(unsigned mask) const;
 	bool					isarmor() const { return bsmeta<item_type_info>::elements[getinfo().type].use_armor != 0; }
 	bool					isidentified() const { return identify != 0; }
 	bool					isready() const { return ready != 0; }
@@ -550,6 +551,7 @@ public:
 	bool					isallow(alignment_s v) const { return isallow(v, type); }
 	bool					isallow(class_s v) const { return isallow(v, race); }
 	static bool				isallow(class_s v, race_s race);
+	bool					isallow(const item& e) const { return e.isallow(usability.data); }
 	static bool				isallowwear(const void* object, int param);
 	bool					isenemy(const character* p) const;
 	bool					islarge() const { return size == Large; }

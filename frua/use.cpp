@@ -4,6 +4,7 @@ usability_info bsmeta<usability_info>::elements[] = {{"UseLeatherArmor", "Кожанн
 {"UseMetalArmor", "Металические доспехи"},
 {"UseShield", "Щит"},
 {"UseTheifWeapon", "Оружие воров"},
+{"UseElfWeapon", "Оружие эльфов"},
 {"UseMartialWeapon", "Ратное оружие"},
 {"UseLargeWeapon", "Большое оружие"},
 {"UseMagicDevice", "Волшебное устройство"},

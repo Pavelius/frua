@@ -68,8 +68,7 @@
       "BonusSaveVsPoison",
       "BonusSaveVsWands",
       "BonusSaveVsSpells",
-      "BonusHits",
-      "DetectUndegroundPassages"
+      "BonusHits"
     ],
     "usability":[
       "UseLeatherArmor",
@@ -185,29 +184,40 @@
     "race":"Halfelf",
     "size":"Medium",
     "abilities":[
-      16,
-      13,
-      12,
+      18,
+      10,
+      7,
       15,
-      13,
-      11
+      14,
+      14
     ],
     "feats":[
       "Darkvision",
-      "BonusHits"
+      "BonusHits",
+      "DetectSecretDoors",
+      "DetectUndegroundPassages",
+      "CharmResistance90",
+      "CharmResistance30",
+      "ElfWeaponTraining",
+      "BonusToHitOrcs",
+      "SmallSizeCombatAdvantage",
+      "LightSteps",
+      "HolyGrace",
+      "NoExeptionalStrenght",
+      "LightSensivity",
+      "UniqueCharacter"
     ],
     "usability":[
       "UseLeatherArmor",
       "UseShield",
       "UseTheifWeapon",
+      "UseElfWeapon",
       "UseMartialWeapon",
-      "UseLargeWeapon",
-      "UseMagicDevice",
-      "UseScrolls"
+      "UseLargeWeapon"
     ],
     "hp":5,
-    "hp_rolled":15,
-    "strenght_percent":14,
+    "hp_rolled":16,
+    "strenght_percent":9,
     "avatar":57,
     "levels":[
       1,
@@ -219,11 +229,7 @@
     "reaction":"Player",
     "wears":[
       {
-        "type":2,
-        "value":32
-      },
-      {
-        "type":3,
+        "type":16,
         "value":32
       }
     ]
@@ -547,6 +553,27 @@
       "d":6
     },
     "usability":[
+      "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"item_info",
+    "name":"Двуручный меч",
+    "cost":1600,
+    "weight":100,
+    "damage":{
+      "type":"Slashing",
+      "damage":{
+        "c":1,
+        "d":10
+      }
+    },
+    "damage_large":{
+      "c":3,
+      "d":6
+    },
+    "usability":[
+      "UseMartialWeapon",
       "UseLargeWeapon"
     ]
   }

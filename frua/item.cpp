@@ -45,3 +45,8 @@ int	item::getq(ability_s id) const {
 	}
 	return r;
 }
+
+bool item::isallow(unsigned mask) const {
+	auto v = getinfo().usability.data;
+	return (mask & v) == v;
+}

@@ -36,6 +36,11 @@ static bool element_allow_class(const void* source, int value) {
 static bool allow_alignment(const void* source, int value) {
 	return ((character*)source)->isallow((alignment_s)value);
 }
+static markup abilities_statistic_group[] = {{0, 0, {"statistics"}, 0, {0, 0, character::view_statistic}}, {}};
+static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, character::view_skills}}, {}};
+static markup skills_с3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
+{0, "Боевые характеристики", {0, 0, abilities_statistic_group}},
+{}};
 static markup character_gender_radio[] = {{0, "#radiobuttons", {"gender"}}, {}};
 static markup character_race_radio[] = {{0, "#radiobuttons", {"race"}, 0, {allow_race}}, {}};
 static markup character_class_radio[] = {{0, "#radiobuttons", {"type"}, 0, {allow_class}}, {}};
@@ -58,11 +63,8 @@ static markup abilities_personal_group[] = {{0, 0, {"name"}},
 {}};
 static markup abilities_levels_group[] = {{0, 0, {"levels"}, 0, {0, 0, character::view_levels}}, {}};
 static markup abilities_ability_group[] = {{0, 0, {"abilities"}, 0, {0, 0, character::view_ability}}, {}};
-static markup abilities_statistic_group[] = {{0, 0, {"statistics"}, 0, {0, 0, character::view_statistic}}, {}};
-static markup abilities_skills_group[] = {{0, 0, {"skills"}, 0, {0, 0, character::view_skills}}, {}};
 static markup abilities_c1[] = {{0, "Имя", {0, 0, abilities_personal_group}},
 {0, "Атрибуты", {0, 0, abilities_ability_group}},
-{0, "Боевая статистика", {0, 0, abilities_statistic_group}},
 {}};
 static markup abilities_c2[] = {{0, "Уровни и опыт", {0, 0, abilities_levels_group}},
 {0, "Навыки", {0, 0, abilities_skills_group}},
@@ -121,13 +123,10 @@ static markup element_с1[] = {{0, "Базовые характеристики", {0, 0, element_basic
 {}};
 static markup element_с2[] = {{0, "Боевая картинка", {0, 0, element_avatar}},
 {0, "Атрибуты", {0, 0, element_ability}},
-{0, "Боевые характеристики", {0, 0, abilities_statistic_group}},
-{}};
-static markup element_с3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
 {}};
 static markup element_general[] = {{5, 0, {0, 0, element_с1}},
 {3, 0, {0, 0, element_с2}},
-{4, 0, {0, 0, element_с3}},
+{4, 0, {0, 0, skills_с3}},
 {0, 0, {"#commands", 0, generate_commands}},
 {}};
 static markup element_special_feats[] = {{0, "#checkboxes", {"feats"}}, {}};
@@ -139,7 +138,7 @@ static markup element_special_с2[] = {{0, "Специальные качества", {0, 0, element
 {}};
 static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},
-{4, 0, {0, 0, element_с3}},
+{4, 0, {0, 0, skills_с3}},
 {}};
 bool character::isallowwear(const void* object, int param) {
 	auto p = (character*)object;
@@ -165,12 +164,9 @@ static markup items_c2[] = {{0, "Доступность предметов", {0, 0, element_special_
 static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
 static markup items_commands[] = {{0, "Редактировать", {}, 0, {}, edit_items},
 {}};
-static markup items_с3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
-{0, "Боевые характеристики", {0, 0, abilities_statistic_group}},
-{}};
-static markup items_page[] = {{4, 0, {0, 0, items_c1}},
-{4, 0, {0, 0, items_c2}},
-{4, 0, {0, 0, items_с3}},
+static markup items_page[] = {{5, 0, {0, 0, items_c1}},
+{3, 0, {0, 0, items_c2}},
+{4, 0, {0, 0, skills_с3}},
 {0, 0, {"#commands", 0, items_commands}},
 {}};
 static markup element_form[] = {{0, 0, {"#update"}, 0, {}, character::changed},
@@ -183,13 +179,10 @@ markup character::markups[] = {{0, 0, {"#element", 0, element_form}},
 {0, "Генерация персонажа", {"#element", 0, generate_form}},
 {}};
 static markup charsheet_c1[] = {{0, "Атрибуты", {0, 0, abilities_ability_group}},
-{0, "Статистика", {0, 0, abilities_statistic_group}},
-{}};
-static markup charsheet_c3[] = {{0, "Навыки", {0, 0, abilities_skills_group}},
 {}};
 static markup charsheet_c2[] = {{0, "Уровни и опыт", {0, 0, abilities_levels_group}},
 {}};
 markup character::charsheet_markup[] = {{3, 0, {0,0, charsheet_c1}},
 {5, 0, {0, 0, charsheet_c2}},
-{4, 0, {0, 0, charsheet_c3}},
+{4, 0, {0, 0, skills_с3}},
 {}};
