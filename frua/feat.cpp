@@ -2,7 +2,7 @@
 
 feat_info bsmeta<feat_info>::elements[] = {{"Darkvision", "¬идит в темноте"},
 {"TurnUndead", "»згон€ет нежить"},
-{"HuntEnemy", "+1/уровень к урону по гоблиноидам и большим гуманоидам"},
+{"HuntEnemy", "+1/уровень к урону врагам"},
 {"BonusSaveVsPoison", "Ѕонус к спасению от €да"},
 {"BonusSaveVsWands", "Ѕонус к спасению от палочек"},
 {"BonusSaveVsSpells", "Ѕонус к спасению от заклинаний"},

@@ -215,6 +215,13 @@
       "UseMartialWeapon",
       "UseLargeWeapon"
     ],
+    "special_quality":[
+      "ImmunityDesease",
+      "ImmunityPoison",
+      "ImmunityCharm",
+      "ImmunityCold",
+      "ImmunityFire"
+    ],
     "hp":5,
     "hp_rolled":16,
     "strenght_percent":9,

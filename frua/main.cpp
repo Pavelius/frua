@@ -60,7 +60,7 @@ static void main_menu() {
 		e.ask(6, "Импортировать данные");
 		e.ask(7, "Экспортировать данные");
 		e.ask(100, "Выход и прогаммы");
-		auto id = e.choose("Приключения в забытых королевствах", {"intro", "main"});
+		auto id = e.choose("Приключения в забытых королевствах", {"adventure", "forest_site"});
 		switch(id) {
 		case 1: decoration::choose(bsmeta<character>::meta); break;
 		case 2: decoration::choose(bsmeta<item_info>::meta); break;

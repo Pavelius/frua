@@ -49,7 +49,8 @@ static struct char_code_info {
 {'ё', '.'}, {'я', 'Z'},
 };
 struct main_picture_info : surface, picture_info {
-	bool load(const picture_info& pi) {
+	point	size;
+	bool load(const picture_info& pi, int sx = picture_width, int sy = picture_height) {
 		if(id && folder
 			&& strcmp(id, pi.id) == 0
 			&& strcmp(folder, pi.folder) == 0)
@@ -59,6 +60,8 @@ struct main_picture_info : surface, picture_info {
 			this->clear();
 		char temp[260]; geturl(temp);
 		this->read(temp);
+		size.x = sx;
+		size.y = sy;
 		return true;
 	}
 } picture;
@@ -119,16 +122,16 @@ int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, co
 	return rc.height() + metrics::padding * 2;
 }
 
-static void render_picture(int x, int y) {
+static void render_picture(int x, int y, bool border = true) {
 	auto x1 = x, y1 = y;
-	auto w = picture_width;
+	auto w = picture.size.x;
 	if(w > picture.width) {
-		x = x + (picture_width - picture_width) / 2;
+		x = x + (picture.size.x - picture.width) / 2;
 		w = picture.width;
 	}
-	auto h = picture_height;
+	auto h = picture.size.y;
 	if(h > picture.height) {
-		y = y + (picture.height - picture_height) / 2;
+		y = y + (picture.size.y - picture.height) / 2;
 		h = picture.height;
 	}
 	if(true) {
@@ -136,7 +139,8 @@ static void render_picture(int x, int y) {
 		draw::state push; setclip(rc);
 		blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
 	}
-	rectb({x1, y1, x1 + picture_width, y1 + picture_height}, colors::border);
+	if(border)
+		rectb({x, y, x + w, y + h}, colors::border);
 }
 
 static void render_background() {
@@ -440,6 +444,16 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 	return fieldv(x, y, width, title, temp);
 }
 
+static void page_header_center(int& x, int& y, const char* title) {
+	x = metrics::padding;
+	y = metrics::padding * 2;
+	draw::state push;
+	font = metrics::h1;
+	fore = colors::yellow;
+	text((getwidth() - textw(title)) / 2, y, title);
+	y += texth() + metrics::padding * 3;
+}
+
 static void page_header(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page = 0, int page_maximum = 0) {
 	char temp[260]; stringcreator sc(temp);
 	x = metrics::padding;
@@ -683,14 +697,15 @@ int answer::choose(const char* title, const picture_info& pi) {
 	openform();
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, title, 0, 0, 0, 0);
-		picture.load(pi);
+		page_header_center(x, y, title);
+		picture.load(pi, 794, 300);
 		picture.position = pi.position;
 		render_picture(x, y);
-		auto x1 = x + picture_width + metrics::padding;
-		auto w1 = getwidth() - x1 - metrics::padding;
+		auto w1 = (getwidth() - x - metrics::padding) / 2;
+		y += 300 + metrics::padding*3;
+		x = (getwidth() - w1) / 2;
 		for(auto& e : elements)
-			y += button(x1, y, w1, 0, cmdi(buttonparam, e.id), e.name);
+			y += button(x, y, w1, 0, cmdi(buttonparam, e.id), e.name);
 		domodal();
 	}
 	closeform();
@@ -1155,6 +1170,22 @@ static void character_sheet() {
 	decoration::edit(p->getname(), p, bsmeta<character>::meta, character::charsheet_markup);
 }
 
+void decoration::database_export() {
+	char filter_text[261];
+	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
+	char folder[261] = {0};
+	if(dialog::save("Ёкспортировать данные", folder, filter_text, 0))
+		bsdata::writetxt(folder);
+}
+
+void decoration::database_import() {
+	char filter_text[261];
+	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
+	char folder[261] = {0};
+	if(dialog::open("»мпортировать данные", folder, filter_text, 0))
+		bsdata::readtxt(folder);
+}
+
 int scene::choose() {
 	party[0]->setactive();
 	openform();
@@ -1245,20 +1276,4 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 	}
 	closeform();
 	return getresult() != 0;
-}
-
-void decoration::database_export() {
-	char filter_text[261];
-	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
-	char folder[261] = {0};
-	if(dialog::save("Ёкспортировать данные", folder, filter_text, 0))
-		bsdata::writetxt(folder);
-}
-
-void decoration::database_import() {
-	char filter_text[261];
-	io::plugin::getfilter(filter_text, filter_text + sizeof(filter_text) - 1);
-	char folder[261] = {0};
-	if(dialog::open("»мпортировать данные", folder, filter_text, 0))
-		bsdata::readtxt(folder);
 }
