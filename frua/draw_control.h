@@ -152,7 +152,14 @@ struct scrollable : control {
 	virtual void			redraw(rect rc) {}
 	void					view(const rect& rc) override;
 };
-struct textedit : scrollable {
+class textedit : public scrollable {
+	char*					string;
+	unsigned				maxlenght;
+	int						cashed_width;
+	int						cashed_string;
+	int						cashed_origin;
+	int						p1, p2;
+public:
 	rect					rctext, rcclient;
 	unsigned				align;
 	bool					readonly;
@@ -181,13 +188,6 @@ struct textedit : scrollable {
 	void					select(int index, bool shift);
 	unsigned				select_all(bool run);
 	void					setcount(unsigned v) { maxlenght = v; }
-private:
-	char*					string;
-	unsigned				maxlenght;
-	int						cashed_width;
-	int						cashed_string;
-	int						cashed_origin;
-	int						p1, p2;
 };
 }
 namespace dialog {
