@@ -10,6 +10,7 @@ const bsreq bsmeta<character>::meta[] = {
 	BSREQ(abilities),
 	BSREQ(feats),
 	BSREQ(usability),
+	BSREQ(special_quality),
 	BSREQ(hp), BSREQ(hp_rolled),
 	BSREQ(strenght_percent),
 	BSREQ(avatar),
@@ -131,9 +132,11 @@ static markup element_general[] = {{5, 0, {0, 0, element_с1}},
 {}};
 static markup element_special_feats[] = {{0, "#checkboxes", {"feats"}}, {}};
 static markup element_special_usability[] = {{0, "#checkboxes", {"usability"}}, {}};
+static markup element_special_quality[] = {{0, "#checkboxes", {"special_quality"}}, {}};
 static markup element_special_с1[] = {{0, "Способности расы или класса", {0, 0, element_special_feats}},
 {}};
 static markup element_special_с2[] = {{0, "Доступность предметов", {0, 0, element_special_usability}},
+{0, "Специальные качества", {0, 0, element_special_quality}},
 {}};
 static markup element_special[] = {{4, 0, {0, 0, element_special_с1}},
 {4, 0, {0, 0, element_special_с2}},

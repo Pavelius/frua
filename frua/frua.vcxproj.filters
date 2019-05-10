@@ -255,6 +255,9 @@
     <ClCompile Include="win_draw_shell.cpp">
       <Filter>Платформа</Filter>
     </ClCompile>
+    <ClCompile Include="special_quaility.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

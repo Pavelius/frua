@@ -94,6 +94,11 @@ enum feat_s : unsigned char {
 	LightSensivity,
 	UniqueCharacter,
 };
+enum special_quality_s : unsigned char {
+	HitMagicWeapon, HitSilverWeapon,
+	HalfDamagePierce, HalfDamageSlashing, HalfDamageBludgeon,
+	Regeneration,
+};
 enum usability_s : unsigned char {
 	UseLeatherArmor, UseMetalArmor, UseShield,
 	UseTheifWeapon, UseMartialWeapon, UseLargeWeapon,
@@ -147,7 +152,7 @@ enum magic_power_s : unsigned char {
 	// Rings
 	Blinking, ChameleonPower, Clumsiness, Contrariness, DjinniSummoning, ElementalControl, FeatherFalling,
 	FreeAction, JumpingPower, MindShielding, Protection,
-	Ram, Regeneration, ShockingGrasp, ShootingStars, SpellStoring, SpellTurning,
+	Ram, ShockingGrasp, ShootingStars, SpellStoring, SpellTurning,
 	Sustenance, SwimmingPower, Telekinesis, Truth, Warmth, WaterWalking, Weakness, Wizardry, DarkvisionPower,
 };
 enum gender_s : unsigned char {
@@ -253,8 +258,11 @@ struct decoration {
 	static void				editlist(const bsreq* type) { choose(type, false); }
 	static const decoration* find(const bsreq* type);
 };
-
 struct name_info {
+	const char*				id;
+	const char*				name;
+};
+struct special_quality_info {
 	const char*				id;
 	const char*				name;
 };
@@ -476,6 +484,7 @@ class character {
 	char					initiative;
 	cflags<feat_s>			feats;
 	cflags<usability_s>		usability;
+	cflags<special_quality_s> special_quality;
 	char					strenght_percent;
 	char					movement, current_movement;
 	short unsigned			index;
@@ -646,8 +655,8 @@ public:
 };
 DECLENUM(alignment);
 DECLENUM(ability);
-DECLENUM(class);
 DECLENUM(attack_affect);
+DECLENUM(class);
 DECLENUM(direction);
 DECLENUM(effect);
 DECLENUM(feat);
@@ -659,6 +668,7 @@ DECLENUM(reaction);
 DECLENUM(save);
 DECLENUM(size);
 DECLENUM(skill);
+DECLENUM(special_quality);
 DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;

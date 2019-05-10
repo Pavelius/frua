@@ -185,6 +185,7 @@
     <ClCompile Include="size.cpp" />
     <ClCompile Include="skill.cpp" />
     <ClCompile Include="damage.cpp" />
+    <ClCompile Include="special_quaility.cpp" />
     <ClCompile Include="sprite_util.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>

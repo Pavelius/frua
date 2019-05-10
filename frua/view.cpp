@@ -1155,10 +1155,6 @@ static void character_sheet() {
 }
 
 int scene::choose() {
-	struct cmdv : cmd {
-		int getid() const override { return v + 1; }
-		constexpr cmdv(void(*p)(), int v) : cmd(p, v) {}
-	};
 	party[0]->setactive();
 	openform();
 	while(ismodal()) {
@@ -1191,7 +1187,7 @@ int scene::choose() {
 		x = metrics::padding;
 		y = y_buttons;
 		for(unsigned i = 0; i < elements.count; i++)
-			x += button(x, y, elements.data[i].name, cmdv(buttonparam, elements.data[i].id), 0);
+			x += button(x, y, elements.data[i].name, cmdi(buttonparam, elements.data[i].id), 0);
 		x += button(x, y, "Лист", cmd(character_sheet), Alpha + 'C');
 		x += button(x, y, "Сменить", cmd(change_character), Alpha + 'N');
 		domodal();
