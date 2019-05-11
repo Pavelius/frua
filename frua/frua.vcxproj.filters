@@ -258,6 +258,9 @@
     <ClCompile Include="overland.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="maparea.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

@@ -124,22 +124,24 @@ struct picker : list {
 };
 struct table : list {
 	const markup*			columns;
-	constexpr table(const markup* columns) : columns(columns) {}
-	virtual unsigned		getalign(int column) const { return AlignLeft; }
+	const bsreq*			type;
+	int						minimum_width, column_count, resize_column_count;
+	constexpr table(const markup* columns, const bsreq* type) : columns(columns), type(type),
+		minimum_width(0), column_count(0), resize_column_count(0) {}
+	virtual image_flag_s	getalign(int column) const;
 	virtual const char*		getheader(char* result, const char* result_max, int column) const;
+	const char*				getname(char* result, const char* result_end, int line, int column) const override;
 	virtual void*			getrow(int index) const { return 0; }
 	void					row(const rect &rc, int index) override;
 	int						rowheader(const rect& rc) const { return 0; }
+	void					view(const rect& rc) override;
 };
 struct reftable : table {
 	void**					source;
 	unsigned				count;
-	const markup*			columns;
-	const bsreq*			type;
-	constexpr reftable(void** source, unsigned count, const bsreq* type, const markup* columns) : table(columns), source(source), count(count), columns(columns), type(type) {}
-	unsigned				getalign(int column) const override;
+	constexpr reftable(void** source, unsigned count, const bsreq* type, const markup* columns) : table(columns, type),
+		source(source), count(count) {}
 	int						getmaximum() const override { return count; }
-	const char*				getname(char* result, const char* result_end, int line, int column) const override;
 	void*					getrow(int index) const override { return source[index]; }
 };
 struct scrollable : control {

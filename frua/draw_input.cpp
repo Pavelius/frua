@@ -202,6 +202,7 @@ int draw::getfocus() {
 
 void draw::openform() {
 	setfocus(0, true);
+	hot.zero();
 }
 
 void draw::closeform() {

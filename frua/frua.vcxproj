@@ -171,6 +171,7 @@
     <ClCompile Include="main_util.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="maparea.cpp" />
     <ClCompile Include="mapcore.cpp" />
     <ClCompile Include="markup.cpp" />
     <ClCompile Include="overland.cpp" />

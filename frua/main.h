@@ -354,6 +354,7 @@ struct picture_info {
 	bool operator==(const picture_info& e) const;
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
 	static const picture_info* choose_image();
+	void					correct(int xmax, int ymax, int width, int height);
 	static void				edit_monsters();
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
@@ -603,7 +604,6 @@ struct mapcore {
 };
 template<short XM, short YM> struct map_info : mapcore {
 	static const short		xmax = XM, ymax = YM;
-	unsigned char			data[XM*YM];
 	static direction_s		getdirection(short unsigned i1, short unsigned i2) { return mapcore::getdirection(i1, i2, XM, YM); }
 	static point			i2m(short unsigned i) { return {i % XM, i / XM}; }
 	static short unsigned	m2i(short x, short y) { return y * XM + x; };
@@ -642,13 +642,25 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update() const;
 	void					visualize(bool use_update) const;
 };
+struct maparea {
+	const char*				name;
+	char					move_rate;
+	unsigned char			impassable;
+	constexpr maparea() : name(0), impassable(0), move_rate(1) {}
+	static void				choose(maparea* source);
+};
 class overland_info : public map_info<99, 67> {
 	static const int ex = 8, ey = 8;
 	short unsigned			index;
 	picture_info			source;
+	unsigned char			data[xmax*ymax];
+	maparea					areas[16];
 public:
-	constexpr overland_info(const picture_info& source, short unsigned index) : source(source), index(0) {}
+	constexpr overland_info(const picture_info& source, short unsigned index) :
+		source(source), index(0), areas(), data() {}
+	static void				choose_areas(overland_info* p);
 	void					edit();
+	maparea&				getarea(int index) { return areas[index]; }
 	void					setindex(short unsigned v);
 	void					move(direction_s v);
 };

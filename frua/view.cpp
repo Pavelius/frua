@@ -122,7 +122,7 @@ int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, co
 	return rc.height() + metrics::padding * 2;
 }
 
-static void render_picture(int x, int y, bool border = true) {
+static void render_picture(int x, int y, bool border = true, rect* result = 0) {
 	auto x1 = x, y1 = y;
 	auto w = picture.size.x;
 	if(w > picture.width) {
@@ -134,13 +134,15 @@ static void render_picture(int x, int y, bool border = true) {
 		y = y + (picture.size.y - picture.height) / 2;
 		h = picture.height;
 	}
+	rect rc = {x, y, x + w, y + h};
 	if(true) {
-		rect rc = {x, y, x + w, y + h};
 		draw::state push; setclip(rc);
 		blit(*canvas, x, y, w, h, 0, picture, picture.position.x, picture.position.y);
 	}
 	if(border)
-		rectb({x, y, x + w, y + h}, colors::border);
+		rectb(rc, colors::border);
+	if(result)
+		*result = rc;
 }
 
 static void render_background() {
@@ -702,7 +704,7 @@ int answer::choose(const char* title, const picture_info& pi) {
 		picture.position = pi.position;
 		render_picture(x, y);
 		auto w1 = (getwidth() - x - metrics::padding) / 2;
-		y += 300 + metrics::padding*3;
+		y += 300 + metrics::padding * 3;
 		x = (getwidth() - w1) / 2;
 		for(auto& e : elements)
 			y += button(x, y, w1, 0, cmdi(buttonparam, e.id), e.name);
@@ -1278,15 +1280,50 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 	return getresult() != 0;
 }
 
+void maparea::choose(maparea* source) {
+	static markup columns[] = {{-1, "Наименование", {"name"}},
+	{32, "Движение", {"move_rate"}},
+	{32, "Проходимое", {"impassable"}},
+	{}};
+	struct table : controls::table {
+		maparea* source;
+		int	getmaximum() const { return 16; }
+		void* getrow(int index) const override { return source + index; }
+		constexpr table(maparea* source, const markup* columns) : controls::table(columns, bsmeta<maparea>::meta), source(source) {}
+	} e1(source, columns);
+	int x, y;
+	openform();
+	while(ismodal()) {
+		render_background();
+		page_header(x, y, 0, "Области", 0);
+		e1.view({x, y, x + getwidth() - metrics::padding * 2, y_buttons - metrics::padding});
+		page_footer(x, y, false);
+		domodal();
+	}
+	closeform();
+}
+
+void overland_info::choose_areas(overland_info* p) {
+	maparea::choose(p->areas);
+}
+
+static void set_area() {
+	auto p = (overland_info*)hot.param;
+}
+
 void overland_info::edit() {
+	rect rc;
+	const int picture_width = ex * xmax;
+	const int picture_height = ey * ymax;
 	int x, y;
 	openform();
 	while(ismodal()) {
 		render_background();
 		x = metrics::padding, y = metrics::padding;
-		picture.load(source, ex*xmax, ey*ymax);
+		picture.load(source, picture_width, picture_height);
+		source.correct(picture_width, picture_height, picture.width, picture.height);
 		picture.position = source.position;
-		render_picture(x, y, false);
+		render_picture(x, y, false, &rc);
 		if(index != Blocked) {
 			auto pt = i2m(index);
 			rect rc;
@@ -1295,16 +1332,32 @@ void overland_info::edit() {
 			rc.x2 = rc.x1 + ex;
 			rc.y2 = rc.y1 + ey;
 			rectb(rc, colors::black);
-			rc.offset(1, 1);
+			rc.offset(-1, -1);
 			rectb(rc, colors::edit);
 		}
 		page_footer(x, y, true);
+		x += button(x, y, "Установить", cmd(set_area, (int)this), KeySpace);
+		x += button(x, y, "Сменить", cmd(choose_areas, this), Alpha + 'S');
 		domodal();
 		switch(hot.key) {
 		case KeyLeft: move(Left); break;
 		case KeyRight: move(Right); break;
 		case KeyUp: move(Up); break;
 		case KeyDown: move(Down); break;
+		case Ctrl | KeyLeft: source.position.x--; break;
+		case Ctrl | KeyRight: source.position.x++; break;
+		case Ctrl | KeyUp: source.position.y--; break;
+		case Ctrl | KeyDown: source.position.y++; break;
+		case MouseLeft:
+			if(hot.pressed) {
+				point hilite = {-1, -1};
+				if(areb(rc)) {
+					hilite.x = (hot.mouse.x - rc.x1) / ex;
+					hilite.y = (hot.mouse.y - rc.y1) / ey;
+					index = m2i(hilite);
+				}
+			}
+			break;
 		}
 	}
 	closeform();

@@ -16,3 +16,14 @@ void picture_info::set(const char* folder, const char* id) {
 	this->folder = folder;
 	this->id = id;
 }
+
+void picture_info::correct(int xmax, int ymax, int width, int height) {
+	if(position.x + xmax > width)
+		position.x = width - xmax;
+	if(position.y + ymax > height)
+		position.y = height - ymax;
+	if(position.x < 0)
+		position.x = 0;
+	if(position.y < 0)
+		position.y = 0;
+}
