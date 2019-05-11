@@ -642,6 +642,16 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					update() const;
 	void					visualize(bool use_update) const;
 };
+class overland_info : public map_info<99, 67> {
+	static const int ex = 8, ey = 8;
+	short unsigned			index;
+	picture_info			source;
+public:
+	constexpr overland_info(const picture_info& source, short unsigned index) : source(source), index(0) {}
+	void					edit();
+	void					setindex(short unsigned v);
+	void					move(direction_s v);
+};
 struct answer {
 	struct element {
 		int					id;

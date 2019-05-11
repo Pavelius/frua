@@ -255,6 +255,9 @@
     <ClCompile Include="special_quaility.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="overland.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

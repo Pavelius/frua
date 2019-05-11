@@ -1277,3 +1277,35 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 	closeform();
 	return getresult() != 0;
 }
+
+void overland_info::edit() {
+	int x, y;
+	openform();
+	while(ismodal()) {
+		render_background();
+		x = metrics::padding, y = metrics::padding;
+		picture.load(source, ex*xmax, ey*ymax);
+		picture.position = source.position;
+		render_picture(x, y, false);
+		if(index != Blocked) {
+			auto pt = i2m(index);
+			rect rc;
+			rc.x1 = x + pt.x*ex;
+			rc.y1 = y + pt.y*ey;
+			rc.x2 = rc.x1 + ex;
+			rc.y2 = rc.y1 + ey;
+			rectb(rc, colors::black);
+			rc.offset(1, 1);
+			rectb(rc, colors::edit);
+		}
+		page_footer(x, y, true);
+		domodal();
+		switch(hot.key) {
+		case KeyLeft: move(Left); break;
+		case KeyRight: move(Right); break;
+		case KeyUp: move(Up); break;
+		case KeyDown: move(Down); break;
+		}
+	}
+	closeform();
+}

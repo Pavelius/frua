@@ -73,6 +73,11 @@ static void main_menu() {
 	}
 }
 
+static void test_overland() {
+	overland_info e({"maps", "amn"}, 0);
+	e.edit();
+}
+
 int	main(int argc, char *argv[]) {
 	if(!test_array())
 		return -1;
@@ -80,7 +85,8 @@ int	main(int argc, char *argv[]) {
 	draw::initialize();
 	//test_item();
 	//test_combat();
-	main_menu();
+	//main_menu();
+	test_overland();
 	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//test_combat();

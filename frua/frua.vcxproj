@@ -173,6 +173,7 @@
     </ClCompile>
     <ClCompile Include="mapcore.cpp" />
     <ClCompile Include="markup.cpp" />
+    <ClCompile Include="overland.cpp" />
     <ClCompile Include="picture.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
