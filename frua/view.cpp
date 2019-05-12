@@ -1116,6 +1116,62 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	return -1;
 }
 
+class cmdfm : public runable {
+	const char*		name;
+	const markup*	columns;
+	const bsreq*	type;
+	void*			object;
+	void*			source;
+	unsigned*		count;
+	unsigned		size;
+	unsigned		maximum;
+	callback		proc;
+	static cmdfm	e;
+public:
+	cmdfm() = default;
+	constexpr cmdfm(callback proc, void* object, const bsreq* type = 0, const markup* columns = 0, const char* name = 0, void* source = 0, unsigned size = 0, unsigned* count = 0, unsigned maximum = 0) : proc(proc),
+		object(object), type(type), columns(columns),
+		name(name),
+		source(source), size(size), count(count), maximum(maximum) {}
+	int	getid() const override { return (int)proc; }
+	void execute() const override {
+		e = *this;
+		draw::execute(proc);
+	}
+	static void change() {
+		if(!e.count)
+			return;
+		decoration::edit(e.name,
+			e.source, e.size, *e.count, e.maximum,
+			e.type, e.columns,
+			e.object, 0);
+	}
+};
+cmdfm cmdfm::e;
+
+void decoration::open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta,
+	const markup* columns, const markup* element) {
+	controls::listtable e1(source, count, size, meta, columns);
+	e1.show_border = false;
+	int x, y;
+	openform();
+	while(ismodal()) {
+		render_background();
+		page_header(x, y, "Доступные", name, 0);
+		auto w = getwidth() - metrics::padding * 2;
+		e1.view({x, y, x + w, y_buttons - metrics::padding});
+		page_footer(x, y, false);
+		if(e1.getmaximum() > 0) {
+			cmdfm pc(cmdfm::change, e1.getrow(e1.current), meta, element, name, source, size, &count, maxcount);
+			x += button(x, y, "Редактировать", pc, KeyEnter);
+			if(hot.key == F2)
+				pc.execute();
+		}
+		domodal();
+	}
+	closeform();
+}
+
 void* decoration::choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns) {
 	controls::reftable e1(source, count, type, columns);
 	e1.show_border = false;
@@ -1278,31 +1334,6 @@ bool decoration::edit(const char* name, void* object, const bsreq* type, const m
 	}
 	closeform();
 	return getresult() != 0;
-}
-
-void maparea::choose(maparea* source) {
-	static markup columns[] = {{-1, "Наименование", {"name"}},
-	{32, "Движение", {"move_rate"}},
-	{32, "Проходимое", {"impassable"}},
-	{}};
-	struct table : controls::table {
-		maparea* source;
-		int	getmaximum() const { return 16; }
-		void* getrow(int index) const override { return source + index; }
-		constexpr table(maparea* source, const markup* columns) : controls::table(columns, bsmeta<maparea>::meta), source(source) {}
-	} e1(source, columns);
-	e1.show_border = false;
-	int x, y;
-	openform();
-	while(ismodal()) {
-		render_background();
-		page_header(x, y, "Доступные", "Области", 0);
-		auto w = getwidth() - metrics::padding*2;
-		e1.view({x, y, x + w, y_buttons - metrics::padding});
-		page_footer(x, y, false);
-		domodal();
-	}
-	closeform();
 }
 
 void overland_info::choose_areas(overland_info* p) {

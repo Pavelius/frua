@@ -15,14 +15,25 @@ const markup* getmarkup(const bsreq* type) {
 	return p->markups;
 }
 
-bool decoration::edit(bsdata& source, void* object, void* copy_object, const char* form_name) {
+bool decoration::edit(bsdata& source, void* object, void* copy_object) {
 	auto result = true;
 	auto pd = find(source.meta);
 	if(!pd)
 		return false;
+	return edit(pd->name, source.data, source.size, source.count, source.maximum, source.meta, 0,
+		object, copy_object);
+}
+
+bool decoration::edit(const char* title, void* source, unsigned size, unsigned& count, unsigned maximum,
+	const bsreq* meta, const markup* elements,
+	void* object, void* copy_object) {
+	if(!size)
+		return false;
+	if(!object && count >= maximum)
+		return false;
+	auto result = true;
 	char copy_buffer[256] = {};
 	auto copy = copy_buffer;
-	auto size = source.size;
 	auto creating = false;
 	if(size > sizeof(copy_buffer))
 		copy = new char[size];
@@ -34,9 +45,9 @@ bool decoration::edit(bsdata& source, void* object, void* copy_object, const cha
 		memset(copy, 0, size);
 		creating = true;
 	}
-	if(edit(pd->name, copy, source.size, source.meta, 0, creating)) {
+	if(edit(title, copy, size, meta, elements, creating)) {
 		if(!object)
-			object = source.add();
+			object = (char*)source + (count++)*size;
 		if(object)
 			memcpy(object, copy, size);
 	} else

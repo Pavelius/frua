@@ -123,8 +123,8 @@ struct picker : list {
 	void					view(const rect& rc) override;
 };
 struct table : list {
-	const markup*			columns;
 	const bsreq*			type;
+	const markup*			columns;
 	int						minimum_width, column_count, resize_column_count;
 	constexpr table(const markup* columns, const bsreq* type) : columns(columns), type(type),
 		minimum_width(0), column_count(0), resize_column_count(0) {}
@@ -135,6 +135,15 @@ struct table : list {
 	void					row(const rect &rc, int index) override;
 	int						rowheader(const rect& rc) const { return 0; }
 	void					view(const rect& rc) override;
+};
+struct listtable : table {
+	void*					source;
+	unsigned				count;
+	unsigned				size;
+	constexpr listtable(void* source, unsigned count, unsigned size, const bsreq* type, const markup* columns) : table(columns, type),
+		source(source), count(count), size(size) {}
+	int						getmaximum() const override { return count; }
+	void*					getrow(int index) const override { return (char*)source + index*size; }
 };
 struct reftable : table {
 	void**					source;
