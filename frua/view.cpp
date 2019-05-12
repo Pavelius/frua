@@ -1291,12 +1291,14 @@ void maparea::choose(maparea* source) {
 		void* getrow(int index) const override { return source + index; }
 		constexpr table(maparea* source, const markup* columns) : controls::table(columns, bsmeta<maparea>::meta), source(source) {}
 	} e1(source, columns);
+	e1.show_border = false;
 	int x, y;
 	openform();
 	while(ismodal()) {
 		render_background();
-		page_header(x, y, 0, "Области", 0);
-		e1.view({x, y, x + getwidth() - metrics::padding * 2, y_buttons - metrics::padding});
+		page_header(x, y, "Доступные", "Области", 0);
+		auto w = getwidth() - metrics::padding*2;
+		e1.view({x, y, x + w, y_buttons - metrics::padding});
 		page_footer(x, y, false);
 		domodal();
 	}

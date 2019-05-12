@@ -656,8 +656,7 @@ class overland_info : public map_info<99, 67> {
 	unsigned char			data[xmax*ymax];
 	maparea					areas[16];
 public:
-	constexpr overland_info(const picture_info& source, short unsigned index) :
-		source(source), index(0), areas(), data() {}
+	overland_info(const picture_info& source, short unsigned index);
 	static void				choose_areas(overland_info* p);
 	void					edit();
 	maparea&				getarea(int index) { return areas[index]; }
