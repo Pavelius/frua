@@ -1088,15 +1088,20 @@ void decoration::database_import() {
 		bsdata::readtxt(folder);
 }
 
+static void choose_color() {
+	static color custom[16];
+	dialog::color(*((color*)hot.param), custom);
+}
+
 int	decoration::button_color(int x, int y, int width, const void* object, const char* id, int index) {
-	color c1 = *((color*)object);
+	color& c1 = *((color*)object);
 	unsigned flags = 0;
 	setposition(x, y, width);
 	rect rc = {x, y, x + width, y + texth() + 8};
 	focusing((int)object, flags, rc);
 	char temp[260]; zprint(temp, "%1i, %2i, %3i", c1.r, c1.g, c1.b);
-	if(buttonh(rc, false, isfocused(flags), false, true, c1, temp, 0, false)) {
-	}
+	if(buttonh(rc, false, isfocused(flags), false, true, c1, temp, 0, false))
+		execute(choose_color, (int)&c1);
 	return rc.height() + metrics::padding*2;
 }
 

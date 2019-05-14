@@ -78,15 +78,20 @@ void table::row(const rect &rc, int index) {
 		else
 			re.x2 = re.x1 + e.width;
 		re.x1 = re.x1 + 1;
-		char temp[260]; temp[0] = 0;
-		auto p = getname(temp, temp + sizeof(temp) - 1, index, i);
-		if(p && p[0]) {
-			auto w = re.width();
-			auto align = getalign(i);
-			if(align==AlignRight)
-				draw::text(re.x1 + w - 4 - textw(p), re.y1 + 4, p);
-			else
-				draw::textc(re.x1 + 4, re.y1 + 4, w - 4 * 2, p);
+		if(e.proc.custom) {
+			auto v = getrow(index);
+			e.proc.custom(re.x1, re.y1, re.width(), v, e.value.id, i);
+		} else {
+			char temp[260]; temp[0] = 0;
+			auto p = getname(temp, temp + sizeof(temp) - 1, index, i);
+			if(p && p[0]) {
+				auto w = re.width();
+				auto align = getalign(i);
+				if(align == AlignRight)
+					draw::text(re.x1 + w - 4 - textw(p), re.y1 + 4, p);
+				else
+					draw::textc(re.x1 + 4, re.y1 + 4, w - 4 * 2, p);
+			}
 		}
 		re.x1 = re.x2;
 	}
