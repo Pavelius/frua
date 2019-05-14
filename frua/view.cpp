@@ -97,19 +97,6 @@ void view_initialize() {
 	load_campaign();
 }
 
-static int button(int x, int y, const char* string, const runable& ev, unsigned key, bool checked = false) {
-	auto id = ev.getid();
-	auto dx = textw(string);
-	rect rc = {x, y, x + dx + metrics::padding * 2, y + texth() + metrics::padding * 2};
-	addelement(id, rc);
-	auto focused = getfocus() == ev.getid();
-	if(draw::buttonh(rc, checked, focused, false, true, string, key, false))
-		ev.execute();
-	if(focused)
-		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
-	return rc.width() + 2;
-}
-
 int	draw::button(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips, int key) {
 	setposition(x, y, width);
 	rect rc = {x, y, x + width, y + texth() + metrics::padding * 2};
@@ -449,6 +436,7 @@ static int fieldv(int x, int y, int width, const char* title, int value, int val
 static void page_header_center(int& x, int& y, const char* title) {
 	x = metrics::padding;
 	y = metrics::padding * 2;
+	render_background();
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
@@ -456,10 +444,11 @@ static void page_header_center(int& x, int& y, const char* title) {
 	y += texth() + metrics::padding * 3;
 }
 
-static void page_header(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page = 0, int page_maximum = 0) {
+void draw::pageheader(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page, int page_maximum) {
 	char temp[260]; stringcreator sc(temp);
 	x = metrics::padding;
 	y = metrics::padding;
+	render_background();
 	draw::state push;
 	font = metrics::h1;
 	fore = colors::yellow;
@@ -480,7 +469,7 @@ static void page_header(int& x, int& y, const char* title_prefix, const char* ti
 	y += texth() + metrics::padding;
 }
 
-static void page_footer(int& x, int& y, bool allow_cancel = false) {
+void draw::pagefooter(int& x, int& y, bool allow_cancel) {
 	x = metrics::padding;
 	y = y_buttons;
 	if(allow_cancel) {
@@ -698,7 +687,6 @@ int answer::choose(const char* title, const picture_info& pi) {
 	int x, y;
 	openform();
 	while(ismodal()) {
-		render_background();
 		page_header_center(x, y, title);
 		picture.load(pi, 794, 300);
 		picture.position = pi.position;
@@ -742,10 +730,9 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	setfocus(0, true);
 	int x, y;
 	while(ismodal()) {
-		render_background();
-		page_header(x, y, title, 0, 0, 0, 0);
+		pageheader(x, y, title, 0, 0, 0, 0);
 		s1.view({x, y, getwidth() - metrics::padding, y_buttons - metrics::padding * 2});
-		page_footer(x, y, true);
+		pagefooter(x, y, true);
 		x += button(x, y, "Редактировать", cmd(picture_info::edit_monsters), Ctrl + Alpha + 'E');
 		domodal();
 	}
@@ -882,7 +869,7 @@ int item::view_check(int x, int y, int width, const void* object, const char* id
 }
 
 void damage_info::edit(void* p) {
-	decoration::edit((damage_info*)p);
+	//decoration::edit((damage_info*)p);
 }
 
 int item_info::view_weapon(int x, int y, int width, const void* object, const char* id, int index) {
@@ -897,110 +884,6 @@ void character::apply_avatar(void* object) {
 	auto p = (character*)object;
 	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))
 		return;
-}
-
-static void add_value() {
-	auto& p = *((int*)hot.param);
-	p++;
-}
-
-static void sub_value() {
-	auto& p = *((int*)hot.param);
-	p--;
-}
-
-bool decoration::edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements, bool creating) {
-	int x, y;
-	if(!elements) {
-		// Получим форму элемента по умолчанию
-		elements = getmarkup(type);
-		auto fm = elements->getform(object, "element");
-		if(fm) {
-			elements = fm->value.child;
-			if(fm->title)
-				name = fm->title;
-		}
-	}
-	if(!elements)
-		return false;
-	if(!name) {
-		auto pd = decoration::find(type);
-		if(pd)
-			name = pd->name;
-	}
-	if(!name)
-		name = "Форма редактирования";
-	if(creating)
-		elements->action("create", object);
-	char r2_buffer[256];
-	auto r2 = r2_buffer;
-	if(size > sizeof(r2_buffer))
-		r2 = new char[size];
-	auto old_focus = getfocus();
-	openform();
-	auto current_page = 0;
-	const markup* page_markup_last = 0;
-	auto updater = elements->find("update", object, 0, false);
-	auto type_key = type;
-	while(ismodal()) {
-		auto page_maximum = elements->getpagecount(object);
-		if(current_page < 0)
-			current_page = 0;
-		if(current_page > page_maximum)
-			current_page = page_maximum - 1;
-		auto page_name = name;
-		const char* page_title = 0;
-		auto page = elements;
-		auto page_markup = elements->getpage(object, current_page);
-		if(page_markup) {
-			page = page_markup->value.child;
-			if(page_markup->title)
-				page_title = page_markup->title;
-			if(page_markup_last != page_markup) {
-				page_markup_last = page_markup;
-				setfocus(0, true);
-				if(page_markup->cmd.execute)
-					cmd(page_markup->cmd.execute, object).execute();
-			}
-		}
-		if(type_key && type_key->is(KindText)) {
-			auto pn = (const char*)type_key->get(type_key->ptr(object));
-			if(pn && pn[0])
-				page_name = pn;
-		}
-		render_background();
-		page_header(x, y, 0, page_name, page_title, current_page, page_maximum);
-		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, page, bsval(object, type), 100);
-		page_footer(x, y, true);
-		if(page_maximum > 0) {
-			if(current_page < page_maximum - 1)
-				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
-			if(current_page > 0)
-				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
-		}
-		auto commands = page->findcommands(object);
-		if(commands && commands->value.child) {
-			for(auto p = commands->value.child; *p; p++)
-				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
-		}
-		memcpy(r2, object, size);
-		domodal();
-		if(updater) {
-			// Если ПОСЛЕ обработки команды менялся оригинальный объект вызываем специальное событие
-			// В нем мы можем проанализировать что именно поменялось и если надо что-то обновить.
-			if(updater->cmd.change && memcmp(object, r2, size) != 0)
-				updater->cmd.change(object, r2);
-		}
-	}
-	closeform();
-	setfocus(old_focus, true);
-	if(r2 != r2_buffer)
-		delete r2;
-	auto result = getresult() != 0;
-	if(result)
-		elements->action("apply", object);
-	return result;
 }
 
 int decoration::choose(const char* title, int width, int height, bool choose_mode) const {
@@ -1090,10 +973,9 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	int x, y;
 	openform();
 	while(ismodal()) {
-		render_background();
-		page_header(x, y, "Доступные", title, 0);
+		pageheader(x, y, "Доступные", title, 0);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
-		page_footer(x, y, choose_mode);
+		pagefooter(x, y, choose_mode);
 		if(database->count < database->maximum) {
 			x += button(x, y, "Добавить", cmd(table::add, &e1), F3);
 			if(database->count > 0)
@@ -1156,11 +1038,10 @@ void decoration::open(const char* name, void* source, unsigned size, unsigned& c
 	int x, y;
 	openform();
 	while(ismodal()) {
-		render_background();
-		page_header(x, y, "Доступные", name, 0);
+		pageheader(x, y, "Доступные", name, 0);
 		auto w = getwidth() - metrics::padding * 2;
 		e1.view({x, y, x + w, y_buttons - metrics::padding});
-		page_footer(x, y, false);
+		pagefooter(x, y, false);
 		if(e1.getmaximum() > 0) {
 			cmdfm pc(cmdfm::change, e1.getrow(e1.current), meta, element, name, source, size, &count, maxcount);
 			x += button(x, y, "Редактировать", pc, KeyEnter);
@@ -1173,15 +1054,14 @@ void decoration::open(const char* name, void* source, unsigned size, unsigned& c
 }
 
 void* decoration::choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns) {
+	int x, y;
 	controls::reftable e1(source, count, type, columns);
 	e1.show_border = false;
 	openform();
 	while(ismodal()) {
-		render_background();
-		int x, y;
-		page_header(x, y, 0, title, 0);
+		pageheader(x, y, 0, title, 0);
 		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
-		page_footer(x, y, false);
+		pagefooter(x, y, false);
 		domodal();
 	}
 	closeform();
@@ -1225,7 +1105,7 @@ static void change_character() {
 
 static void character_sheet() {
 	auto p = character::getactive();
-	decoration::edit(p->getname(), p, bsmeta<character>::meta, character::charsheet_markup);
+	draw::edit(p->getname(), p, sizeof(character), bsmeta<character>::meta, character::charsheet_markup, false);
 }
 
 void decoration::database_export() {
@@ -1288,53 +1168,104 @@ int scene::choose() {
 	return result;
 }
 
-bool decoration::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
-	int x, y;
-	openform();
-	auto current_page = 0;
-	const markup* page_markup_last = 0;
-	while(ismodal()) {
-		auto page_maximum = elements->getpagecount(object);
-		if(current_page < 0)
-			current_page = 0;
-		if(current_page > page_maximum)
-			current_page = page_maximum - 1;
-		auto page_name = name;
-		const char* page_title = 0;
-		auto page = elements;
-		auto page_markup = elements->getpage(object, current_page);
-		if(page_markup) {
-			page = page_markup->value.child;
-			if(page_markup->title)
-				page_title = page_markup->title;
-			if(page_markup_last != page_markup) {
-				page_markup_last = page_markup;
-				setfocus(0, true);
-				if(page_markup->cmd.execute)
-					cmd(page_markup->cmd.execute, object).execute();
-			}
+bool decoration::edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum,
+	const bsreq* meta, const markup* elements,
+	void* object, void* copy_object) {
+	if(!size)
+		return false;
+	if(!object && count >= maximum)
+		return false;
+	if(!elements) {
+		// Получим форму элемента по умолчанию
+		elements = getmarkup(meta);
+		auto fm = elements->getform(object, "element");
+		if(fm) {
+			elements = fm->value.child;
+			if(fm->title)
+				name = fm->title;
 		}
-		render_background();
-		page_header(x, y, 0, page_name, page_title, current_page, page_maximum);
-		auto width = getwidth() - x * 2;
-		y += draw::field(x, y, width, page, bsval(object, type), 100);
-		page_footer(x, y, false);
-		if(page_maximum > 0) {
-			if(current_page < page_maximum - 1)
-				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
-			if(current_page > 0)
-				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
-		}
-		auto commands = page->findcommands(object);
-		if(commands && commands->value.child) {
-			for(auto p = commands->value.child; *p; p++)
-				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
-		}
-		domodal();
 	}
-	closeform();
-	return getresult() != 0;
+	if(!elements)
+		return false;
+	if(!name) {
+		auto pd = decoration::find(meta);
+		if(pd)
+			name = pd->name;
+	}
+	if(!name)
+		name = "Форма редактирования";
+	auto result = true;
+	char copy_buffer[256] = {};
+	auto copy = copy_buffer;
+	auto creating = false;
+	if(size > sizeof(copy_buffer))
+		copy = new char[size];
+	if(object)
+		memcpy(copy, object, size);
+	else if(copy_object)
+		memcpy(copy, copy_object, size);
+	else {
+		memset(copy, 0, size);
+		creating = true;
+	}
+	if(draw::edit(name, copy, size, meta, elements, creating)) {
+		if(!object)
+			object = (char*)source + (count++)*size;
+		if(object)
+			memcpy(object, copy, size);
+	} else
+		result = false;
+	if(copy != copy_buffer)
+		delete copy;
+	return result;
 }
+
+//bool decoration::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
+//	int x, y;
+//	openform();
+//	auto current_page = 0;
+//	const markup* page_markup_last = 0;
+//	while(ismodal()) {
+//		auto page_maximum = elements->getpagecount(object);
+//		if(current_page < 0)
+//			current_page = 0;
+//		if(current_page > page_maximum)
+//			current_page = page_maximum - 1;
+//		auto page_name = name;
+//		const char* page_title = 0;
+//		auto page = elements;
+//		auto page_markup = elements->getpage(object, current_page);
+//		if(page_markup) {
+//			page = page_markup->value.child;
+//			if(page_markup->title)
+//				page_title = page_markup->title;
+//			if(page_markup_last != page_markup) {
+//				page_markup_last = page_markup;
+//				setfocus(0, true);
+//				if(page_markup->cmd.execute)
+//					cmd(page_markup->cmd.execute, object).execute();
+//			}
+//		}
+//		pageheader(x, y, 0, page_name, page_title, current_page, page_maximum);
+//		auto width = getwidth() - x * 2;
+//		y += draw::field(x, y, width, page, bsval(object, type), 100);
+//		pagefooter(x, y, false);
+//		if(page_maximum > 0) {
+//			if(current_page < page_maximum - 1)
+//				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
+//			if(current_page > 0)
+//				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
+//		}
+//		auto commands = page->findcommands(object);
+//		if(commands && commands->value.child) {
+//			for(auto p = commands->value.child; *p; p++)
+//				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
+//		}
+//		domodal();
+//	}
+//	closeform();
+//	return getresult() != 0;
+//}
 
 void overland_info::choose_areas(overland_info* p) {
 	maparea::choose(p->areas);
@@ -1368,7 +1299,7 @@ void overland_info::edit() {
 			rc.offset(-1, -1);
 			rectb(rc, colors::edit);
 		}
-		page_footer(x, y, true);
+		pagefooter(x, y, true);
 		x += button(x, y, "Установить", cmd(set_area, (int)this), KeySpace);
 		x += button(x, y, "Сменить", cmd(choose_areas, this), Alpha + 'S');
 		domodal();

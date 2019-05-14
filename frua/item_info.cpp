@@ -37,7 +37,7 @@ static markup weapon_markup[] = {{6, 0, {0, 0, weapon_c1}},
 static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, item_info::view_weapon}},
 {}};
 void item_info::editweapon(void* p) {
-	decoration::edit("Оружие", p, sizeof(item_info), bsmeta<item_info>::meta, weapon_markup);
+	//decoration::edit("Оружие", p, sizeof(item_info), bsmeta<item_info>::meta, weapon_markup);
 }
 static markup deflection_markup[] = {{0, "/", {"abilities", DR}}, {}};
 markup armor_block[] = {{0, "Класс брони", {"abilities", AC, deflection_markup}},

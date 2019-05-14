@@ -256,9 +256,7 @@ struct decoration {
 	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
 	static bool				edit(bsdata& source, void* object, void* copy_object = 0);
 	static bool				edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum, const bsreq* meta, const markup* elements, void* object, void* copy_object);
-	static bool				edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements = 0, bool creating = false);
-	static bool				edit(const char* name, void* object, const bsreq* type, const markup* elements);
-	template<class T> static bool edit(T* p) { return edit(0, p, sizeof(T), bsmeta<T>::meta); }
+	//template<class T> static bool edit(T* p) { return edit(0, p, sizeof(T), bsmeta<T>::meta, ); }
 	static void				editlist(const bsreq* type) { choose(type, false); }
 	static const decoration* find(const bsreq* type);
 	static void				open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element);

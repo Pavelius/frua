@@ -125,6 +125,7 @@
     <ClCompile Include="anyval.cpp" />
     <ClCompile Include="attack_affect.cpp" />
     <ClCompile Include="direction.cpp" />
+    <ClCompile Include="draw_form.cpp" />
     <ClCompile Include="draw_table.cpp" />
     <ClCompile Include="io_plugin.cpp" />
     <ClCompile Include="io_plugin_json.cpp" />

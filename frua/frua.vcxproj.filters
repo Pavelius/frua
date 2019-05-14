@@ -261,6 +261,9 @@
     <ClCompile Include="maparea.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="draw_form.cpp">
+      <Filter>Графика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

@@ -72,25 +72,25 @@ public:
 		textedit::clear();
 		value.clear();
 	}
-} edit;
+} cedit;
 
 void save_focus() {
-	if(edit.isfocused()) {
-		edit.save();
-		edit.clear();
+	if(cedit.isfocused()) {
+		cedit.save();
+		cedit.clear();
 	}
 }
 
 static void field_up() {
 	edit_value = edit_value + 1;
-	edit.load();
-	edit.invalidate();
+	cedit.load();
+	cedit.invalidate();
 }
 
 static void field_down() {
 	edit_value = edit_value - 1;
-	edit.load();
-	edit.invalidate();
+	cedit.load();
+	cedit.invalidate();
 }
 
 static void execute(callback proc, const anyval& ev) {
@@ -114,9 +114,9 @@ void draw::field(const rect& rco, unsigned flags, const anyval& ev, int digits, 
 	}
 	auto a = area(rc);
 	if(focused) {
-		edit.align = flags & AlignMask;
-		edit.update(ev, type, digits);
-		edit.view(rc);
+		cedit.align = flags & AlignMask;
+		cedit.update(ev, type, digits);
+		cedit.view(rc);
 	} else {
 		char temp[260];
 		auto p = getvalue(ev, type, temp, temp + sizeof(temp) / sizeof(temp[0]));
