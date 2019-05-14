@@ -132,6 +132,7 @@ struct table : list {
 	virtual const char*		getheader(char* result, const char* result_max, int column) const;
 	const char*				getname(char* result, const char* result_end, int line, int column) const override;
 	virtual void*			getrow(int index) const { return 0; }
+	void*					getcurrent() const;
 	void					row(const rect &rc, int index) override;
 	int						rowheader(const rect& rc) const { return 0; }
 	void					view(const rect& rc) override;
@@ -211,6 +212,7 @@ int							button(int x, int y, int width, unsigned flags, const runable& cmd, co
 int							button(int x, int y, const char* string, const runable& ev, unsigned key, bool checked = false);
 int							checkbox(int x, int y, int width, bool& value, const char* label, const char* tips);
 int							checkbox(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);
+void*						choose(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element, bool choose_mode = false);
 bool						dropdown(const rect& rc, draw::controls::control& e, bool choose_mode = false);
 bool						edit(const char* title, void* object, unsigned size, const bsreq* type, const markup* elements, bool creating);
 bool						edit(const char* title, void* source, unsigned size, unsigned& count, unsigned maximum, const bsreq* meta, const markup* elements, void* object, void* copy_object);
@@ -218,7 +220,6 @@ void						field(const rect& rco, unsigned flags, const anyval& ev, int digits, f
 int							field(int x, int y, int width, const markup* elements, const bsval& source, int title_width = 128);
 int							field(int x, int y, int width, const char* header_label, const char*& ev, int header_width);
 int							field(int x, int y, int width, const char* header_label, const anyval& ev, int header_width, int digits);
-void						open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element);
 void						pagefooter(int& x, int& y, bool allow_cancel = false);
 void						pageheader(int& x, int& y, const char* title_prefix, const char* title, const char* page_title, int page = 0, int page_maximum = 0);
 int							radio(int x, int y, int width, unsigned flags, const runable& cmd, const char* label, const char* tips);

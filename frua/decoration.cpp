@@ -15,15 +15,6 @@ const markup* getmarkup(const bsreq* type) {
 	return p->markups;
 }
 
-bool decoration::edit(bsdata& source, void* object, void* copy_object) {
-	auto result = true;
-	auto pd = find(source.meta);
-	if(!pd)
-		return false;
-	return edit(pd->name, source.data, source.size, source.count, source.maximum, source.meta, 0,
-		object, copy_object);
-}
-
 const decoration* decoration::find(const bsreq* type) {
 	for(auto& e : data) {
 		if(e.meta == type)
@@ -39,12 +30,20 @@ int decoration::choose(const bsreq* type, bool choose_mode) {
 	if(!p->database)
 		return -1;
 	auto x = p->size.x;
-	if(!x)
-		x = 120;
-	auto y = p->size.y;
-	if(!y)
-		y = 18 + 4 * 2;
-	return p->choose(p->name, x, y, choose_mode);
+	if(x > 0) {
+		auto y = p->size.y;
+		if(!y)
+			y = 18 + 4 * 2;
+		return p->choose(p->name, x, y, choose_mode);
+	}
+	auto element = getmarkup(type);
+	if(!element)
+		return -1;
+	auto list = element->getform(0, "list");
+	choose(p->name,
+		p->database->data, p->database->size, p->database->count, p->database->maximum,
+		type, list, getmarkup(type), choose_mode);
+	return 0;
 }
 
 bool decoration::choose(void** result, const bsreq* type) {
@@ -62,7 +61,7 @@ void decoration::initialize() {
 	for(auto& e : data) {
 		if(!e.database)
 			continue;
-		if(e.zero_element && e.database->count==0) {
+		if(e.zero_element && e.database->count == 0) {
 			auto p = e.database->add();
 			auto pf = e.meta->find("name");
 			if(pf)

@@ -3,7 +3,16 @@
 #include "draw_control.h"
 
 using namespace draw;
-using namespace draw::controls;
+
+static void add_value() {
+	auto& p = *((int*)hot.param);
+	p++;
+}
+
+static void sub_value() {
+	auto& p = *((int*)hot.param);
+	p--;
+}
 
 int draw::button(int x, int y, const char* string, const runable& ev, unsigned key, bool checked) {
 	auto id = ev.getid();
@@ -16,16 +25,6 @@ int draw::button(int x, int y, const char* string, const runable& ev, unsigned k
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
 	return rc.width() + 2;
-}
-
-static void add_value() {
-	auto& p = *((int*)hot.param);
-	p++;
-}
-
-static void sub_value() {
-	auto& p = *((int*)hot.param);
-	p--;
 }
 
 bool draw::edit(const char* name, void* object, unsigned size, const bsreq* type, const markup* elements, bool creating) {
@@ -102,6 +101,49 @@ bool draw::edit(const char* name, void* object, unsigned size, const bsreq* type
 	return result;
 }
 
+bool draw::edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum,
+	const bsreq* meta, const markup* elements,
+	void* object, void* copy_object) {
+	if(!size)
+		return false;
+	if(!object && count >= maximum)
+		return false;
+	if(!elements)
+		return false;
+	auto fm = elements->getform(source, "element");
+	if(fm) {
+		elements = fm->value.child;
+		if(fm->title)
+			name = fm->title;
+	}
+	if(!name)
+		name = "Форма редактирования";
+	auto result = true;
+	char copy_buffer[256] = {};
+	auto copy = copy_buffer;
+	auto creating = false;
+	if(size > sizeof(copy_buffer))
+		copy = new char[size];
+	if(object)
+		memcpy(copy, object, size);
+	else if(copy_object)
+		memcpy(copy, copy_object, size);
+	else {
+		memset(copy, 0, size);
+		creating = true;
+	}
+	if(draw::edit(name, copy, size, meta, elements, creating)) {
+		if(!object)
+			object = (char*)source + (count++)*size;
+		if(object)
+			memcpy(object, copy, size);
+	} else
+		result = false;
+	if(copy != copy_buffer)
+		delete copy;
+	return result;
+}
+
 class cmdfm : public runable {
 	const char*		name;
 	const markup*	columns;
@@ -135,8 +177,8 @@ public:
 };
 cmdfm cmdfm::e;
 
-void draw::open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta,
-	const markup* columns, const markup* element) {
+void* draw::choose(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta,
+	const markup* columns, const markup* element, bool choose_mode) {
 	controls::listtable e1(source, count, size, meta, columns);
 	e1.show_border = false;
 	int x, y;
@@ -145,49 +187,21 @@ void draw::open(const char* name, void* source, unsigned size, unsigned& count, 
 		pageheader(x, y, "Доступные", name, 0);
 		auto w = getwidth() - metrics::padding * 2;
 		e1.view({x, y, x + w, (getheight() - 16 + 8 * 2) - metrics::padding});
-		pagefooter(x, y, false);
+		pagefooter(x, y, choose_mode);
 		if(e1.getmaximum() > 0) {
 			cmdfm pc(cmdfm::change, e1.getrow(e1.current), meta, element, name, source, size, &count, maxcount);
-			x += button(x, y, "Редактировать", pc, KeyEnter);
-			if(hot.key == F2)
-				pc.execute();
+			x += button(x, y, "Редактировать", pc, F2);
+			if(hot.key == KeyEnter) {
+				if(choose_mode)
+					execute(buttonok);
+				else
+					pc.execute();
+			}
 		}
 		domodal();
 	}
 	closeform();
-}
-
-bool draw::edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum,
-	const bsreq* meta, const markup* elements,
-	void* object, void* copy_object) {
-	if(!size)
-		return false;
-	if(!object && count >= maximum)
-		return false;
-	if(!name)
-		name = "Форма редактирования";
-	auto result = true;
-	char copy_buffer[256] = {};
-	auto copy = copy_buffer;
-	auto creating = false;
-	if(size > sizeof(copy_buffer))
-		copy = new char[size];
-	if(object)
-		memcpy(copy, object, size);
-	else if(copy_object)
-		memcpy(copy, copy_object, size);
-	else {
-		memset(copy, 0, size);
-		creating = true;
-	}
-	if(draw::edit(name, copy, size, meta, elements, creating)) {
-		if(!object)
-			object = (char*)source + (count++)*size;
-		if(object)
-			memcpy(object, copy, size);
-	} else
-		result = false;
-	if(copy != copy_buffer)
-		delete copy;
-	return result;
+	if(!getresult())
+		return 0;
+	return e1.getcurrent();
 }

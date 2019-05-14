@@ -161,7 +161,7 @@ static markup items_c1[] = {{0, 0, {"wears", 0}, 0, {0, character::isallowwear}}
 {}};
 static markup items_c2[] = {{0, "Доступность предметов", {0, 0, element_special_usability}},
 {}};
-static void edit_items(void* object) { decoration::editlist(bsmeta<item_info>::meta); }
+static void edit_items(void* object) { decoration::choose(bsmeta<item_info>::meta, false); }
 static markup items_commands[] = {{0, "Редактировать", {}, 0, {}, edit_items},
 {}};
 static markup items_page[] = {{5, 0, {0, 0, items_c1}},

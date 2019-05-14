@@ -869,7 +869,7 @@ int item::view_check(int x, int y, int width, const void* object, const char* id
 }
 
 void damage_info::edit(void* p) {
-	//decoration::edit((damage_info*)p);
+	decoration::edit((damage_info*)p);
 }
 
 int item_info::view_weapon(int x, int y, int width, const void* object, const char* id, int index) {
@@ -884,6 +884,21 @@ void character::apply_avatar(void* object) {
 	auto p = (character*)object;
 	if(!picture_info::choose(p->avatar, "Укажите картинку персонажа", "character*", 64))
 		return;
+}
+
+bool decoration::edit(void* object, void* copy_object, unsigned size, const bsreq* meta, const markup* element, const char* name) {
+	if(!element)
+		element = getmarkup(meta);
+	if(!element)
+		return false;
+	auto pd = decoration::find(meta);
+	if(!pd)
+		return false;
+	if(!name)
+		name = pd->name;
+	return draw::edit(name,
+		pd->database->data, size, pd->database->count, pd->database->maximum,
+		meta, element, object, copy_object);
 }
 
 int decoration::choose(const char* title, int width, int height, bool choose_mode) const {
@@ -948,15 +963,30 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 				source.add(index);
 		}
 		static void add(table* p) {
-			if(p->manager.edit(p->database, 0, 0))
+			auto element = getmarkup(p->database.meta);
+			if(!element)
+				return;
+			if(draw::edit(p->manager.name,
+				p->database.data, p->database.size, p->database.count, p->database.maximum,
+				p->database.meta, element, 0, 0))
 				p->update();
 		}
 		static void copy(table* p) {
-			if(p->manager.edit(p->database, 0, (void*)p->database.get(p->getcurrent())))
+			auto element = getmarkup(p->database.meta);
+			if(!element)
+				return;
+			if(draw::edit(p->manager.name,
+				p->database.data, p->database.size, p->database.count, p->database.maximum,
+				p->database.meta, element, 0, (void*)p->database.get(p->getcurrent())))
 				p->update();
 		}
 		static void change(table* p) {
-			if(p->manager.edit(p->database, (void*)p->database.get(p->getcurrent()), 0))
+			auto element = getmarkup(p->database.meta);
+			if(!element)
+				return;
+			if(draw::edit(p->manager.name,
+				p->database.data, p->database.size, p->database.count, p->database.maximum,
+				p->database.meta, element, (void*)p->database.get(p->getcurrent()), 0))
 				p->update();
 		}
 		table(bsdata& database, const decoration& manager) : database(database), manager(manager) {
@@ -998,42 +1028,6 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	return -1;
 }
 
-void decoration::open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element) {
-	if(!element) {
-		// Получим форму элемента по умолчанию
-		element = getmarkup(meta);
-		auto fm = element->getform(source, "element");
-		if(fm) {
-			element = fm->value.child;
-			if(fm->title)
-				name = fm->title;
-		}
-	}
-	if(!element)
-		return;
-	if(!name) {
-		auto pd = decoration::find(meta);
-		if(pd)
-			name = pd->name;
-	}
-	draw::open(name, source, size, count, maxcount, meta, columns, element);
-}
-
-void* decoration::choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns) {
-	int x, y;
-	controls::reftable e1(source, count, type, columns);
-	e1.show_border = false;
-	openform();
-	while(ismodal()) {
-		pageheader(x, y, 0, title, 0);
-		e1.view({x, y, getwidth() - x, y_buttons - metrics::padding * 2});
-		pagefooter(x, y, false);
-		domodal();
-	}
-	closeform();
-	return (void*)getresult();
-}
-
 static void fieldc(int x, int y, int width, const char* v) {
 	textc(x, y, width - 4, v);
 }
@@ -1072,6 +1066,10 @@ static void change_character() {
 static void character_sheet() {
 	auto p = character::getactive();
 	draw::edit(p->getname(), p, sizeof(character), bsmeta<character>::meta, character::charsheet_markup, false);
+}
+
+void* decoration::choose(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element, bool choose_mode) {
+	return draw::choose(name, source, size, count, maxcount, meta, columns, element, choose_mode);
 }
 
 void decoration::database_export() {
@@ -1133,105 +1131,6 @@ int scene::choose() {
 	elements.clear();
 	return result;
 }
-
-bool decoration::edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum,
-	const bsreq* meta, const markup* elements,
-	void* object, void* copy_object) {
-	if(!size)
-		return false;
-	if(!object && count >= maximum)
-		return false;
-	if(!elements) {
-		// Получим форму элемента по умолчанию
-		elements = getmarkup(meta);
-		auto fm = elements->getform(object, "element");
-		if(fm) {
-			elements = fm->value.child;
-			if(fm->title)
-				name = fm->title;
-		}
-	}
-	if(!elements)
-		return false;
-	if(!name) {
-		auto pd = decoration::find(meta);
-		if(pd)
-			name = pd->name;
-	}
-	if(!name)
-		name = "Форма редактирования";
-	auto result = true;
-	char copy_buffer[256] = {};
-	auto copy = copy_buffer;
-	auto creating = false;
-	if(size > sizeof(copy_buffer))
-		copy = new char[size];
-	if(object)
-		memcpy(copy, object, size);
-	else if(copy_object)
-		memcpy(copy, copy_object, size);
-	else {
-		memset(copy, 0, size);
-		creating = true;
-	}
-	if(draw::edit(name, copy, size, meta, elements, creating)) {
-		if(!object)
-			object = (char*)source + (count++)*size;
-		if(object)
-			memcpy(object, copy, size);
-	} else
-		result = false;
-	if(copy != copy_buffer)
-		delete copy;
-	return result;
-}
-
-//bool decoration::edit(const char* name, void* object, const bsreq* type, const markup* elements) {
-//	int x, y;
-//	openform();
-//	auto current_page = 0;
-//	const markup* page_markup_last = 0;
-//	while(ismodal()) {
-//		auto page_maximum = elements->getpagecount(object);
-//		if(current_page < 0)
-//			current_page = 0;
-//		if(current_page > page_maximum)
-//			current_page = page_maximum - 1;
-//		auto page_name = name;
-//		const char* page_title = 0;
-//		auto page = elements;
-//		auto page_markup = elements->getpage(object, current_page);
-//		if(page_markup) {
-//			page = page_markup->value.child;
-//			if(page_markup->title)
-//				page_title = page_markup->title;
-//			if(page_markup_last != page_markup) {
-//				page_markup_last = page_markup;
-//				setfocus(0, true);
-//				if(page_markup->cmd.execute)
-//					cmd(page_markup->cmd.execute, object).execute();
-//			}
-//		}
-//		pageheader(x, y, 0, page_name, page_title, current_page, page_maximum);
-//		auto width = getwidth() - x * 2;
-//		y += draw::field(x, y, width, page, bsval(object, type), 100);
-//		pagefooter(x, y, false);
-//		if(page_maximum > 0) {
-//			if(current_page < page_maximum - 1)
-//				x += button(x, y, "Далее", cmd(add_value, (int)&current_page), KeyPageDown);
-//			if(current_page > 0)
-//				x += button(x, y, "Назад", cmd(sub_value, (int)&current_page), KeyPageUp);
-//		}
-//		auto commands = page->findcommands(object);
-//		if(commands && commands->value.child) {
-//			for(auto p = commands->value.child; *p; p++)
-//				x += button(x, y, p->title, cmd(p->cmd.execute, object), 0);
-//		}
-//		domodal();
-//	}
-//	closeform();
-//	return getresult() != 0;
-//}
 
 void overland_info::choose_areas(overland_info* p) {
 	maparea::choose(p->areas);

@@ -249,17 +249,14 @@ struct decoration {
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
-	static void*			choose(const char* title, void** source, unsigned count, const bsreq* type, const markup* columns);
+	static void*			choose(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element, bool choose_mode);
 	static void				database_export();
 	static void				database_import();
-	static void				initialize();
-	template<class T> static bool choose(T*& result) { return choose((void**)&result); }
-	static bool				edit(bsdata& source, void* object, void* copy_object = 0);
-	static bool				edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum, const bsreq* meta, const markup* elements, void* object, void* copy_object);
-	//template<class T> static bool edit(T* p) { return edit(0, p, sizeof(T), bsmeta<T>::meta, ); }
-	static void				editlist(const bsreq* type) { choose(type, false); }
+	static bool				edit(void* object, void* copy_object, unsigned size, const bsreq* meta, const markup* element = 0, const char* name = 0);
+	template<class T> static bool edit(T* p) { return edit(p, 0, sizeof(T), bsmeta<T>::meta); }
 	static const decoration* find(const bsreq* type);
-	static void				open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta, const markup* columns, const markup* element);
+	static void				initialize();
+	static void				open(const bsreq* meta) { choose(meta, false); }
 };
 struct name_info {
 	const char*				id;

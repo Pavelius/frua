@@ -103,3 +103,9 @@ image_flag_s table::getalign(int column) const {
 		return AlignRight;
 	return AlignLeft;
 }
+
+void* table::getcurrent() const {
+	if(getmaximum() <= 0)
+		return 0;
+	return getrow(current);
+}
