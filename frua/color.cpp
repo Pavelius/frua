@@ -1,5 +1,13 @@
+#include "bsreq.h"
 #include "color.h"
 #include "crt.h"
+
+const bsreq bsmeta<color>::meta[] = {
+	BSREQ(r),
+	BSREQ(g),
+	BSREQ(b),
+	BSREQ(a),
+{}};
 
 // Common used color
 color colors::black = color::create(0, 0, 0);

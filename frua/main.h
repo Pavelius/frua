@@ -1,6 +1,7 @@
 #include "anyval.h"
 #include "bsreq.h"
 #include "collection.h"
+#include "color.h"
 #include "crt.h"
 #include "dice.h"
 #include "markup.h"
@@ -257,6 +258,7 @@ struct decoration {
 	static const decoration* find(const bsreq* type);
 	static void				initialize();
 	static void				open(const bsreq* meta) { choose(meta, false); }
+	static int				button_color(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct name_info {
 	const char*				id;
@@ -643,7 +645,8 @@ struct maparea {
 	const char*				name;
 	char					move_rate;
 	unsigned char			impassable;
-	constexpr maparea() : name(0), impassable(0), move_rate(1) {}
+	color					fore;
+	constexpr maparea() : name(0), impassable(0), move_rate(1), fore{0} {}
 	static void				choose(maparea* source);
 };
 class overland_info : public map_info<99, 67> {

@@ -311,15 +311,21 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		// Страницы, команды, любые другие управляющие структуры.
 		return 0;
 	else if(e.proc.custom) {
+		void* data = ctx.source.data;
+		if(e.value.id) {
+			auto bv = getvalue(ctx.source, e);
+			if(bv.type)
+				data = bv.type->ptr(data);
+		}
 		if(e.title) {
-			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, ctx.source.data, e.value.id, e.value.index);
+			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, data, e.value.id, e.value.index);
 			if(dy) {
 				setposition(x, y, width);
 				header(x, y, width, ctx, e.title);
 			}
 			return dy;
 		}
-		return e.proc.custom(x, y, width, ctx.source.data, e.value.id, e.value.index);
+		return e.proc.custom(x, y, width, data, e.value.id, e.value.index);
 	} else if(e.cmd.execute)
 		return button(x, y, width, 0, cmd(e.cmd.execute, ctx.source.data), e.title);
 	else if(e.title && e.title[0] == '#') {
