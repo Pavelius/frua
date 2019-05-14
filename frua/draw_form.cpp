@@ -101,3 +101,93 @@ bool draw::edit(const char* name, void* object, unsigned size, const bsreq* type
 		elements->action("apply", object);
 	return result;
 }
+
+class cmdfm : public runable {
+	const char*		name;
+	const markup*	columns;
+	const bsreq*	type;
+	void*			object;
+	void*			source;
+	unsigned*		count;
+	unsigned		size;
+	unsigned		maximum;
+	callback		proc;
+	static cmdfm	e;
+public:
+	cmdfm() = default;
+	constexpr cmdfm(callback proc, void* object, const bsreq* type = 0, const markup* columns = 0, const char* name = 0, void* source = 0, unsigned size = 0, unsigned* count = 0, unsigned maximum = 0) : proc(proc),
+		object(object), type(type), columns(columns),
+		name(name),
+		source(source), size(size), count(count), maximum(maximum) {
+	}
+	int	getid() const override { return (int)proc; }
+	void execute() const override {
+		e = *this;
+		draw::execute(proc);
+	}
+	static void change() {
+		if(!e.count)
+			return;
+		draw::edit(e.name, e.source, e.size, *e.count, e.maximum,
+			e.type, e.columns,
+			e.object, 0);
+	}
+};
+cmdfm cmdfm::e;
+
+void draw::open(const char* name, void* source, unsigned size, unsigned& count, unsigned maxcount, const bsreq* meta,
+	const markup* columns, const markup* element) {
+	controls::listtable e1(source, count, size, meta, columns);
+	e1.show_border = false;
+	int x, y;
+	openform();
+	while(ismodal()) {
+		pageheader(x, y, "Доступные", name, 0);
+		auto w = getwidth() - metrics::padding * 2;
+		e1.view({x, y, x + w, (getheight() - 16 + 8 * 2) - metrics::padding});
+		pagefooter(x, y, false);
+		if(e1.getmaximum() > 0) {
+			cmdfm pc(cmdfm::change, e1.getrow(e1.current), meta, element, name, source, size, &count, maxcount);
+			x += button(x, y, "Редактировать", pc, KeyEnter);
+			if(hot.key == F2)
+				pc.execute();
+		}
+		domodal();
+	}
+	closeform();
+}
+
+bool draw::edit(const char* name, void* source, unsigned size, unsigned& count, unsigned maximum,
+	const bsreq* meta, const markup* elements,
+	void* object, void* copy_object) {
+	if(!size)
+		return false;
+	if(!object && count >= maximum)
+		return false;
+	if(!name)
+		name = "Форма редактирования";
+	auto result = true;
+	char copy_buffer[256] = {};
+	auto copy = copy_buffer;
+	auto creating = false;
+	if(size > sizeof(copy_buffer))
+		copy = new char[size];
+	if(object)
+		memcpy(copy, object, size);
+	else if(copy_object)
+		memcpy(copy, copy_object, size);
+	else {
+		memset(copy, 0, size);
+		creating = true;
+	}
+	if(draw::edit(name, copy, size, meta, elements, creating)) {
+		if(!object)
+			object = (char*)source + (count++)*size;
+		if(object)
+			memcpy(object, copy, size);
+	} else
+		result = false;
+	if(copy != copy_buffer)
+		delete copy;
+	return result;
+}
