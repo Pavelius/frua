@@ -32,37 +32,11 @@ const char* table::getname(char* result, const char* result_end, int line, int c
 	auto pf = type->find(e.value.id);
 	if(!pf)
 		return 0;
-	auto pv = pf->ptr(object, e.value.index);
-	if(e.prop.getname)
+	if(e.prop.getname) {
+		auto pv = pf->ptr(object, e.value.index);
 		e.prop.getname(pv, result, result_end);
-	else if(pf->is(KindNumber))
-		szprint(result, result_end, "%1i", pf->get(pv));
-	else if(pf->is(KindText)) {
-		auto p = (const char*)pf->get(pv);
-		if(p)
-			szprint(result, result_end, p);
-	} else {
-		if(pf->is(KindEnum)) {
-			auto pb = bsdata::find(type, bsdata::firstenum);
-			if(!pb)
-				pb = bsdata::find(type, bsdata::first);
-			if(!pb)
-				return 0;
-			auto index = pf->get(pv);
-			pv = (char*)pb->get(index);
-		} else
-			pv = (char*)pf->get(pv);
-		if(pv) {
-			auto ppf = pf->type->find("name");
-			if(!ppf)
-				ppf = pf->type->find("id");
-			if(ppf) {
-				auto p = (const char*)ppf->get(ppf->ptr(pv));
-				if(p)
-					szprint(result, result_end, p);
-			}
-		}
-	}
+	} else
+		return pf->get(result, result_end, object);
 	return result;
 }
 

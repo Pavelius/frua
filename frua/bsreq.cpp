@@ -1,3 +1,4 @@
+#include "crt.h"
 #include "bsreq.h"
 
 extern "C" int strcmp(const char* s1, const char* s2);
@@ -186,21 +187,44 @@ const char*	bsdata::getstring(const void* object, const bsreq* type, const char*
 	return ps;
 }
 
-//const bsval& bsval::get(const char* url) const {
-//	bsval e;
-//	auto p = url;
-//	while(true) {
-//		auto p1 = p;
-//		while(*p1 && *p1 != '.')
-//			p1++;
-//		if(*p1 != '.')
-//			break;
-//		char temp[64];
-//		unsigned size = p1 - p;
-//		zcpy(temp, p, size);
-//		e.data = 
-//	}
-//	e.type = type->find(p);
-//	e.data = data;
-//	return e;
-//}
+const bsreq* bsreq::getname() const {
+	auto p = find("name", bsmeta<const char*>::meta);
+	if(!p)
+		p = find("id", bsmeta<const char*>::meta);
+	if(!p)
+		p = find("text", bsmeta<const char*>::meta);
+	return p;
+}
+
+const char* bsreq::get(char* result, const char* result_max, void* object) const {
+	if(is(KindNumber)) {
+		auto v = get(ptr(object));
+		szprint(result, result_max, "%1i", v);
+	} else if(is(KindText)) {
+		auto v = (const char*)get(ptr(object));
+		if(!v)
+			return "";
+		return v;
+	} else if(is(KindReference)) {
+		auto pf = type->getname();
+		if(!pf)
+			return "";
+		auto v = (void*)get(ptr(object));
+		if(!v)
+			return "";
+		return pf->get(result, result_max, v);
+	} else if(is(KindEnum)) {
+		auto pb = bsdata::find(type, bsdata::firstenum);
+		if(!pb)
+			pb = bsdata::find(type, bsdata::first);
+		if(!pb)
+			return "";
+		auto pf = pb->meta->getname();
+		if(!pf)
+			return "";
+		auto vi = get(ptr(object));
+		auto v = (void*)pb->get(vi);
+		return pf->get(result, result_max, v);
+	}
+	return result;
+}

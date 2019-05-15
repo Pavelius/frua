@@ -33,7 +33,7 @@ struct markup {
 		template<class T> constexpr propi(int(*v)(const T*)) : getname(0), getvalue((num_type)v) {}
 	};
 	constexpr explicit operator bool() const { return title || value.id || value.child; }
-	char				width;
+	int					width;
 	const char*			title;
 	element				value;
 	int					param;

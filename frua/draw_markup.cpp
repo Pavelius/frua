@@ -301,9 +301,6 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	return rc.height() + metrics::padding*2;
 }
 
-static int field_button(int x, int y, int width, contexti& ctx, const markup& e) {
-}
-
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 	if(e.proc.isvisible && !e.proc.isvisible(ctx.source.data, e.value.index))
 		return 0;

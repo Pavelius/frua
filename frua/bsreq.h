@@ -76,6 +76,8 @@ struct bsreq {
 	const bsreq*		find(const char* name, unsigned count) const;
 	const bsreq*		find(const char* name, const bsreq* type) const;
 	int					get(const void* p) const;
+	const char*			get(char* result, const char* result_max, void* object) const;
+	const bsreq*		getname() const;
 	bool				is(bstype_s v) const { return subtype == v; }
 	bool				match(const void* p, const char* name) const;
 	static const bsreq	metadata[];

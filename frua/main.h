@@ -189,6 +189,9 @@ enum attack_affect_s : unsigned char {
 enum action_s : unsigned char {
 	Guard, Move,
 };
+enum terrain_s : unsigned char {
+	Unpassable, StandartMovement, HalfMovement, QuarterMovement,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -342,6 +345,12 @@ struct usability_info {
 };
 struct sprite_name_info {
 	char					name[32];
+};
+struct terrain_info {
+	const char*				id;
+	const char*				name;
+	char					move_mul;
+	char					move_div;
 };
 struct picture_info {
 	const char*				folder;
@@ -643,10 +652,9 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 };
 struct maparea {
 	const char*				name;
-	char					move_rate;
-	unsigned char			impassable;
+	terrain_s				moverate;
 	color					fore;
-	constexpr maparea() : name(0), impassable(0), move_rate(1), fore{0} {}
+	constexpr maparea() : name(0), moverate(StandartMovement), fore{0} {}
 	static void				choose(maparea* source);
 };
 class overland_info : public map_info<99, 67> {
@@ -698,6 +706,7 @@ DECLENUM(save);
 DECLENUM(size);
 DECLENUM(skill);
 DECLENUM(special_quality);
+DECLENUM(terrain);
 DECLENUM(usability);
 extern aref<sprite_name_info> avatar_data;
 extern adat<character*, 8>	party;
