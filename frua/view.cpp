@@ -743,7 +743,7 @@ bool picture_info::choose(short unsigned& result, const char* title, const char*
 	return false;
 }
 
-int character::view_personal(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_personal(int x, int y, int width, const void* object) {
 	auto y0 = y;
 	auto p = (character*)object;
 	char temp[260]; zprint(temp, "%+2 %-1", getstr(p->gender), getstr(p->race));
@@ -754,7 +754,7 @@ int character::view_personal(int x, int y, int width, const void* object, const 
 	return y - y0;
 }
 
-int character::view_levels(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_levels(int x, int y, int width, const void* object) {
 	auto y0 = y;
 	auto p = (character*)object;
 	auto& col = bsmeta<class_s>::data;
@@ -770,7 +770,7 @@ int character::view_levels(int x, int y, int width, const void* object, const ch
 	return y - y0;
 }
 
-int character::view_skills(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_skills(int x, int y, int width, const void* object) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = FirstSave; i <= LastSkill; i = (skill_s)(i + 1)) {
@@ -782,7 +782,7 @@ int character::view_skills(int x, int y, int width, const void* object, const ch
 	return y - y0;
 }
 
-int character::view_ability(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_ability(int x, int y, int width, const void* object) {
 	auto p = (character*)object;
 	auto y0 = y;
 	for(auto i = Strenght; i <= Charisma; i = (ability_s)(i + 1)) {
@@ -804,7 +804,7 @@ int character::gethprollmax() const {
 	return rolled;
 }
 
-int character::view_statistic(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_statistic(int x, int y, int width, const void* object) {
 	char temp[260];
 	auto p = (character*)object;
 	attack_info ai = {}; p->get(p->get(Weapon), ai);
@@ -824,7 +824,7 @@ int character::view_statistic(int x, int y, int width, const void* object, const
 	return y - y0;
 }
 
-int character::view_avatar(int x, int y, int width, const void* object, const char* id, int index) {
+int character::view_avatar(int x, int y, int width, const void* object) {
 	auto p = (character*)object;
 	unsigned flags = 0;
 	auto height = 64;
@@ -872,7 +872,7 @@ void damage_info::edit(void* p) {
 	decoration::edit((damage_info*)p);
 }
 
-int item_info::view_weapon(int x, int y, int width, const void* object, const char* id, int index) {
+int item_info::view_weapon(int x, int y, int width, const void* object) {
 	char temp[260]; stringcreator sc(temp);
 	auto p = (item_info*)object;
 	p->getweapon(sc);
@@ -1093,7 +1093,7 @@ static void choose_color() {
 	dialog::color(*((color*)hot.param), custom);
 }
 
-int	decoration::button_color(int x, int y, int width, const void* object, const char* id, int index) {
+int	decoration::button_color(int x, int y, int width, const void* object) {
 	color& c1 = *((color*)object);
 	unsigned flags = 0;
 	setposition(x, y, width);

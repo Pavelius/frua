@@ -131,11 +131,11 @@ template<typename T> struct bsmeta {
 	static bsdatat<T>	data;
 };
 template<> struct bsmeta<int> {
-	typedef int			type;
+	typedef int			data_type;
 	static const bsreq	meta[];
 };
 template<> struct bsmeta<const char*> {
-	typedef const char*	type;
+	typedef const char*	data_type;
 	static const bsreq	meta[];
 };
 struct bsval {
@@ -144,12 +144,13 @@ struct bsval {
 	constexpr bsval() : data(0), type(0) {}
 	constexpr bsval(void* data, const bsreq* type) : data(data), type(type) {}
 	constexpr explicit operator bool() const { return data != 0; }
+	const bsval&		get(const char* url) const;
 	int					get() const { return type->get(type->ptr(data)); }
 	void				set(int value) const { type->set(type->ptr(data), value); }
 };
-template<class T> const char* getstr(const T e) { return bsmeta<T>::data[e].name; }
 template<> struct bsmeta<unsigned char> : bsmeta<int> {};
 template<> struct bsmeta<char> : bsmeta<int> {};
 template<> struct bsmeta<unsigned short> : bsmeta<int> {};
 template<> struct bsmeta<short> : bsmeta<int> {};
 template<> struct bsmeta<unsigned> : bsmeta<int> {};
+template<class T> const char* getstr(const T e) { return bsmeta<T>::data[e].name; }

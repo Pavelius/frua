@@ -185,3 +185,22 @@ const char*	bsdata::getstring(const void* object, const bsreq* type, const char*
 		ps = "";
 	return ps;
 }
+
+//const bsval& bsval::get(const char* url) const {
+//	bsval e;
+//	auto p = url;
+//	while(true) {
+//		auto p1 = p;
+//		while(*p1 && *p1 != '.')
+//			p1++;
+//		if(*p1 != '.')
+//			break;
+//		char temp[64];
+//		unsigned size = p1 - p;
+//		zcpy(temp, p, size);
+//		e.data = 
+//	}
+//	e.type = type->find(p);
+//	e.data = data;
+//	return e;
+//}

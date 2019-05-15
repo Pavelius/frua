@@ -174,6 +174,16 @@ public:
 			e.type, e.columns,
 			e.object, 0);
 	}
+	static void add() {
+		draw::edit(e.name, e.source, e.size, *e.count, e.maximum,
+			e.type, e.columns,
+			0, 0);
+	}
+	static void copy() {
+		draw::edit(e.name, e.source, e.size, *e.count, e.maximum,
+			e.type, e.columns,
+			0, e.object);
+	}
 };
 cmdfm cmdfm::e;
 
@@ -188,14 +198,25 @@ void* draw::choose(const char* name, void* source, unsigned size, unsigned& coun
 		auto w = getwidth() - metrics::padding * 2;
 		e1.view({x, y, x + w, (getheight() - 16 + 8 * 2) - metrics::padding});
 		pagefooter(x, y, choose_mode);
+		auto pr = e1.getrow(e1.current);
 		if(e1.getmaximum() > 0) {
-			cmdfm pc(cmdfm::change, e1.getrow(e1.current), meta, element, name, source, size, &count, maxcount);
+			cmdfm pc(cmdfm::change, pr, meta, element, name, source, size, &count, maxcount);
 			x += button(x, y, "Редактировать", pc, F2);
 			if(hot.key == KeyEnter) {
 				if(choose_mode)
 					execute(buttonok);
 				else
 					pc.execute();
+			}
+		}
+		if(count < maxcount) {
+			x += button(x, y, "Добавить",
+				cmdfm(cmdfm::add, pr, meta, element, name, source, size, &count, maxcount),
+				F3);
+			if(e1.getmaximum() > 0) {
+				x += button(x, y, "Скопировать",
+					cmdfm(cmdfm::copy, pr, meta, element, name, source, size, &count, maxcount),
+					F4);
 			}
 		}
 		domodal();

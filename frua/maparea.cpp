@@ -18,7 +18,7 @@ static markup columns[] = {{-1, "Наименование", {"name"}},
 {}};
 
 void maparea::choose(maparea* source) {
-	unsigned count = 16;
+	unsigned count = 10;
 	decoration::choose("Области",
 		source, sizeof(source[0]), count, 16,
 		bsmeta<maparea>::meta, columns, form,

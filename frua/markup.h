@@ -5,7 +5,7 @@ struct markup {
 	typedef const char* (*text_type)(const void* object, char* result, const char* result_maximum);
 	typedef int(*num_type)(const void* object);
 	typedef bool(*allow_type)(const void* object, int index);
-	typedef int(*custom_type)(int x, int y, int width, const void* object, const char* id, int index); // Custom draw
+	typedef int(*custom_type)(int x, int y, int width, const void* object); // Custom draw
 	typedef void(*command_type)(void* object);
 	typedef void(*change_type)(void* object, const void* previous_object);
 	struct element {

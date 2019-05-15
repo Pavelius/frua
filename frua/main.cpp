@@ -64,7 +64,7 @@ static void main_menu() {
 
 static void test_overland() {
 	overland_info e({"maps", "amn"}, 0);
-	e.getarea(1).name = "Test";
+	//e.getarea(1).name = "Test";
 	e.choose_areas(&e);
 }
 

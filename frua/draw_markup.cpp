@@ -318,14 +318,14 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				pv = bv.type->ptr(bv.data, e.value.index);
 		}
 		if(e.title) {
-			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, pv, e.value.id, e.value.index);
+			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, pv);
 			if(dy) {
 				setposition(x, y, width);
 				header(x, y, width, ctx, e.title);
 			}
 			return dy;
 		}
-		return e.proc.custom(x, y, width, pv, e.value.id, e.value.index);
+		return e.proc.custom(x, y, width, pv);
 	} else if(e.cmd.execute)
 		return button(x, y, width, 0, cmd(e.cmd.execute, ctx.source.data), e.title);
 	else if(e.title && e.title[0] == '#') {

@@ -139,9 +139,9 @@ struct table : list {
 };
 struct listtable : table {
 	void*					source;
-	unsigned				count;
+	unsigned&				count;
 	unsigned				size;
-	constexpr listtable(void* source, unsigned count, unsigned size, const bsreq* type, const markup* columns) : table(columns, type),
+	constexpr listtable(void* source, unsigned& count, unsigned size, const bsreq* type, const markup* columns) : table(columns, type),
 		source(source), count(count), size(size) {}
 	int						getmaximum() const override { return count; }
 	void*					getrow(int index) const override { return (char*)source + index*size; }

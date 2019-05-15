@@ -79,8 +79,8 @@ void table::row(const rect &rc, int index) {
 			re.x2 = re.x1 + e.width;
 		re.x1 = re.x1 + 1;
 		if(e.proc.custom) {
-			auto v = getrow(index);
-			e.proc.custom(re.x1, re.y1, re.width(), v, e.value.id, i);
+			auto pv = getrow(index);
+			e.proc.custom(re.x1, re.y1, re.width(), pv);
 		} else {
 			char temp[260]; temp[0] = 0;
 			auto p = getname(temp, temp + sizeof(temp) - 1, index, i);

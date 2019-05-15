@@ -247,6 +247,7 @@ struct decoration {
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
 		markups(T::markups), zero_element(0) {}
+	static int				button_color(int x, int y, int width, const void* object);
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);
@@ -258,7 +259,6 @@ struct decoration {
 	static const decoration* find(const bsreq* type);
 	static void				initialize();
 	static void				open(const bsreq* meta) { choose(meta, false); }
-	static int				button_color(int x, int y, int width, const void* object, const char* id, int index);
 };
 struct name_info {
 	const char*				id;
@@ -428,8 +428,8 @@ struct item_info {
 	static void				create(item_info* p);
 	static void				editweapon(void* p);
 	void					getweapon(stringcreator& sc) const;
-	static int				view_special(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_weapon(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_special(int x, int y, int width, const void* object);
+	static int				view_weapon(int x, int y, int width, const void* object);
 	// Database engine methods
 	static markup			markups[];
 	static const char*		getweapon(const void* object, char* result, const char* result_max, int id);
@@ -580,12 +580,12 @@ public:
 	void					setposition(short unsigned v) { index = v; }
 	void					stop();
 	void					update_items();
-	static int				view_avatar(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_ability(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_levels(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_personal(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_skills(int x, int y, int width, const void* object, const char* id, int index);
-	static int				view_statistic(int x, int y, int width, const void* object, const char* id, int index);
+	static int				view_avatar(int x, int y, int width, const void* object);
+	static int				view_ability(int x, int y, int width, const void* object);
+	static int				view_levels(int x, int y, int width, const void* object);
+	static int				view_personal(int x, int y, int width, const void* object);
+	static int				view_skills(int x, int y, int width, const void* object);
+	static int				view_statistic(int x, int y, int width, const void* object);
 };
 struct mapcore {
 	enum block_s : short unsigned {DefaultCost = 0xFFFE, Blocked};
