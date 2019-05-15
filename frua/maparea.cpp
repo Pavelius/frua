@@ -10,7 +10,8 @@ static markup form[] = {{0, "Название", {"name"}},
 {0, "Движение", {"moverate"}},
 {0, "Цвет", {"fore"}, 0, {0, 0, decoration::button_color}},
 {}};
-static markup columns[] = {{200, "Наименование", {"name"}},
+static markup columns[] = {{32, "Цвет", {"fore"}, 0, {0, 0, decoration::column_button}},
+{200, "Наименование", {"name"}},
 {200, "Движение", {"moverate"}},
 {}};
 

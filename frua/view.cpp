@@ -1102,7 +1102,16 @@ int	decoration::button_color(int x, int y, int width, const void* object) {
 	char temp[260]; zprint(temp, "%1i, %2i, %3i", c1.r, c1.g, c1.b);
 	if(buttonh(rc, false, isfocused(flags), false, true, c1, temp, 0, false))
 		execute(choose_color, (int)&c1);
-	return rc.height() + metrics::padding*2;
+	return rc.height() + metrics::padding * 2;
+}
+
+int	decoration::column_button(int x, int y, int width, const void* object) {
+	color& c1 = *((color*)object);
+	rect rcb = {x + 4, y + 4, x + width - 8, y + texth() + 4 * 2 - 4};
+	color b1 = c1.lighten();
+	color b2 = c1.darken();
+	gradv(rcb, b1, b2);
+	return rcb.height();
 }
 
 int scene::choose() {

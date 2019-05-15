@@ -196,12 +196,12 @@ const bsreq* bsreq::getname() const {
 	return p;
 }
 
-const char* bsreq::get(char* result, const char* result_max, void* object) const {
+const char* bsreq::get(const void* p, char* result, const char* result_max) const {
 	if(is(KindNumber)) {
-		auto v = get(ptr(object));
+		auto v = get(p);
 		szprint(result, result_max, "%1i", v);
 	} else if(is(KindText)) {
-		auto v = (const char*)get(ptr(object));
+		auto v = (const char*)get(p);
 		if(!v)
 			return "";
 		return v;
@@ -209,10 +209,10 @@ const char* bsreq::get(char* result, const char* result_max, void* object) const
 		auto pf = type->getname();
 		if(!pf)
 			return "";
-		auto v = (void*)get(ptr(object));
+		auto v = (void*)get(p);
 		if(!v)
 			return "";
-		return pf->get(result, result_max, v);
+		return pf->get(pf->ptr(v), result, result_max);
 	} else if(is(KindEnum)) {
 		auto pb = bsdata::find(type, bsdata::firstenum);
 		if(!pb)
@@ -222,9 +222,9 @@ const char* bsreq::get(char* result, const char* result_max, void* object) const
 		auto pf = pb->meta->getname();
 		if(!pf)
 			return "";
-		auto vi = get(ptr(object));
+		auto vi = get(p);
 		auto v = (void*)pb->get(vi);
-		return pf->get(result, result_max, v);
+		return pf->get(pf->ptr(v), result, result_max);
 	}
 	return result;
 }

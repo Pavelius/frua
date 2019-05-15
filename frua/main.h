@@ -251,6 +251,7 @@ struct decoration {
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
 		markups(T::markups), zero_element(0) {}
 	static int				button_color(int x, int y, int width, const void* object);
+	static int				column_button(int x, int y, int width, const void* object);
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
 	static int				choose(const bsreq* type, bool choose_mode = true);
 	static bool				choose(void** result, const bsreq* type);

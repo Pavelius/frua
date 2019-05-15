@@ -32,11 +32,11 @@ const char* table::getname(char* result, const char* result_end, int line, int c
 	auto pf = type->find(e.value.id);
 	if(!pf)
 		return 0;
-	if(e.prop.getname) {
-		auto pv = pf->ptr(object, e.value.index);
+	auto pv = pf->ptr(object, e.value.index);
+	if(e.prop.getname)
 		e.prop.getname(pv, result, result_end);
-	} else
-		return pf->get(result, result_end, object);
+	else
+		return pf->get(pv, result, result_end);
 	return result;
 }
 
@@ -54,6 +54,11 @@ void table::row(const rect &rc, int index) {
 		re.x1 = re.x1 + 1;
 		if(e.proc.custom) {
 			auto pv = getrow(index);
+			if(e.value.id) {
+				auto pf = type->find(e.value.id);
+				if(pf)
+					pv = pf->ptr(pv);
+			}
 			e.proc.custom(re.x1, re.y1, re.width(), pv);
 		} else {
 			char temp[260]; temp[0] = 0;
