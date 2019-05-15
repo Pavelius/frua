@@ -179,6 +179,7 @@
     <ClCompile Include="picture.cpp" />
     <ClCompile Include="png.cpp" />
     <ClCompile Include="point.cpp" />
+    <ClCompile Include="point_meta.cpp" />
     <ClCompile Include="race.cpp" />
     <ClCompile Include="reaction.cpp" />
     <ClCompile Include="save.cpp" />

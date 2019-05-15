@@ -250,6 +250,7 @@ struct decoration {
 	template<class T> decoration(const char* name, const T& object) : name(name), size(),
 		meta(bsmeta<T>::meta), type_size(sizeof(T)), database(0),
 		markups(T::markups), zero_element(0) {}
+	static void				autosave();
 	static int				button_color(int x, int y, int width, const void* object);
 	static int				column_button(int x, int y, int width, const void* object);
 	int						choose(const char* title, int width, int height, bool choose_mode) const;
@@ -570,7 +571,6 @@ public:
 	bool					isplayable() const { return reaction == Player; }
 	bool					isready() const { return isalive() && current_movement > 0; }
 	static markup			markups[];
-	static const bsreq		metadata[];
 	bool					moveto(direction_s d);
 	void					raise(class_s v);
 	static void				random(void* object);
@@ -660,15 +660,17 @@ struct maparea {
 };
 class overland_info : public map_info<99, 67> {
 	static const int ex = 8, ey = 8;
+	const char*				name;
 	short unsigned			index;
-	picture_info			source;
+	picture_info			image;
 	unsigned char			data[xmax*ymax];
 	maparea					areas[16];
+	friend struct bsmeta<overland_info>;
 public:
-	overland_info(const picture_info& source, short unsigned index);
 	static void				choose_areas(overland_info* p);
 	void					edit();
 	maparea&				getarea(int index) { return areas[index]; }
+	void					set(const picture_info& v);
 	void					setindex(short unsigned v);
 	void					move(direction_s v);
 };

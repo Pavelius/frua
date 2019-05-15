@@ -267,6 +267,9 @@
     <ClCompile Include="terrain.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="point_meta.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

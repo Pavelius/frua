@@ -80,7 +80,7 @@ static void save_monsters() {
 	buttonok();
 }
 
-static void save_campaign() {
+void decoration::autosave() {
 	bsdata::write("campaigns/autosave.dat");
 }
 
@@ -1022,7 +1022,7 @@ int decoration::choose(const char* title, int width, int height, bool choose_mod
 	closeform();
 	if(getresult()) {
 		// DEBUG: сохраним модуль автоматически
-		save_campaign();
+		autosave();
 		return e1.getcurrent();
 	}
 	return -1;
@@ -1175,9 +1175,9 @@ void overland_info::edit() {
 	while(ismodal()) {
 		render_background();
 		x = metrics::padding, y = metrics::padding;
-		picture.load(source, picture_width, picture_height);
-		source.correct(picture_width, picture_height, picture.width, picture.height);
-		picture.position = source.position;
+		picture.load(image, picture_width, picture_height);
+		image.correct(picture_width, picture_height, picture.width, picture.height);
+		picture.position = image.position;
 		render_picture(x, y, false, &rc);
 		if(index != Blocked) {
 			auto pt = i2m(index);
@@ -1199,10 +1199,10 @@ void overland_info::edit() {
 		case KeyRight: move(Right); break;
 		case KeyUp: move(Up); break;
 		case KeyDown: move(Down); break;
-		case Ctrl | KeyLeft: source.position.x--; break;
-		case Ctrl | KeyRight: source.position.x++; break;
-		case Ctrl | KeyUp: source.position.y--; break;
-		case Ctrl | KeyDown: source.position.y++; break;
+		case Ctrl | KeyLeft: image.position.x--; break;
+		case Ctrl | KeyRight: image.position.x++; break;
+		case Ctrl | KeyUp: image.position.y--; break;
+		case Ctrl | KeyDown: image.position.y++; break;
 		case MouseLeft:
 			if(hot.pressed) {
 				point hilite = {-1, -1};

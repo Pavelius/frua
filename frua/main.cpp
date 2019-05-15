@@ -63,9 +63,14 @@ static void main_menu() {
 }
 
 static void test_overland() {
-	overland_info e({"maps", "amn"}, 0);
-	//e.getarea(1).name = "Test";
-	e.choose_areas(&e);
+	overland_info* pb;
+	if(bsmeta<overland_info>::data.count>0)
+		pb = (overland_info*)bsmeta<overland_info>::data.get(0);
+	else
+		pb = bsmeta<overland_info>::data.add();
+	pb->set({"maps", "amn"});
+	pb->edit();
+	decoration::autosave();
 }
 
 int	main(int argc, char *argv[]) {

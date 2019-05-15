@@ -1,11 +1,13 @@
 #include "main.h"
 
-overland_info::overland_info(const picture_info& source, short unsigned index) : source(source), index(index) {
-	for(auto i = 0; i < 16; i++) {
-		char temp[260]; zprint(temp, "Область %1i", i+1);
-		areas[i].name = szdup(temp);
-	}
-}
+const bsreq bsmeta<overland_info>::meta[] = {
+	BSREQ(name),
+	BSREQ(index),
+	BSREQ(image),
+	BSREQ(areas),
+	BSREQ(data),
+{}};
+BSDATA(overland_info, 4);
 
 void overland_info::setindex(short unsigned v) {
 	if(v == Blocked)
@@ -15,4 +17,8 @@ void overland_info::setindex(short unsigned v) {
 
 void overland_info::move(direction_s v) {
 	setindex(to(index, v));
+}
+
+void overland_info::set(const picture_info& v) {
+	image = v;
 }
