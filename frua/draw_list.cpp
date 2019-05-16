@@ -11,6 +11,8 @@ static int		current_column;
 
 static void execute_select() {
 	auto p = (list*)hot.param;
+	if(p->isfocusable())
+		setfocus((int)p, true);
 	p->current = current_index;
 	p->ensurevisible();
 }
@@ -21,12 +23,6 @@ void list::ensurevisible() {
 		origin = current;
 	if(current > origin + lines_per_page - 1)
 		origin = current - lines_per_page + 1;
-}
-
-void list::select(int index, int column) {
-	current_index = index;
-	current_column = column;
-	execute(execute_select, (int)this);
 }
 
 void list::correction_width() {
@@ -99,8 +95,11 @@ void list::mousehiliting(const rect& screen, point mouse) {
 void list::mouseselect(int id, bool pressed) {
 	if(current_hilite < 0)
 		return;
-	if(pressed)
-		select(current_hilite, getcolumn());
+	if(pressed) {
+		current_index = current_hilite;
+		current_column = getcolumn();
+		execute(execute_select, (int)this);
+	}
 }
 
 bool list::isopen(int index) const {
@@ -248,15 +247,6 @@ bool list::keyinput(unsigned id) {
 		return control::keyinput(id);
 	}
 	return true;
-}
-
-void list::mouseinput(unsigned id, point position) {
-	switch(id) {
-	case MouseLeftDBL:
-		keyinput(KeyEnter);
-		break;
-	default: control::mouseinput(id, position);
-	}
 }
 
 void list::mousewheel(unsigned id, point position, int step) {

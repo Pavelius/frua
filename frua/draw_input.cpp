@@ -16,7 +16,7 @@ struct focusable_element {
 static focusable_element elements[96];
 static focusable_element* render_control;
 static draw::controls::control*		current_focus_control;
-static draw::controls::control*		current_hilite_control;
+//static draw::controls::control*	current_hilite_control;
 extern rect		sys_static_area;
 static int		current_focus;
 static bool		break_modal;
@@ -28,21 +28,21 @@ static void standart_domodal() {
 	int id;
 	tooltips_after();
 	hot.key = draw::rawinput();
-	if(current_hilite_control) {
-		switch(hot.key & CommandMask) {
-		case MouseLeft:
-		case MouseRight:
-		case MouseLeftDBL:
-			current_hilite_control->mouseinput(hot.key, hot.mouse);
-			return;
-		case MouseWheelDown:
-			current_hilite_control->mousewheel(hot.key, hot.mouse, 1);
-			return;
-		case MouseWheelUp:
-			current_hilite_control->mousewheel(hot.key, hot.mouse, -1);
-			return;
-		}
-	}
+	//if(current_hilite_control) {
+	//	switch(hot.key & CommandMask) {
+	//	case MouseLeft:
+	//	case MouseRight:
+	//	case MouseLeftDBL:
+	//		current_hilite_control->mouseinput(hot.key, hot.mouse);
+	//		return;
+	//	case MouseWheelDown:
+	//		current_hilite_control->mousewheel(hot.key, hot.mouse, 1);
+	//		return;
+	//	case MouseWheelUp:
+	//		current_hilite_control->mousewheel(hot.key, hot.mouse, -1);
+	//		return;
+	//	}
+	//}
 	if(current_focus_control) {
 		if(current_focus_control->keyinput(hot.key))
 			return;
@@ -107,18 +107,16 @@ bool controls::control::isfocused() const {
 	return (control*)current_focus == this;
 }
 
-bool controls::control::ishilited() const {
-	return current_hilite_control == this;
-}
-
 void draw::controls::control::view(const rect& rc) {
 	if(isfocusable()) {
 		addelement((int)this, rc);
 		if(!getfocus())
 			setfocus((int)this, true);
+		if(areb(rc) && hot.key == MouseLeft && hot.pressed) {
+			setfocus((int)this, false);
+			hot.key = MouseLeft;
+		}
 	}
-	if(areb(rc))
-		current_hilite_control = this;
 	if(isfocused())
 		current_focus_control = this;
 	if(show_border)
@@ -237,7 +235,7 @@ int draw::getresult() {
 
 bool draw::ismodal() {
 	current_focus_control = 0;
-	current_hilite_control = 0;
+	//current_hilite_control = 0;
 	render_control = elements;
 	if(hot.mouse.x < 0 || hot.mouse.y < 0)
 		sys_static_area.clear();

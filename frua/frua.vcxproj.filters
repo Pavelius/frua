@@ -93,9 +93,6 @@
     <ClCompile Include="surface_serial.cpp">
       <Filter>Графика</Filter>
     </ClCompile>
-    <ClCompile Include="draw_control.cpp">
-      <Filter>Графика</Filter>
-    </ClCompile>
     <ClCompile Include="draw_list.cpp">
       <Filter>Графика</Filter>
     </ClCompile>

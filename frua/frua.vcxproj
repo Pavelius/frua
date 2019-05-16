@@ -151,7 +151,6 @@
     <ClCompile Include="draw.cpp" />
     <ClCompile Include="draw_button.cpp" />
     <ClCompile Include="draw_clipart.cpp" />
-    <ClCompile Include="draw_control.cpp" />
     <ClCompile Include="draw_dialog.cpp" />
     <ClCompile Include="draw_dropdown.cpp" />
     <ClCompile Include="draw_field.cpp" />
