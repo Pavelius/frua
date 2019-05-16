@@ -693,6 +693,10 @@ public:
 	int						choose();
 	picture_info			img;
 };
+template<class T> struct bsmarkup {
+	static const char*		name;
+	static markup			elements[];
+};
 DECLENUM(alignment);
 DECLENUM(ability);
 DECLENUM(attack_affect);

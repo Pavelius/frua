@@ -186,3 +186,4 @@ markup character::charsheet_markup[] = {{3, 0, {0,0, charsheet_c1}},
 {5, 0, {0, 0, charsheet_c2}},
 {4, 0, {0, 0, skills_с3}},
 {}};
+const char* bsmarkup<character>::name = "Персонажи и монстры";

@@ -211,6 +211,7 @@ const picture_info* picture_info::choose_image() {
 	if(!file_data)
 		make_cash(file_data, "", file_exclude, file_ext_exclude);
 	string_view s1(file_data);
+	s1.show_border = false;
 	setfocus(0, true);
 	while(ismodal()) {
 		render_background();
@@ -691,11 +692,18 @@ int answer::choose(const char* title, const picture_info& pi) {
 		picture.load(pi, 794, 300);
 		picture.position = pi.position;
 		render_picture(x, y);
-		auto w1 = (getwidth() - x - metrics::padding) / 2;
+		auto w1 = (getwidth() - x - metrics::padding) / 2 - metrics::padding;
 		y += 300 + metrics::padding * 3;
-		x = (getwidth() - w1) / 2;
-		for(auto& e : elements)
+		x = metrics::padding;
+		auto y1 = y;
+		auto y2 = getheight() - metrics::padding*3 - texth();
+		for(auto& e : elements) {
+			if(y >= y2) {
+				y = y1;
+				x += w1 + metrics::padding;
+			}
 			y += button(x, y, w1, 0, cmdi(buttonparam, e.id), e.name);
+		}
 		domodal();
 	}
 	closeform();

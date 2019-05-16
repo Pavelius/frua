@@ -39,12 +39,24 @@ void test_scene() {
 	sc.choose();
 }
 
+static void test_overland() {
+	overland_info* pb;
+	if(bsmeta<overland_info>::data.count>0)
+		pb = (overland_info*)bsmeta<overland_info>::data.get(0);
+	else
+		pb = bsmeta<overland_info>::data.add();
+	pb->set({"maps", "amn"});
+	pb->edit();
+	decoration::autosave();
+}
+
 static void main_menu() {
 	answer e;
 	while(true) {
-		e.ask(1, "Редактировать героев");
+		e.ask(1, "Редактировать героев и монстров");
 		e.ask(2, "Редактировать предметы");
 		e.ask(3, "Редактировать рисунки");
+		e.ask(8, "Редактировать карту");
 		e.ask(4, "Редактировать картинки монстров");
 		e.ask(6, "Импортировать данные");
 		e.ask(7, "Экспортировать данные");
@@ -57,20 +69,10 @@ static void main_menu() {
 		case 4: picture_info::edit_monsters(); break;
 		case 6: decoration::database_import(); break;
 		case 7: decoration::database_export(); break;
+		case 8: test_overland(); break;
 		case 100: bsdata::writetxt("campaigns/autosave.json"); return;
 		}
 	}
-}
-
-static void test_overland() {
-	overland_info* pb;
-	if(bsmeta<overland_info>::data.count>0)
-		pb = (overland_info*)bsmeta<overland_info>::data.get(0);
-	else
-		pb = bsmeta<overland_info>::data.add();
-	pb->set({"maps", "amn"});
-	pb->edit();
-	decoration::autosave();
 }
 
 int	main(int argc, char *argv[]) {
@@ -78,10 +80,9 @@ int	main(int argc, char *argv[]) {
 		return -1;
 	decoration::initialize();
 	draw::initialize();
-	//test_item();
 	//test_combat();
-	//main_menu();
-	test_overland();
+	main_menu();
+	//test_overland();
 	//auto index = decoration::choose(bsmeta<character>::meta);
 	//auto index = decoration::choose(bsmeta<item_info>::meta);
 	//test_combat();
