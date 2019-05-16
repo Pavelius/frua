@@ -696,7 +696,7 @@ int answer::choose(const char* title, const picture_info& pi) {
 		y += 300 + metrics::padding * 3;
 		x = metrics::padding;
 		auto y1 = y;
-		auto y2 = getheight() - metrics::padding*3 - texth();
+		auto y2 = getheight() - metrics::padding * 3 - texth();
 		for(auto& e : elements) {
 			if(y >= y2) {
 				y = y1;
@@ -1187,6 +1187,18 @@ void overland_info::edit() {
 		image.correct(picture_width, picture_height, picture.width, picture.height);
 		picture.position = image.position;
 		render_picture(x, y, false, &rc);
+		auto& ov = bsmeta<overland_info>::data[0];
+		for(auto xm = 0; xm < xmax; xm++) {
+			for(auto ym = 0; ym < ymax; ym++) {
+				auto x1 = x + xm * ex;
+				auto y1 = y + ym * ey;
+				auto c = getarea(ov.data[ov.m2i({(short)xm, (short)ym})]).fore;
+				if(c.r == 0 && c.g == 0 && c.b == 0) {
+
+				} else
+					rectf({x1 + 1, y1 + 1, x1 + ex - 1, y1 + ey - 1}, c, 128);
+			}
+		}
 		if(index != Blocked) {
 			auto pt = i2m(index);
 			rect rc;
