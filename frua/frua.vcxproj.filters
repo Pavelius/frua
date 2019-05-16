@@ -267,6 +267,12 @@
     <ClCompile Include="point_meta.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="event.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
+    <ClCompile Include="event_type.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

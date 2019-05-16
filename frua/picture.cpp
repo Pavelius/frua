@@ -33,3 +33,15 @@ void picture_info::correct(int xmax, int ymax, int width, int height) {
 	if(position.y < 0)
 		position.y = 0;
 }
+
+const char* picture_info::getname(const picture_info* p, char* result, const char* result_max) {
+	stringcreator sc(result, result_max);
+	if(!(*p))
+		sc.add("Нет картинки");
+	else {
+		sc.add(p->folder);
+		sc.add("/");
+		sc.add(p->id);
+	}
+	return result;
+}

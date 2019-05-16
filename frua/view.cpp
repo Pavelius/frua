@@ -904,9 +904,16 @@ bool decoration::edit(void* object, void* copy_object, unsigned size, const bsre
 		return false;
 	if(!name)
 		name = pd->name;
-	return draw::edit(name,
-		pd->database->data, size, pd->database->count, pd->database->maximum,
-		meta, element, object, copy_object);
+	if(pd->database) {
+		return draw::edit(name,
+			pd->database->data, size, pd->database->count, pd->database->maximum,
+			meta, element, object, copy_object);
+	} else {
+		unsigned count = 0;
+		return draw::edit(name,
+			0, size, count, 0,
+			meta, element, object, copy_object);
+	}
 }
 
 int decoration::choose(const char* title, int width, int height, bool choose_mode) const {

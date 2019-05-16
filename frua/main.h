@@ -373,6 +373,7 @@ struct picture_info {
 	static const picture_info* choose_image();
 	void					correct(int xmax, int ymax, int width, int height);
 	static void				edit_monsters();
+	static const char*		getname(const picture_info* p, char* result, const char* result_max);
 	const char*				geturl(char* temp) const;
 	const char*				geturl(char* temp, int part) const;
 	static int				random(const char* mask);
@@ -665,6 +666,8 @@ struct event_info {
 	};
 	picture_info			image;
 	event_type_s			type;
+	//
+	static markup			markups[];
 };
 struct maparea {
 	const char*				name;
@@ -718,6 +721,7 @@ DECLENUM(attack_affect);
 DECLENUM(class);
 DECLENUM(direction);
 DECLENUM(effect);
+DECLENUM(event_type);
 DECLENUM(feat);
 DECLENUM(gender);
 DECLENUM(item_state);
