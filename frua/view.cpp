@@ -833,12 +833,12 @@ int character::view_statistic(int x, int y, int width, const void* object) {
 }
 
 int character::view_avatar(int x, int y, int width, const void* object) {
-	auto p = (character*)object;
+	short unsigned* p = (short unsigned*)object;
 	unsigned flags = 0;
 	auto height = 64;
 	draw::setposition(x, y, width);
 	rect rc = {x, y, x + width, y + height};
-	focusing((int)&p->avatar, flags, rc);
+	focusing((int)p, flags, rc);
 	auto focused = isfocused(flags);
 	auto a = area(rc);
 	switch(a) {
@@ -848,8 +848,8 @@ int character::view_avatar(int x, int y, int width, const void* object) {
 	if(spr_monsters) {
 		auto dx = width / 4;
 		auto y1 = y + (height / 8) * 7;
-		image(x + dx * 1, y1, spr_monsters, p->avatar * 2 + 0, 0);
-		image(x + dx * 3, y1, spr_monsters, p->avatar * 2 + 1, 0);
+		image(x + dx * 1, y1, spr_monsters, (*p) * 2 + 0, 0);
+		image(x + dx * 3, y1, spr_monsters, (*p) * 2 + 1, 0);
 	}
 	auto result = false;
 	if(focused) {

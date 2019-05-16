@@ -134,12 +134,6 @@ static void choose_enum() {
 		command.value = ev.getcurrent();
 }
 
-static bsval getvalue(const bsval& source, const markup& e) {
-	bsval result;
-	result.type = source.type->find(e.value.id);
-	result.data = source.data;
-	return result;
-}
 static rect start_group(int& x, int& y, int& width) {
 	setposition(x, y, width);
 	rect rc = {x, y, x + width, y + texth() + 4 * 2};
@@ -301,19 +295,25 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	return rc.height() + metrics::padding*2;
 }
 
+static int field_button(int x, int y, int width, contexti& ctx, const markup& e, const void* pv) {
+	char temp[512];
+	auto p = e.title;
+	if(e.prop.getname)
+		p = e.prop.getname(pv, temp, zendof(temp));
+	return button(x, y, width, 0, cmd(e.cmd.execute, ctx.source.data), p);
+}
+
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 	if(e.proc.isvisible && !e.proc.isvisible(ctx.source.data, e.value.index))
 		return 0;
-	else if(e.value.id && e.value.id[0] == '#')
+	if(e.value.id && e.value.id[0] == '#')
 		// Страницы, команды, любые другие управляющие структуры.
 		return 0;
-	else if(e.proc.custom) {
-		auto pv = ctx.source.data;
-		if(e.value.id) {
-			auto bv = getvalue(ctx.source, e);
-			if(bv.type)
-				pv = bv.type->ptr(bv.data, e.value.index);
-		}
+	auto pv = ctx.source.data;
+	auto bv = ctx.source.ptr(e.value.id);
+	if(bv.type)
+		pv = bv.type->ptr(bv.data, e.value.index);
+	if(e.proc.custom) {
 		if(e.title) {
 			auto dy = e.proc.custom(x + ctx.title, y, width - ctx.title, pv);
 			if(dy) {
@@ -324,7 +324,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		}
 		return e.proc.custom(x, y, width, pv);
 	} else if(e.cmd.execute)
-		return button(x, y, width, 0, cmd(e.cmd.execute, ctx.source.data), e.title);
+		return field_button(x, y, width, ctx, e, pv);
 	else if(e.title && e.title[0] == '#') {
 		auto pn = e.title + 1;
 		auto y0 = y;
@@ -335,8 +335,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		if(!e.value.id)
 			return 0;
 		// Теперь специальные элементы с заполненными данными
-		auto bv = getvalue(ctx.source, e);
-		if(!bv.data || !bv.type)
+		if(!bv.type)
 			return 0;
 		if(strcmp(pn, "checkboxes") == 0 && (bv.type->is(KindEnum) || bv.type->is(KindCFlags))) {
 			auto pb = bsdata::find(bv.type->type, bsdata::firstenum);
@@ -358,7 +357,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				if(!ctx.isallow(e, i))
 					continue;
 				auto p = getpresent(pb->get(i), pb->meta);
-				cmd_check ev({bv.type->ptr(bv.data), size}, p, i);
+				cmd_check ev({pv, size}, p, i);
 				unsigned flags = 0;
 				if(ev.ischecked())
 					flags |= Checked;
@@ -384,7 +383,7 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 				if(!ctx.isallow(e, i))
 					continue;
 				auto p = getpresent(pb->get(i), pb->meta);
-				cmd_radio ev({bv.type->ptr(bv.data), size}, p, i);
+				cmd_radio ev({pv, size}, p, i);
 				unsigned flags = 0;
 				if(ev.ischecked())
 					flags |= Checked;
@@ -410,13 +409,11 @@ static int element(int x, int y, int width, contexti& ctx, const markup& e) {
 		}
 		return y - y0;
 	} else if(e.value.id) {
-		auto bv = getvalue(ctx.source, e);
-		if(!bv.data || !bv.type) {
+		if(!bv.type) {
 			if(ctx.show_missed_requisit)
 				return error(x, y, width, ctx, e, "Не найден реквизит");
 			return 0; // Данные не найдены, но это не ошибка
 		}
-		auto pv = bv.type->ptr(bv.data, e.value.index);
 		// Вначале найдем целую форму объекта
 		if(bv.type->is(KindScalar)) {
 			auto hint_type = bv.type->type;

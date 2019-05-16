@@ -146,8 +146,8 @@ struct bsval {
 	constexpr bsval() : data(0), type(0) {}
 	constexpr bsval(void* data, const bsreq* type) : data(data), type(type) {}
 	constexpr explicit operator bool() const { return data != 0; }
-	const bsval&		get(const char* url) const;
 	int					get() const { return type->get(type->ptr(data)); }
+	bsval				ptr(const char* url) const;
 	void				set(int value) const { type->set(type->ptr(data), value); }
 };
 template<> struct bsmeta<unsigned char> : bsmeta<int> {};

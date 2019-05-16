@@ -215,6 +215,13 @@
       "UseMartialWeapon",
       "UseLargeWeapon"
     ],
+    "special_quality":[
+      "ImmunityDesease",
+      "ImmunityPoison",
+      "ImmunityCharm",
+      "ImmunityCold",
+      "ImmunityFire"
+    ],
     "hp":5,
     "hp_rolled":16,
     "strenght_percent":9,
@@ -230,6 +237,72 @@
     "wears":[
       {
         "type":16,
+        "value":32
+      }
+    ]
+  },
+  {
+    "typeid":"character",
+    "name":"Герда",
+    "gender":"Female",
+    "alignment":"Neutral Good",
+    "type":"Fighter",
+    "race":"Elf",
+    "size":"Medium",
+    "abilities":[
+      17,
+      15,
+      11,
+      10,
+      14,
+      15
+    ],
+    "feats":[
+      "Darkvision",
+      "BonusHits",
+      "DetectSecretDoors",
+      "DetectUndegroundPassages",
+      "CharmResistance90",
+      "CharmResistance30",
+      "ElfWeaponTraining",
+      "BonusToHitOrcs",
+      "SmallSizeCombatAdvantage",
+      "LightSteps",
+      "HolyGrace",
+      "NoExeptionalStrenght",
+      "LightSensivity",
+      "UniqueCharacter"
+    ],
+    "usability":[
+      "UseLeatherArmor",
+      "UseMetalArmor",
+      "UseShield",
+      "UseTheifWeapon",
+      "UseElfWeapon",
+      "UseMartialWeapon",
+      "UseLargeWeapon"
+    ],
+    "hp":10,
+    "hp_rolled":10,
+    "strenght_percent":33,
+    "avatar":5,
+    "levels":[
+      2
+    ],
+    "base_ac":10,
+    "movement":12,
+    "reaction":"Player",
+    "wears":[
+      {
+        "type":5,
+        "value":32
+      },
+      {
+        "type":3,
+        "value":32
+      },
+      {
+        "type":2,
         "value":32
       }
     ]
@@ -274,6 +347,7 @@
       "d":12
     },
     "usability":[
+      "UseElfWeapon",
       "UseMartialWeapon",
       "UseLargeWeapon"
     ],
@@ -575,6 +649,111 @@
     "usability":[
       "UseMartialWeapon",
       "UseLargeWeapon"
+    ]
+  },
+  {
+    "typeid":"overland_info",
+    "index":5006,
+    "image":{
+      "id":"amn",
+      "folder":"maps"
+    },
+    "areas":[
+      {
+        "name":"Равнина",
+        "moverate":"StandartMovement",
+        "fore":{
+          "g":-1
+        }
+      },
+      {
+        "name":"Лес",
+        "moverate":"HalfMovement",
+        "fore":{
+          "g":-128
+        }
+      },
+      {
+        "name":"Океан",
+        "moverate":"StandartMovement",
+        "fore":{
+          "b":-1
+        }
+      },
+      {
+        "name":"Холмы",
+        "moverate":"HalfMovement",
+        "fore":{
+          "g":-128,
+          "b":64
+        }
+      },
+      {
+        "name":"Горы",
+        "fore":{
+          "r":-1,
+          "g":-1,
+          "b":-1
+        }
+      },
+      {
+        "name":"Джунгли",
+        "moverate":"StandartMovement",
+        "fore":{
+          "g":64,
+          "b":64
+        }
+      },
+      {
+        "name":"Болото",
+        "moverate":"StandartMovement",
+        "fore":{
+          "g":64,
+          "b":64
+        }
+      },
+      {
+        "name":"Пустыня",
+        "moverate":"QuarterMovement",
+        "fore":{
+          "r":-1,
+          "g":-1
+        }
+      },
+      {
+        "name":"Степь",
+        "moverate":"StandartMovement",
+        "fore":{
+          "r":-77,
+          "g":89
+        }
+      },
+      {
+        "name":"Река",
+        "moverate":"StandartMovement",
+        "fore":{
+          "g":-128,
+          "b":-1
+        }
+      },
+      {
+        "moverate":"StandartMovement"
+      },
+      {
+        "moverate":"StandartMovement"
+      },
+      {
+        "moverate":"StandartMovement"
+      },
+      {
+        "moverate":"StandartMovement"
+      },
+      {
+        "moverate":"StandartMovement"
+      },
+      {
+        "moverate":"StandartMovement"
+      }
     ]
   }
 ]

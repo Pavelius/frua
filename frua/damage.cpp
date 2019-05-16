@@ -74,6 +74,12 @@ void item_info::getweapon(stringcreator& sc) const {
 	}
 }
 
+const char* item_info::getweaponx(const item_info* p, char* result, const char* result_max) {
+	stringcreator sc(result, result_max);
+	p->getweapon(sc); szupper(result, 1);
+	return result;
+}
+
 int	damage_info::getattacks() const {
 	return bsmeta<attack_affect_info>::elements[attack_type].attacks;
 }

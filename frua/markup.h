@@ -3,7 +3,6 @@
 // Standart markup
 struct markup {
 	typedef const char* (*text_type)(const void* object, char* result, const char* result_maximum);
-	typedef int(*num_type)(const void* object);
 	typedef bool(*allow_type)(const void* object, int index);
 	typedef int(*custom_type)(int x, int y, int width, const void* object); // Custom draw
 	typedef void(*command_type)(void* object);
@@ -27,12 +26,10 @@ struct markup {
 	};
 	struct propi {
 		text_type		getname;
-		num_type		getvalue;
-		constexpr propi() : getname(0), getvalue(0) {}
-		template<class T> constexpr propi(void(*v)(const T*, char*, const char*)) : getname((text_type)v), getvalue(0) {}
-		template<class T> constexpr propi(int(*v)(const T*)) : getname(0), getvalue((num_type)v) {}
+		constexpr propi() : getname(0) {}
+		template<class T> constexpr propi(const char* (*v)(const T*, char*, const char*)) : getname((text_type)v) {}
 	};
-	constexpr explicit operator bool() const { return title || value.id || value.child; }
+	constexpr explicit operator bool() const { return title || value.id || value.child || cmd.execute; }
 	int					width;
 	const char*			title;
 	element				value;

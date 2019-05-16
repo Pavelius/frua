@@ -192,6 +192,9 @@ enum action_s : unsigned char {
 enum terrain_s : unsigned char {
 	Unpassable, StandartMovement, HalfMovement, QuarterMovement,
 };
+enum event_type_s : unsigned char {
+	NoEvent, Combat,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -266,6 +269,10 @@ struct decoration {
 	static void				open(const bsreq* meta) { choose(meta, false); }
 };
 struct name_info {
+	const char*				id;
+	const char*				name;
+};
+struct event_type_info {
 	const char*				id;
 	const char*				name;
 };
@@ -443,7 +450,7 @@ struct item_info {
 	static int				view_weapon(int x, int y, int width, const void* object);
 	// Database engine methods
 	static markup			markups[];
-	static const char*		getweapon(const void* object, char* result, const char* result_max, int id);
+	static const char*		getweaponx(const item_info* object, char* result, const char* result_max);
 };
 class item {
 	unsigned short			type;
@@ -650,6 +657,14 @@ struct combat_info : map_info<combat_map_x, combat_map_y> {
 	void					splash(unsigned seconds = 100, bool use_update = true) const;
 	void					update() const;
 	void					visualize(bool use_update) const;
+};
+struct event_info {
+	struct squad {
+		character*			type;
+		char				count;
+	};
+	picture_info			image;
+	event_type_s			type;
 };
 struct maparea {
 	const char*				name;

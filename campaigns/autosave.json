@@ -21,11 +21,11 @@
       "UseLargeWeapon"
     ],
     "hp":4,
-    "hp_rolled":10,
+    "hp_rolled":15,
     "strenght_percent":54,
     "avatar":63,
     "levels":[
-      2
+      3
     ],
     "base_ac":10,
     "movement":12,

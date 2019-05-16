@@ -18,7 +18,7 @@ const bsreq bsmeta<bsreq>::meta[] = {
 {}};
 
 const bsreq* bsreq::find(const char* name) const {
-	if(!this)
+	if(!this || !name || name[0]==0)
 		return 0;
 	for(auto p = this; p->id; p++) {
 		if(strcmp(p->id, name) == 0)
@@ -227,4 +227,9 @@ const char* bsreq::get(const void* p, char* result, const char* result_max) cons
 		return pf->get(pf->ptr(v), result, result_max);
 	}
 	return result;
+}
+
+bsval bsval::ptr(const char* url) const {
+	bsval r(data, type->find(url));
+	return r;
 }

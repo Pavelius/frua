@@ -382,8 +382,8 @@ const char* character::getdescription(const character* p, char* result, const ch
 }
 
 void character::choose_avatar(void* object) {
-	auto p = (character*)object;
-	picture_info::choose(p->avatar, "Какую картинку использовать?", 0, 64);
+	auto p = (short unsigned*)object;
+	picture_info::choose(*p, "Какую картинку использовать?", 0, 64);
 }
 
 void character::rollhp() {

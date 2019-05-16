@@ -34,7 +34,7 @@ static markup weapon_c1[] = {{0, 0, {"damage", 0, damage_info::weapon_markup}},
 {}};
 static markup weapon_markup[] = {{6, 0, {0, 0, weapon_c1}},
 {}};
-static markup weapon_block[] = {{0, 0, {"damage"}, 0, {0, 0, item_info::view_weapon}},
+static markup weapon_block[] = {{0, 0, {0}, 0, {}, {item_info::editweapon}, item_info::getweaponx},
 {}};
 void item_info::editweapon(void* p) {
 	decoration::edit(p, 0, sizeof(item_info), bsmeta<item_info>::meta, weapon_markup, "Оружие");
