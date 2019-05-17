@@ -45,3 +45,9 @@ const char* picture_info::getname(const picture_info* p, char* result, const cha
 	}
 	return result;
 }
+
+void picture_info::choose(picture_info* e) {
+	auto p = choose_image();
+	if(p)
+		*e = *p;
+}

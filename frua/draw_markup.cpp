@@ -265,8 +265,11 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	if(type->is(KindNumber))
 		flags = AlignRight;
 	draw::focusing((int)pv, flags, rc);
-	if(type->is(KindText))
+	if(type->is(KindText)) {
+		if(param)
+			rc.y2 = rc.y1 + texth()*param + 4*2;
 		draw::field(rc, flags, anyval(pv, type->size), -1, FieldText);
+	}
 	else if(type->is(KindEnum) || (type->is(KindNumber) && type->hint_type)) {
 		auto hint = type->type;
 		if(type->hint_type)
@@ -300,7 +303,16 @@ static int field_button(int x, int y, int width, contexti& ctx, const markup& e,
 	auto p = e.title;
 	if(e.prop.getname)
 		p = e.prop.getname(pv, temp, zendof(temp));
-	return button(x, y, width, 0, cmd(e.cmd.execute, ctx.source.data), p);
+	cmd cv(e.cmd.execute, ctx.source.data);
+	if(e.title && e.prop.getname) {
+		auto dy = button(x + ctx.title, y, width - ctx.title, 0, cv, p, 0);
+		if(dy) {
+			setposition(x, y, width);
+			header(x, y, width, ctx, e.title);
+		}
+		return dy;
+	}
+	return button(x, y, width, 0, cv, p);
 }
 
 static int element(int x, int y, int width, contexti& ctx, const markup& e) {

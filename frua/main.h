@@ -371,6 +371,7 @@ struct picture_info {
 	bool operator==(const picture_info& e) const;
 	static bool				choose(short unsigned& result, const char* title, const char* mask, int size);
 	static const picture_info* choose_image();
+	static void				choose(picture_info* e);
 	void					correct(int xmax, int ymax, int width, int height);
 	static void				edit_monsters();
 	static const char*		getname(const picture_info* p, char* result, const char* result_max);
@@ -666,6 +667,7 @@ struct event_info {
 	};
 	picture_info			image;
 	event_type_s			type;
+	const char*				text;
 	//
 	static markup			markups[];
 };
