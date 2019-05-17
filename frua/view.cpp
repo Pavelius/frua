@@ -13,7 +13,7 @@ const int buttons_height = 16 + 8 * 2;
 const int y_buttons = 600 - buttons_height;
 
 const markup* getmarkup(const bsreq* type);
-void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi);
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi, const bsreq* type);
 
 static anyval					command_value;
 static bsdata*					command_data;
@@ -403,7 +403,7 @@ static int field(int x, int y, int width, const anyval& ev, const bsreq* type, c
 	rect rc = {x, y, x + width, y + draw::texth() + 8};
 	unsigned flags = AlignLeft;
 	draw::focusing((int)ev.ptr(), flags, rc);
-	field_enum(rc, flags, ev, type, object, pri, ppi);
+	field_enum(rc, flags, ev, type, object, pri, ppi, type);
 	return rc.height() + metrics::padding * 2;
 }
 

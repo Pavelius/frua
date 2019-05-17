@@ -273,6 +273,9 @@
     <ClCompile Include="event_type.cpp">
       <Filter>Логика</Filter>
     </ClCompile>
+    <ClCompile Include="condition.cpp">
+      <Filter>Логика</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="draw.h">

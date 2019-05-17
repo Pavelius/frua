@@ -195,6 +195,12 @@ enum terrain_s : unsigned char {
 enum event_type_s : unsigned char {
 	NoEvent, Combat,
 };
+enum condition_s : unsigned char {
+	AlwaysHappen,
+	PartyHasSpecialItem, PartyDoesNotHaveSpecialItem,
+	DayTime, NightTime, RandomPercentChance,
+	SpecifiedRaceInParty, SpecifiedClassInParty,
+};
 
 const unsigned CP = 1; // One cooper coin
 const unsigned SP = 10; // One silver coin
@@ -354,6 +360,10 @@ struct usability_info {
 };
 struct sprite_name_info {
 	char					name[32];
+};
+struct condition_info {
+	const char*				id;
+	const char*				name;
 };
 struct terrain_info {
 	const char*				id;
@@ -667,6 +677,9 @@ struct event_info {
 	};
 	picture_info			image;
 	event_type_s			type;
+	condition_s				condition;
+	char					chance;
+	item_info*				macguffin;
 	const char*				text;
 	//
 	static markup			markups[];
@@ -721,6 +734,7 @@ DECLENUM(alignment);
 DECLENUM(ability);
 DECLENUM(attack_affect);
 DECLENUM(class);
+DECLENUM(condition);
 DECLENUM(direction);
 DECLENUM(effect);
 DECLENUM(event_type);

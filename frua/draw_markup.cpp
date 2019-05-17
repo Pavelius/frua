@@ -217,7 +217,7 @@ static int error(int x, int y, int width, contexti& ctx, const markup& e, const 
 	return rc.height() + metrics::padding * 2;
 }
 
-void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi) {
+void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* meta_type, const void* object, const markup::proci* pri, const markup::propi* ppi, const bsreq* type) {
 	auto pb = bsdata::find(meta_type, bsdata::firstenum);
 	if(!pb)
 		pb = bsdata::find(meta_type, bsdata::first);
@@ -229,7 +229,11 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 	if(buttonh(rc, false, focused, false, true, 0, 0, false, 0))
 		result = true;
 	auto pn = "";
-	auto pv = pb->get(ev);
+	const void* pv = 0;
+	if(type->is(KindReference))
+		pv = (void*)((int)ev);
+	else
+		pv = pb->get(ev);
 	if(ppi && ppi->getname)
 		pn = ppi->getname(pv, temp, zendof(temp));
 	else
@@ -264,17 +268,18 @@ static int field_main(int x, int y, int width, contexti& ctx, const char* title_
 	unsigned flags = AlignLeft;
 	if(type->is(KindNumber))
 		flags = AlignRight;
+	if(type->is(KindText) && param)
+		rc.y2 = rc.y1 + texth()*param + 4 * 2;
 	draw::focusing((int)pv, flags, rc);
-	if(type->is(KindText)) {
-		if(param)
-			rc.y2 = rc.y1 + texth()*param + 4*2;
+	if(type->is(KindText))
 		draw::field(rc, flags, anyval(pv, type->size), -1, FieldText);
-	}
-	else if(type->is(KindEnum) || (type->is(KindNumber) && type->hint_type)) {
+	else if(type->is(KindEnum)
+		|| (type->is(KindNumber) && type->hint_type)
+		|| type->is(KindReference)) {
 		auto hint = type->type;
 		if(type->hint_type)
 			hint = type->hint_type;
-		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri, ppi);
+		field_enum(rc, flags, anyval(pv, type->size), hint, ctx.source.data, pri, ppi, type);
 	} else if(type->is(KindNumber)) {
 		auto d = param;
 		if(!d)
