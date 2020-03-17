@@ -27,7 +27,7 @@ static void check_flags() {
 		v1 &= ~v2;
 	else
 		v1 |= v2;
-	command.value = (const int)v1;
+	command.value.set(v1);
 }
 static void set_command_value() {
 	command.value = (const int)hot.param;
@@ -79,6 +79,8 @@ struct contexti {
 }
 
 static const char* getpresent(const void* p, const bsreq* type) {
+	if(!p)
+		return "";
 	auto pf = type->find("name");
 	if(!pf)
 		pf = type->find("id");
@@ -130,8 +132,9 @@ static void choose_enum() {
 	rc.y1 = rc.y2;
 	rc.y2 = rc.y1 + ev.getrowheight() * mc + 1;
 	rectf(rc, colors::form);
-	if(dropdown(rc, ev, true))
-		command.value = ev.getcurrent();
+	if(dropdown(rc, ev, true)) {
+		command.value.set(ev.getcurrent());
+	}
 }
 
 static rect start_group(int& x, int& y, int& width) {
@@ -237,7 +240,7 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 	if(ppi && ppi->getname)
 		pn = ppi->getname(pv, temp, zendof(temp));
 	else
-		pn = getpresent(pb->get(ev), pb->meta);
+		pn = getpresent(pv, pb->meta);
 	textc(rc.x1 + 4, rc.y1 + 4, rc.width() - 4 * 2, pn);
 	if(focused)
 		rectx({rc.x1 + 2, rc.y1 + 2, rc.x2 - 2, rc.y2 - 2}, colors::border);
@@ -248,10 +251,6 @@ void field_enum(const rect& rc, unsigned flags, const anyval& ev, const bsreq* m
 		command.data = pb;
 		command.object = (void*)object;
 		if(pri) {
-			//if(pri->command) {
-			//	cmd(pri->command, (void*)pv).execute();
-			//	return;
-			//}
 			command.proc = *pri;
 			command.prop = *ppi;
 		}

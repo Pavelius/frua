@@ -31,7 +31,7 @@ static void setvalue(const anyval& v, field_type_s t, const char* result) {
 	case FieldNumber: value = sz2num(result); break;
 	case FieldText: value = (int)szdup(result); break;
 	}
-	v = value;
+	v.set(value);
 }
 
 static class edit_driver : public controls::textedit {
@@ -82,13 +82,13 @@ void save_focus() {
 }
 
 static void field_up() {
-	edit_value = edit_value + 1;
+	edit_value.set(edit_value + 1);
 	cedit.load();
 	cedit.invalidate();
 }
 
 static void field_down() {
-	edit_value = edit_value - 1;
+	edit_value.set(edit_value - 1);
 	cedit.load();
 	cedit.invalidate();
 }

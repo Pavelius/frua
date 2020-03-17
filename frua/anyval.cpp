@@ -15,7 +15,7 @@ anyval::operator int() const {
 	return 0;
 }
 
-void anyval::operator=(const int v) const {
+void anyval::set(const int v) const {
 	if(!data)
 		return;
 	if(bit_size) {

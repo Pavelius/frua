@@ -85,6 +85,7 @@ static void main_menu() {
 }
 
 int	main(int argc, char *argv[]) {
+	auto s1 = sizeof(bsreq);
 	if(!test_array())
 		return -1;
 	decoration::initialize();

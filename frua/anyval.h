@@ -15,8 +15,8 @@ public:
 	operator int() const;
 	constexpr bool operator==(const anyval& v) const { return data==v.data && size==v.size
 		&& bit_offset==v.bit_offset && bit_size == v.bit_size; }
-	void operator=(const int v) const;
 	void				clear() { data = 0; size = 0; }
 	template<class T> constexpr bool is(const T& v) const { return data==&v; }
 	constexpr const void* ptr() const { return data; }
+	void				set(const int v) const;
 };
